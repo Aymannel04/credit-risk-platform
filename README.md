@@ -2,7 +2,7 @@
 
 End-to-end ML project predicting credit default risk on the German Credit dataset, with proper class imbalance handling, business-framed evaluation, and SHAP-based explainability.
 
-**🔗 Live Demo:** https://morocco-housing-project.streamlit.app/
+**🔗 Live Demo:** https://creditscoringproject.streamlit.app/
 
 ## Overview
 
