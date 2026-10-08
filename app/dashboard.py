@@ -1,9 +1,8 @@
-import streamlit as st
-import pandas as pd
-import numpy as np
 import joblib
-import shap
 import matplotlib.pyplot as plt
+import pandas as pd
+import shap
+import streamlit as st
 
 # 1. Configuration
 st.set_page_config(page_title="Credit Scoring AI", page_icon="🏦", layout="wide")

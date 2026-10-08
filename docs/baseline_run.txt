@@ -1,0 +1,24 @@
+Entraînement du modèle de Risque Crédit (XGBoost)...
+
+--- RAPPORT DE PERFORMANCE ---
+Précision Globale (Accuracy) : 74.00%
+
+Détails par classe :
+                precision    recall  f1-score   support
+
+    Bon Client       0.80      0.84      0.82       140
+Mauvais Client       0.57      0.52      0.54        60
+
+      accuracy                           0.74       200
+     macro avg       0.69      0.68      0.68       200
+  weighted avg       0.73      0.74      0.74       200
+
+AUC-ROC : 0.8020
+
+ ANALYSE DES RISQUES (Sur les données de test) :
+Vrais Bons (Crédits accordés à raison) : 117
+Faux Mauvais (Clients refusés à tort - Manque à gagner) : 23
+Vrais Mauvais (Défauts évités - Argent sauvé !) : 31
+Faux Bons (Crédits accordés à tort - PERTE SÈCHE) : 29
+
+ Modèle sauvegardé : models/credit_xgb_model.pkl

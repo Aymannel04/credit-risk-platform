@@ -1,0 +1,16 @@
+[tool.ruff]
+line-length = 100
+target-version = "py312"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "B"]
+ignore = ["E501"]  # long lines in the v1 code are cosmetic
+
+[tool.ruff.lint.per-file-ignores]
+# Known v1 issue (audit 3.2 point 8): bare except hides unknown categories.
+# The dashboard is replaced in v2, so it is not rewritten now.
+"app/dashboard.py" = ["E722"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["."]

@@ -1,0 +1,10 @@
+Observed default rate: 0.300  (Brier of constant 0.30 forecast: 0.2100)
+                           brier  brier_sd     auc  mean_pd
+variant       kind                                         
+SMOTE         calibrated  0.1619    0.0014  0.7927   0.3021
+              raw         0.1757    0.0037  0.7840   0.3378
+class weights calibrated  0.1610    0.0027  0.7927   0.3020
+              raw         0.1769    0.0073  0.7799   0.3560
+unweighted    calibrated  0.1609    0.0027  0.7914   0.3011
+              raw         0.1680    0.0056  0.7826   0.2874
+Saved calibration_experiment.png

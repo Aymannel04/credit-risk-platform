@@ -1,7 +1,9 @@
-import pandas as pd
-import os
-import requests
 import io
+import os
+
+import pandas as pd
+import requests
+
 
 def load_german_credit_data():
     print("Téléchargement du dataset 'German Credit'...")
