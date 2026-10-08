@@ -1,12 +1,14 @@
 # Credit Risk Platform on GCP: Technical Sheet
 
-Oct 8, 2026 · Ayman El Baida · v1.1
+Oct 8, 2026 · Ayman El Baida · v1.2
 Upgrade of the existing GitHub project **"Credit Scoring & Risk Analysis"**: https://github.com/Aymannel04/credit_scoring_project (XGBoost · SMOTE · SHAP · Streamlit, live demo https://creditscoringproject.streamlit.app/). Written to be handed to Claude Code or Cowork.
 The repo audit in section 3 was done on Oct 8, 2026 from a read-only clone, including a re-run of the pipeline.
 
 **Repository decision:** v2 lives in a **new repository** (`credit-risk-platform`) created from a clone of v1. The original repo `credit_scoring_project` and its live demo are **never modified** and stay as the standalone v1 project.
 
 **Source of truth:** this markdown file is the specification for the coding agent. The PDF fiche (`fiche_technique.tex`) explains the same plan for the owner but uses **different section numbers**; every section reference in this file (for example "section 11") refers to this file's numbering.
+
+**Changes in v1.2 (Oct 8, 2026): dataset switched from Home Credit to Freddie Mac.** The Home Credit competition rules say the data may be used "only for the purposes of the Competition" (which ended in 2018), so portfolio use is not allowed. Freddie Mac's Single-Family Loan-Level Dataset allows personal/internal use and publishing non-commercial research results, and forbids redistributing the data. See `docs/decision-log.md`. Everything below that mentions Home Credit, a "static snapshot" or "no real time axis" is superseded by section 4 and section 9.
 
 **Changes in v1.1 (Oct 8, 2026, review of v1):**
 - Imbalance: an **unweighted** model is the PD baseline; class weights and SMOTE are both ablations, and every variant is calibrated (class weights distort probabilities too, not only SMOTE).
@@ -121,26 +123,37 @@ Repo: `Aymannel04/credit_scoring_project`. Files: `src/load_data.py`, `src/proce
 
 ## 4. Dataset decision
 
-| Option | Size and shape | Pros | Cons / to verify |
-|---|---|---|---|
-| **Home Credit Default Risk (Kaggle) (recommended)** | Roughly 300k applications plus several related tables (bureau, previous applications, installments, POS/cash, credit card) | Multi-table joins and aggregations are exactly the feature-engineering work credit teams do; realistic imbalance | Competition rules and licence: verify that your use (portfolio, no redistribution) is allowed; requires a Kaggle account; data may not be redistributed, so the repo ships a download script only |
-| Freddie Mac single-family loan-level | Very large, has time dimension (real vintages) | Real timestamps enable true out-of-time validation and drift | Registration and terms to verify; heavy to process; mortgage rather than consumer credit |
-| Give Me Some Credit (Kaggle) | About 150k rows, one table | Simple, fast | Single table, little engineering story |
-| German Credit (UCI) | 1,000 rows | Already in the repo | Toy; keep only as a CI fixture and a "demo mode" |
+**Decision (Oct 8, 2026): Freddie Mac Single-Family Loan-Level Dataset (Standard Dataset), as the main dataset.** German Credit (UCI) stays as the small fixture so CI and tests run without any download. Backup if Freddie Mac fails: UCI "Default of Credit Card Clients" (CC BY 4.0, 30,000 rows, one table).
 
-**Decision (to confirm after verifying terms):** Home Credit as the main dataset. Reading the competition rules is a **blocking check before Phase 1**: Home Credit is a competition dataset, and its rules decide whether portfolio use is allowed at all. If they do not allow it, switch to a fallback before writing any pipeline code. Keep German Credit as the lightweight fixture so CI and tests run without downloading anything.
+| Option | Terms (as read on Oct 8, 2026) | Shape | Verdict |
+|---|---|---|---|
+| **Freddie Mac SF Loan-Level (chosen)** | Free registration. Personal/internal use for analysing credit performance; academic/research results and derived products may be published if **non-commercial**; **no redistribution** of the data; separate paid licence for commercial use | Two pipe-delimited files per quarter (origination, monthly performance), joined by loan sequence number; loans from 1999 | Chosen |
+| Home Credit Default Risk (Kaggle) | Specific rule: data usable "only for the purposes of the Competition" (ended 2018) | About 300k applicants, several tables | **Rejected** (use not allowed) |
+| UCI Default of Credit Card Clients | CC BY 4.0 | 30,000 rows, 1 table | Backup |
+| Berka (CTU Prague "Financial") | No licence stated | 8 tables but only 682 loans (76 bad) | Rejected (unclear terms, too small) |
+| FinBench / OpenML credit risk | Non-commercial / CC0 | Single table | Too simple |
+
+**What Freddie Mac gives the project:**
+- A **real time axis** (loans originated from 1999): true out-of-time validation (train on early vintages, test on later ones) and real drift between vintages. Simulated drift scenarios stay as an extra, not as the main method.
+- **Real loss data** for terminated loans (net sale proceeds, expenses, recoveries, zero-balance removal UPB): LGD can be estimated from data and compared with the assumed value, instead of being only an assumption.
+- A **free sample dataset** (50,000 random loans per vintage year, same format) for development; the full quarterly files are used only if needed.
+- A real two-table structure (one row per loan vs many monthly rows per loan) for the aggregation work.
 
 **Caveats to state in the README:**
-- The dataset has no true calendar dates (relative days only), so drift monitoring must be **simulated** and labelled as such (section 9).
-- It has no LGD or EAD. EAD is approximated by the credit amount; LGD is a configurable assumption.
-- Verify real column names, target definition and default rate from the data, not from this sheet.
+- Mortgages (fixed-rate, fully amortizing in the Standard Dataset), not consumer credit; US data from loans Freddie Mac bought. State this and make no claim about other lenders.
+- The data is **not redistributed**: the repo ships a download/parse script only; the public demo shows model outputs, not raw rows. Derived products published must be non-commercial (state the project's purpose as research/portfolio). Re-read the terms before any public release; this is not legal advice.
+- Files have **no header row**; column names and positions come from the official user guide / file layout. Verify them from the guide, not from this sheet.
+- **No sex, race or age fields.** Fairness slices are limited to what exists (e.g. first-time homebuyer flag, state/region, occupancy, loan purpose); say plainly that this is not a protected-class fairness analysis.
+- The definition of "default" (a delinquency threshold or a credit-event termination) must be read in the user guide (sections "Zero Balance Codes", "Monthly Reporting Period", "Defects", "Actual Loss") and recorded in `docs/decision-log.md` before the target is built. Do not guess it.
+- The dataset is "as is" and may be corrected over time: record the release/cutoff dates and a data hash in `model_runs`.
+- EAD is approximated by the unpaid principal balance (UPB); LGD is first an assumption, then compared with the loss data.
 
 ---
 
 ## 5. Architecture
 
 ```
- Kaggle (manual or scripted download, never committed)
+ Freddie Mac (manual login and download of the sample or quarterly files, never committed)
         |
         v
  Cloud Storage (raw/ landing bucket)
@@ -223,7 +236,7 @@ raw_files -> raw_tables -> stg_tables -> feat_applicants -> data_splits (train /
                                                   -> evidently_reports -> monitoring_summary
 ```
 
-Partitioning: none by date (no dates). Use a single "snapshot" partition and record the data hash in `model_runs`.
+Partitioning: by origination quarter (vintage). Record the release/cutoff dates and a data hash in `model_runs`. The test set is a later vintage (out-of-time) plus a random holdout within the training vintages.
 
 ---
 
@@ -238,7 +251,7 @@ Partitioning: none by date (no dates). Use a single "snapshot" partition and rec
   - **test:** evaluated once, at the end, for the approved candidate only.
 - Why a separate calibration split: if the calibrator and the cut-off were fitted on the same rows, isotonic calibration (which can overfit) would make the chosen cut-off look better than it really is. Alternative if data is scarce (e.g. German Credit): cross-validated calibration (`CalibratedClassifierCV(cv=5)`) on train, and validation for the cut-off.
 - Report mean and spread across folds, not one split.
-- If the chosen dataset has real dates (e.g. Freddie Mac), add an out-of-time split.
+- Freddie Mac has real dates: add an **out-of-time split** (train on early vintages, evaluate on later ones) in addition to the random split, and report both. Choose the vintages after inspecting the data; do not use loans too recent to have a performance history.
 
 ### 7.2 Models
 
@@ -311,10 +324,10 @@ Optional small UI: a Streamlit page (replaces the old demo) that calls the API: 
 ## 9. Monitoring layer
 
 - **Evidently** reports generated by a Dagster asset: data drift (feature-level and PSI), score distribution, performance metrics when labels are available, fairness-slice metrics.
-- Because the dataset has no real time axis, create **simulated vintages**: split the data into batches and apply controlled shifts (e.g. income distribution shift, higher missing rate, a new category) to show that the monitors detect them. **Label this clearly as simulated.** Report detection results for each injected shift (detected or not, which metric flagged it).
+- Freddie Mac has a real time axis: measure **real drift between vintages** (PSI of score and main features, performance by vintage). In addition, create **simulated shifts** as controlled tests of the monitors: split the data into batches and apply controlled shifts (e.g. income distribution shift, higher missing rate, a new category) to show that the monitors detect them. **Label the simulated part clearly as simulated; the vintage drift is real.** Report detection results for each injected shift (detected or not, which metric flagged it).
 - Alert logic: thresholds for PSI/drift in config; the Dagster run fails or flags the report when exceeded. A "retrain recommended" flag is produced; promotion of a new model to `latest.json` is a **manual** step.
 - Summaries go to `credit_ops.monitoring_summary`; the full HTML reports go to Cloud Storage.
-- **Scheduled retraining is a demonstration.** The dataset is a static snapshot, so retraining on a schedule with the same data would give the same model. The Cloud Scheduler + Cloud Run Job path is built to show the mechanism; in the demo it retrains on a reference batch plus a simulated vintage, compares the result with the approved model, and stops at manual promotion. Schedules stay off by default. Say this in the README.
+- **Scheduled retraining is a demonstration.** The downloaded files are a fixed release, so retraining on a schedule with the same data would give the same model (a new Freddie Mac release would be a manual download). The Cloud Scheduler + Cloud Run Job path is built to show the mechanism; in the demo it retrains on a reference batch plus a simulated vintage, compares the result with the approved model, and stops at manual promotion. Schedules stay off by default. Say this in the README.
 
 ---
 
@@ -358,7 +371,7 @@ Estimates are for full-time work **at the learning-protocol pace** (every step e
 
 | Phase | Days | Work | Gate (acceptance criteria) |
 |---|---|---|---|
-| **0. Audit and prep** | 1.5 to 2 | Audit is done (section 3). Remaining: create the new repo (Appendix B0); copy section 3 into `docs/audit.md` after re-verifying; do the quick wins (3.4); verify dataset terms (blocking) and GCP free-tier limits (section 14). **You** create the GCP project, billing account and budget alert by hand in the console (the agent guides you, creates nothing) | New repo pushed with no link to v1; reproducible numbers logged; dataset terms read and recorded in `docs/decision-log.md`; budget alert exists |
+| **0. Audit and prep** | 1.5 to 2 | Audit is done (section 3). Remaining: create the new repo (Appendix B0); copy section 3 into `docs/audit.md` after re-verifying; do the quick wins (3.4); verify dataset terms (done: Home Credit rejected, Freddie Mac chosen; record in `docs/decision-log.md`) and GCP free-tier limits (section 14). **You** create the GCP project, billing account and budget alert by hand in the console (the agent guides you, creates nothing) | New repo pushed with no link to v1; reproducible numbers logged; dataset terms read and recorded in `docs/decision-log.md`; budget alert exists |
 | **1. Data platform** | 4 to 5 | Download script; Cloud Storage raw landing; BigQuery raw/stg/feat tables; Dagster assets; Pandera and SQL checks; feature catalog; CI with the German Credit fixture | One command materialises raw -> feat; checks pass; a deliberately broken input makes the run fail visibly |
 | **2. Modeling** | 5 to 6 | Four-way split (train/calibration/validation/test); scorecard; unweighted boosting; calibration; (opening result: the unweighted vs class-weights vs SMOTE comparison, raw and calibrated, on the original German Credit data); metrics with bootstrap intervals; class-weights and SMOTE ablations; cost matrix, threshold, sensitivity grid; expected loss by band; fairness slices; SHAP and reason codes; model card | Results table filled with real numbers; test set used once; assumptions file reviewed by you |
 | **3. Serving and monitoring** | 4 to 5 | FastAPI service, container, Cloud Run deploy via CI (Workload Identity Federation); contract tests; Evidently reports; simulated drift scenarios; Cloud Scheduler plus Cloud Run Job retrain (demonstration on simulated vintages); Streamlit page | API reachable; golden test passes; each injected drift scenario reported as detected or missed |
@@ -380,7 +393,7 @@ credit-risk-platform/
     drift_thresholds.yaml
   data/                      empty; .gitignore'd; German Credit fixture under tests/fixtures
   scripts/
-    download_data.py         instructions or Kaggle API usage (credentials from env, never committed)
+    download_data.py         download and parse instructions (Freddie Mac needs a logged-in manual download; no credentials in the repo)
   infra/
     setup_gcp.sh             APIs, buckets, datasets, service accounts, WIF, budget alert
     deploy_cloud_run.sh
@@ -404,7 +417,7 @@ credit-risk-platform/
 |---|---|
 | Service accounts | One per role: pipeline runner (BigQuery data editor on its datasets, bucket read/write), scoring-api (artifact bucket read only), agent (invoke scoring-api only). No project-wide owner/editor roles |
 | CI to GCP | Workload Identity Federation from GitHub Actions; no JSON keys |
-| Secrets | LLM API key and Kaggle credentials in Secret Manager or CI secrets; never in code, logs, prompts or notebooks |
+| Secrets | LLM API key in Secret Manager or CI secrets; no Freddie Mac credentials are stored anywhere; never in code, logs, prompts or notebooks |
 | Data | No raw data in git; no personal data beyond the public dataset; the memo agent never logs full feature rows to third parties beyond what the chosen LLM call requires (state this in the README) |
 | Cost | Budget alert before any resource (it only **warns**; it does not stop spending, so also watch the billing page and delete resources when idle); `maximum_bytes_billed` on every BigQuery job; table clustering; Cloud Run min instances 0; schedules off by default during development; delete or pause everything not needed for the demo |
 | Public demo | Rate-limited, read-only, no write endpoints; prefer the German Credit fixture or a small anonymised sample for public interaction |
@@ -413,8 +426,8 @@ credit-risk-platform/
 
 ## 14. To verify before starting (nothing here was checked against live documentation)
 
-1. **Blocking.** Home Credit competition rules and licence: allowed use, redistribution, and whether a Kaggle account and rule acceptance are needed. Freddie Mac terms if used.
-2. Real column names, target definition, default rate, table sizes, and sentinel values in the data.
+1. **Done on Oct 8, 2026:** Home Credit rules read (use restricted to the competition: rejected). Freddie Mac terms read (internal use and non-commercial published research allowed, no redistribution): you must re-read them yourself before publishing anything, and keep a copy of the version you accepted.
+2. Real column names and positions, the definition of default, default rate, file sizes, and special values (e.g. 999 = not available) in the Freddie Mac files; the Release Notes cutoff dates.
 3. Current GCP free tier (Cloud Run needs a billing account even within free limits), BigQuery sandbox limits (including table expiry), Cloud Run, Cloud Scheduler, Secret Manager and Artifact Registry pricing; whether a credit or billing account is required.
 4. Dagster and Evidently current versions (Evidently's API changed a lot between versions: pin one) and how `dagster asset materialize` behaves inside a Cloud Run Job (including that run history is not kept).
 5. LLM choice for the memo agent, per-memo cost, and data-handling terms of the provider.
@@ -427,13 +440,13 @@ credit-risk-platform/
 
 | Risk | Mitigation |
 |---|---|
-| Dataset terms disallow the planned use | Verify first; fall back to Give Me Some Credit or Freddie Mac; keep German Credit fixture |
+| Dataset terms disallow the planned use | Terms read before building: Home Credit rejected, Freddie Mac chosen; backup UCI Default of Credit Card Clients (CC BY 4.0); keep German Credit fixture; never redistribute data |
 | GCP costs creep up | Budget alert, byte caps, scale to zero, pause schedules, delete after the demo |
-| No time axis, so drift is artificial | Say so in the README; use simulated vintages; add out-of-time validation only if a dated dataset is chosen |
+| Freddie Mac files are large | Develop on the 50,000-loan-per-year sample; use one or two quarters of the full files only if needed; cap BigQuery bytes |
 | LGD and margin invented | Config file, labelled assumptions, sensitivity grid, never a single headline number |
 | Probabilities distorted by resampling or reweighting | Unweighted baseline, calibration on a separate calibration split, class-weights and SMOTE ablations to show why |
 | Agent writes numbers not in the data | Deterministic validator; recommendation computed in code; evaluation with seeded errors |
-| Schedule underestimated (learning protocol, Home Credit size, first GCP setup) | 18 to 23 day estimate with gates; cut order below; re-estimate at each gate |
+| Schedule underestimated (learning protocol, Freddie Mac file size, first GCP setup) | 18 to 23 day estimate with gates; cut order below; re-estimate at each gate |
 | Scope creep (platform + agent + UI) | Gates; cut order: agent, then UI, then optional Vertex/Dataform extras; never cut calibration, expected loss or monitoring |
 | Vibe-coded code you cannot defend | Review the validator, API validation, IAM and threshold logic yourself; write the evaluation design yourself |
 
@@ -460,7 +473,7 @@ credit-risk-platform/
 - Scorecard vs boosting: what did you gain and lose, and which would a lender choose? (Gini/KS vs interpretability)
 - How did you pick the threshold, and how sensitive is it to LGD and margin?
 - What is expected loss and how did you check your PDs against observed defaults by band?
-- How do you monitor a credit model, and how do you test the monitors when you have no real time axis?
+- How do you monitor a credit model, and what did real vintage drift show, and how did you test the monitors with controlled shifts?
 - How did you stop the LLM from inventing numbers in the memo? (computed recommendation, grounding validator, evals)
 - How does your CI/CD reach GCP without keys, and what are the IAM boundaries?
 
