@@ -1,10 +1,11 @@
-import pandas as pd
-import numpy as np
-from sklearn.model_selection import train_test_split
-from sklearn.preprocessing import StandardScaler, LabelEncoder
-from imblearn.over_sampling import SMOTE
 import os
+
 import joblib
+import pandas as pd
+from imblearn.over_sampling import SMOTE
+from sklearn.model_selection import train_test_split
+from sklearn.preprocessing import LabelEncoder, StandardScaler
+
 
 def process_data():
     print(" Démarrage du prétraitement...")
@@ -22,7 +23,7 @@ def process_data():
 
     # 3. Encodage des variables texte (ex: "A34" -> 0, 1, 2...)
     # On repère les colonnes qui contiennent du texte (object)
-    cat_columns = X.select_dtypes(include=['object']).columns
+    cat_columns = X.select_dtypes(include=['object', 'str']).columns
     
     # On sauvegarde les encodeurs pour pouvoir les réutiliser dans l'App plus tard
     encoders = {}

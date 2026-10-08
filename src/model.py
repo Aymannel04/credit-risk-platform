@@ -1,10 +1,10 @@
+import os
+
+import joblib
 import pandas as pd
 import xgboost as xgb
 from sklearn.metrics import accuracy_score, classification_report, confusion_matrix
-import joblib
-import os
-import matplotlib.pyplot as plt
-import seaborn as sns
+
 
 def train_model():
     print("Entraînement du modèle de Risque Crédit (XGBoost)...")
@@ -20,14 +20,14 @@ def train_model():
         return
 
     # 2. Création du modèle XGBoost
-    # On utilise 'scale_pos_weight' pour dire au modèle de faire très attention aux défauts
+    # Note : pas de 'scale_pos_weight' ici ; le déséquilibre est traité par SMOTE (process.py)
     model = xgb.XGBClassifier(
         objective='binary:logistic',
         n_estimators=100,
         learning_rate=0.1,
         max_depth=5,
-        use_label_encoder=False,
-        eval_metric='logloss'
+        eval_metric='logloss',
+        random_state=42
     )
 
     # 3. Entraînement
