@@ -167,3 +167,22 @@ Code: `credit/models/{data,metrics,baseline_logreg}.py`; tests: `tests/test_mode
 **Finding.** The pooled Gini (0.83) looks too good because it mixes eras: the 2008 vintage has both high interest rates (avg 6.05%) and high defaults (4.50%), while 2012 and 2016 have rates of about 3.6-3.8% and defaults of 0.26% and 0.61% (train). The model earns part of its ranking by recognising the era, not by judging one borrower. The model also ranks well inside a single vintage (0.87 within 2008), so it is not only an artefact, and there is no leakage (no performance-file field is used; `int_rate` is known at origination). Single-feature AUC on validation: int_rate 0.84, credit_score 0.80, dti 0.71, ltv 0.63.
 
 **Consequences.** (1) Never quote pooled development metrics alone: always report per vintage and on the out-of-time tests. (2) The 2016 vintage has only 41 validation defaults: its numbers are noisy. (3) The out-of-time 2019 and 2022 exams are the honest test of whether the model works in an era it never saw. (4) Options to examine later, not decided: weight vintages equally, add a vintage-adjusted metric, or report a within-vintage average Gini as the headline. The calibration of the raw probabilities is already close on average (2.07% vs 2.04%) but not yet checked per risk band or per vintage.
+
+## 2026-10-09: XGBoost vs logistic regression (validation only)
+
+Code: `credit/models/xgboost_model.py`; tests: `tests/test_xgboost_model.py`; results: `results/xgboost_validation.json`. Unweighted XGBoost (max depth 3, learning rate 0.05, min child weight 5, subsample 0.8, column sample 0.8, L2 penalty 5), same preprocessing as the baseline. Early stopping on a 15% inner holdout of `train` (validation is never used for stopping): 219 trees used. Test splits not used.
+
+| | AUC | Gini | KS | PR-AUC | Brier | mean PD | real |
+|---|---|---|---|---|---|---|---|
+| logistic, train | 0.906 | 0.812 | 0.662 | 0.234 | 0.01710 | 2.01% | 2.01% |
+| xgboost, train | 0.917 | 0.834 | 0.677 | 0.271 | 0.01664 | 2.01% | 2.01% |
+| logistic, validation | 0.913 | 0.826 | 0.687 | 0.240 | 0.01736 | 2.07% | 2.04% |
+| xgboost, validation | 0.913 | 0.825 | 0.675 | 0.248 | 0.01728 | 2.05% | 2.04% |
+| logistic, val. vintage 2008 | 0.872 | 0.743 | 0.607 | 0.264 | 0.03867 | 4.52% | 4.65% |
+| xgboost, val. vintage 2008 | 0.864 | 0.728 | 0.589 | 0.272 | 0.03853 | 4.51% | 4.65% |
+| logistic, val. vintage 2016 | 0.789 | 0.577 | 0.490 | 0.036 | 0.00586 | 0.66% | 0.60% |
+| xgboost, val. vintage 2016 | 0.815 | 0.629 | 0.534 | 0.050 | 0.00581 | 0.62% | 0.60% |
+
+**Reading.** On the pooled validation set the two models tie (AUC 0.913 each). Inside 2008 the logistic regression is slightly better (Gini 0.743 vs 0.728); inside 2016 XGBoost is better (0.629 vs 0.577) but that vintage has only 41 validation defaults. With 391 validation defaults the AUC standard error is about 0.01, so these differences are within noise. XGBoost fits the training data a little better (train Gini 0.834 vs 0.812) without winning on validation: mild overfitting, no real gain. Both models are already well matched to the real default rate on average.
+
+**Consequence.** On this data (few features, mostly monotonic effects) the interpretable model is competitive. The WoE scorecard is therefore a serious candidate, not only a benchmark; the decision between the models is deferred to the out-of-time exams and the calibration comparison. Bootstrap intervals are needed before claiming any winner.
