@@ -95,3 +95,19 @@ Checked on `sample_2016` (all 50,000 origination rows, 400,000 performance rows)
 Loaded 2008, 2012, 2016, 2019, 2022 to raw Parquet (all columns as text): 50,000 loans each; performance rows 2,456,504 / 4,510,559 / 3,379,650 / 1,934,614 / 2,034,798. Code: `credit/freddie/layout.py`, `credit/freddie/load.py`; tests: `tests/test_freddie_layout.py`. Data lives only in `data/raw/freddie/` and `data/interim/` (git-ignored; the terms forbid redistribution).
 
 Correction to the earlier year choice: 2010/2012/2015 was not a good spread (calm vintages have few defaults). Chosen instead: 2008 (crisis), 2012 (calm), 2016 (normal), 2019 (pre-COVID), 2022 (higher rates). The train/test split by year will be decided after measuring default rates per vintage.
+
+## 2026-10-09: default definition B and exclusions (decided by the owner)
+
+**Profile of the raw samples (read-only, 50,000 loans per vintage; 24-month window).** Default counts under three definitions:
+- A (90+ days late or loss event): 2008 4.47%, 2012 0.75%, 2016 0.81%, 2019 4.63%, 2022 1.85%.
+- B (90+ days late only when no borrower assistance plan is active, or loss event): 2008 4.46%, 2012 0.74%, 2016 0.66%, 2019 1.26%, 2022 1.52%.
+- C (loss event only, zero balance codes 02/03/09/15): 0.46%, 0.17%, 0.02%, 0.01%, 0.02% (too few to train on).
+The 2019 vintage drops from 4.63% to 1.26% under B because most of its 90+ day delinquencies happened during COVID-era borrower assistance (forbearance), not credit trouble.
+
+**Decision 1: use definition B** as the target `default_24m`. A is reported as a sensitivity check. Limitation: the borrower assistance code is only populated from January 2014, so for vintages whose 24-month window ends before then (2008) B cannot exclude anything; the rule is not symmetric across years and the README must say so.
+
+**Decision 2: exclude from the main model** (a) relief refinance loans (`relief_refi = 'Y'`: 17,399 loans in the 2012 sample, 2,525 in 2016, 30 in 2019) and (b) loans whose first payment date is more than 6 months after the vintage quarter in `loan_seq` (seasoned or modified at acquisition: 287 / 55 / 103 / 89 / 22 loans in 2008 / 2012 / 2016 / 2019 / 2022). Counts of excluded loans are logged at each run. Also excluded: loans without 24 months of observable history (73 loans of the 2022 sample).
+
+**Other cleaning rules.** `9999` credit score, `999` for CLTV/LTV/DTI/MI percentage, `99` for number of units or borrowers, `9` for first-time buyer flag become missing. Empty fields are NULL in the Parquet files. Delinquency status is text: numbers `00`..`99` or `RA`.
+
+**Correction logged.** A first profiling query dropped loans through SQL NULL logic (a comparison with NULL returns NULL, not TRUE or FALSE). It was caught because two columns were identical in every year. Always wrap nullable comparisons in COALESCE.
