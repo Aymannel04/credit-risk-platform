@@ -1,0 +1,52 @@
+{
+  "model": "logistic_regression_unweighted",
+  "sklearn_version": "1.9.1",
+  "seed": 42,
+  "train": {
+    "n": 78007,
+    "defaults": 1566,
+    "default_rate": 0.02007512146345841,
+    "mean_predicted_pd": 0.02006302417556251,
+    "auc": 0.9060655850521733,
+    "gini": 0.8121311701043465,
+    "ks": 0.6618694460354176,
+    "pr_auc": 0.23395954542016814,
+    "brier": 0.017102710168397397
+  },
+  "validation": {
+    "n": 19129,
+    "defaults": 391,
+    "default_rate": 0.02044016937633959,
+    "mean_predicted_pd": 0.020659716221120603,
+    "auc": 0.9128289163888418,
+    "gini": 0.8256578327776836,
+    "ks": 0.6873437704308081,
+    "pr_auc": 0.2396473481908899,
+    "brier": 0.017357659389014724
+  },
+  "validation_by_vintage": {
+    "2008": {
+      "n": 7435,
+      "defaults": 346,
+      "default_rate": 0.04653665097511769,
+      "mean_predicted_pd": 0.045179427643133804,
+      "auc": 0.871559128080059,
+      "gini": 0.743118256160118,
+      "ks": 0.6071602425641942,
+      "pr_auc": 0.26363032443424556,
+      "brier": 0.03867017297917717
+    },
+    "2016": {
+      "n": 6888,
+      "defaults": 41,
+      "default_rate": 0.005952380952380952,
+      "mean_predicted_pd": 0.006587203013053888,
+      "auc": 0.7885454551931236,
+      "gini": 0.5770909103862472,
+      "ks": 0.48984956915437416,
+      "pr_auc": 0.035613646597884505,
+      "brier": 0.00586299492602012
+    }
+  },
+  "note": "raw (uncalibrated) probabilities; test splits not used; pooled metrics are inflated by the era mix"
+}
