@@ -18,3 +18,8 @@ credentials*.json
 # OS / editor
 .DS_Store
 Thumbs.db
+
+# Freddie Mac data: never commit (terms forbid redistribution)
+data/raw/freddie/
+data/interim/
+*.zip
