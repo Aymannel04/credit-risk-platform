@@ -62,6 +62,10 @@ def make_preprocessor() -> ColumnTransformer:
             ("onehot", OneHotEncoder(handle_unknown="infrequent_if_exist", min_frequency=50)),
         ]
     )
+    # sparse_threshold=0: ALWAYS output a dense table. XGBoost treats empty cells of a sparse table as
+    # MISSING values (not zeros), so training and predicting on different formats gives different
+    # models. One dense format everywhere removes that trap (found during the SMOTE ablation).
     return ColumnTransformer(
-        [("num", numeric, NUMERIC_FEATURES), ("cat", categorical, CATEGORICAL_FEATURES)]
+        [("num", numeric, NUMERIC_FEATURES), ("cat", categorical, CATEGORICAL_FEATURES)],
+        sparse_threshold=0.0,
     )

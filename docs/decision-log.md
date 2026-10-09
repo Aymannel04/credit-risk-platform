@@ -208,3 +208,26 @@ Platt parameters: logistic slope 0.995 / offset -0.094; xgboost slope 1.013 / of
 3. By vintage the average is close: observed 4.65% (2008) vs predicted 4.52% raw; observed 0.60% (2016) vs 0.66% raw. Calibration across eras is the weak point to watch on the out-of-time tests.
 
 **Consequence.** Calibration stays in the pipeline as a step that is applied only if it improves validation. Its real test is the ablation (class weights and SMOTE), where the training distortion we measured on German Credit should appear again; that comparison is next. A larger calibration set or cross-fitted calibration is an option if noise remains a problem.
+
+## 2026-10-09: imbalance ablation on validation (unweighted vs class weights vs SMOTE)
+
+Code: `credit/models/ablation.py`; tests: `tests/test_ablation.py`; results: `results/ablation_validation.json`, chart `docs/ablation_validation.png`. Same XGBoost (219 trees, no early stopping) for all variants; only the imbalance treatment differs. Trained on `train` (78,007 loans, 1,566 defaults), calibrators fitted on `calibration`, measured on `validation` (19,129 loans, real default rate 2.04%). Test splits not used.
+
+| Variant | Version | Brier | ECE | AUC | mean predicted PD |
+|---|---|---|---|---|---|
+| unweighted | raw | **0.01725** | 0.00295 | **0.915** | 2.04% |
+| unweighted | Platt | 0.01727 | 0.00295 | 0.915 | 1.92% |
+| class weights (x48.8) | raw | 0.12280 | 0.22746 | 0.913 | **24.79%** |
+| class weights | Platt | 0.01746 | 0.00285 | 0.913 | 1.92% |
+| class weights | isotonic | 0.01756 | 0.00400 | 0.909 | 1.93% |
+| SMOTE (50/50) | raw | 0.06543 | 0.14659 | 0.904 | **16.70%** |
+| SMOTE | Platt | 0.01775 | 0.00168 | 0.904 | 1.92% |
+| SMOTE | isotonic | 0.01793 | 0.00147 | 0.901 | 1.94% |
+
+**Findings.**
+1. Class weights and SMOTE inflate the predicted risk 12x and 8x (24.8% and 16.7% against a real 2.04%): Brier is 7.1x and 3.8x worse than the unweighted model. This is the v1 flaw, now reproduced on 100,000 real loans.
+2. Class weights distort only the level, not the ranking: AUC 0.913 vs 0.915. Platt scaling repairs it almost completely (Brier 0.01746). Its offset is -3.856, which matches -ln(n_non-default / n_default) = -ln(76,441 / 1,566) = -3.888 (the classic prior-shift correction), with a slope near 1.
+3. SMOTE distorts both level and ranking: AUC falls from 0.915 to 0.904 (synthetic defaults blur the boundary), and calibration cannot restore ranking. After calibration SMOTE is still worse than the unweighted model (Brier 0.01775 vs 0.01725).
+4. Conclusion for the project: the unweighted model is the best PD baseline; class weights plus calibration is acceptable but gains nothing; SMOTE is not recommended. Isotonic does not beat Platt except on ECE for SMOTE, and carries the low-risk-tail danger noted earlier.
+
+**Bug found and fixed during this step (keep for the interview).** A first SMOTE run showed predicted risk of 0.7% (below the real 2.04%), which contradicted theory (balanced training should inflate risk). Cause: XGBoost treats empty cells of a SPARSE table as missing values, not zeros; I trained SMOTE on a dense table and predicted on the sparse output of the preprocessor. Same model, three different answers: dense/dense 16.7%, dense/sparse 0.7%, sparse/sparse 13.3%. Fix: `make_preprocessor` now always outputs a dense array (`sparse_threshold=0`), guarded by a test. The logistic and XGBoost results were re-run and are unchanged (they trained and predicted in the same format), so earlier entries stand.
