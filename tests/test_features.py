@@ -96,3 +96,41 @@ def test_check_catches_a_leaking_column():
     con, _ = _build([{"loan_seq": "F16Q10000001"}])
     con.execute("ALTER TABLE features ADD COLUMN delinq_status VARCHAR")
     assert any("unexpected columns" in f for f in ft.check(con))
+
+
+def test_rate_spread_removes_the_market_level_of_each_quarter():
+    # two vintages with very different market rates; inside each, the same relative pricing
+    loans = []
+    for yy, level in (("08", 6.0), ("12", 3.5)):
+        for i, delta in enumerate((-0.5, 0.0, 0.5)):
+            loans.append({"loan_seq": f"F{yy}Q1{i:07d}", "rate": level + delta})
+    orig, label = _stg([{"loan_seq": ln["loan_seq"]} for ln in loans])
+    for ln in loans:
+        orig.loc[orig.loan_seq == ln["loan_seq"], "int_rate"] = ln["rate"]
+    con = duckdb.connect()
+    con.register("orig_df", orig)
+    con.register("label_df", label)
+    con.execute("CREATE TABLE stg_orig AS SELECT * FROM orig_df")
+    con.execute("CREATE TABLE stg_label AS SELECT * FROM label_df")
+    ft.build(con)
+    got = dict(con.execute("SELECT loan_seq, rate_spread FROM features").fetchall())
+    for ln in loans:
+        level = 6.0 if ln["loan_seq"].startswith("F08") else 3.5
+        assert got[ln["loan_seq"]] == pytest.approx(ln["rate"] - level)  # the same spread in both eras
+    assert "int_rate" not in ft.FEATURES and "rate_spread" in ft.FEATURES
+    assert "int_rate" in ft.META  # kept for tracing, never a model input
+
+
+def test_rate_spread_separates_short_and_long_terms():
+    loans = [{"loan_seq": f"F16Q1{i:07d}"} for i in range(4)]
+    orig, label = _stg(loans)
+    orig["orig_term"] = [180, 180, 360, 360]
+    orig["int_rate"] = [3.0, 3.2, 4.0, 4.4]
+    con = duckdb.connect()
+    con.register("orig_df", orig)
+    con.register("label_df", label)
+    con.execute("CREATE TABLE stg_orig AS SELECT * FROM orig_df")
+    con.execute("CREATE TABLE stg_label AS SELECT * FROM label_df")
+    ft.build(con)
+    got = [r[0] for r in con.execute("SELECT rate_spread FROM features ORDER BY loan_seq").fetchall()]
+    assert got == pytest.approx([-0.1, 0.1, -0.2, 0.2])  # medians are 3.1 (short) and 4.2 (long)

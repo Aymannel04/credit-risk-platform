@@ -30,17 +30,20 @@ DEV_MAX_VINTAGE = 2018  # <= 2018: development pool (the files used are 2008, 20
 OOT_1_RANGE = (2019, 2021)  # out-of-time test 1 (the file used is 2019)
 OOT_2_MIN = 2022  # out-of-time test 2 (the file used is 2022)
 SPLIT_SEED = "split-v1"
+SHORT_TERM_MONTHS = 180  # terms up to 15 years form the short-term class for the rate spread
 
 # Known on day one (origination file only). Changing these lists is a modelling decision: log it.
 NUMERIC_FEATURES = [
-    "credit_score", "mi_pct", "n_units", "cltv", "dti", "orig_upb", "ltv", "int_rate", "orig_term", "n_borrowers",
+    "credit_score", "mi_pct", "n_units", "cltv", "dti", "orig_upb", "ltv", "rate_spread", "orig_term", "n_borrowers",
 ]
 CATEGORICAL_FEATURES = [
     "first_time_homebuyer", "occupancy", "channel", "ppm_flag", "property_type", "purpose", "state", "super_conforming",
 ]
 FEATURES = NUMERIC_FEATURES + CATEGORICAL_FEATURES
 # Kept for splitting, tracing and reporting; NEVER used as model inputs.
-META = ["loan_seq", "vintage_year", "vintage_quarter", "first_payment_date"]
+# int_rate is kept for tracing and drift monitoring only: it mixes the lender's risk pricing with the market level
+# of the year, so the models use rate_spread instead (see the decision log, 2026-10-09).
+META = ["loan_seq", "vintage_year", "vintage_quarter", "first_payment_date", "int_rate"]
 LABELS = ["default_24m", "default_24m_all_late", "default_24m_loss_only"]
 
 # Deliberately not features (reason in docs/decision-log.md): zip3, msa, seller_name (geography/lender
@@ -87,12 +90,20 @@ def build(con: duckdb.DuckDBPyConnection) -> dict:
     ).df()
 
     cols = ", ".join(META + FEATURES + LABELS)
+    # rate_spread = this loan's rate minus the median rate of the KEPT loans of the same vintage quarter and
+    # term class (<= 15 years / longer). It keeps the lender's risk pricing and removes the market level.
+    # Only inputs are used here, never outcomes.
     con.execute(
         f"""
         CREATE OR REPLACE TABLE features AS
-        SELECT {cols}, {_split_sql()} AS split
-        FROM joined
-        WHERE NOT relief_refi AND NOT is_seasoned_or_modified AND observable_24m
+        WITH kept AS (
+          SELECT * FROM joined WHERE NOT relief_refi AND NOT is_seasoned_or_modified AND observable_24m
+        ), spread AS (
+          SELECT *, int_rate - quantile_cont(int_rate, 0.5)
+                 OVER (PARTITION BY vintage_year, vintage_quarter, (orig_term > {SHORT_TERM_MONTHS})) AS rate_spread
+          FROM kept
+        )
+        SELECT {cols}, {_split_sql()} AS split FROM spread
         """
     )
     splits = con.execute(
@@ -128,6 +139,8 @@ def check(con: duckdb.DuckDBPyConnection) -> list[str]:
         failures.append("development vintage found in an out-of-time test set")
     if one(f"SELECT count(*) FROM features WHERE split NOT LIKE 'test_oot%' AND vintage_year > {DEV_MAX_VINTAGE}"):
         failures.append("out-of-time vintage found in a training/validation split")
+    if "int_rate" in FEATURES:
+        failures.append("raw int_rate is an era proxy and must not be a model input; use rate_spread")
     leaking = [c for c in FEATURES if "default" in c or "delinq" in c or "zero_balance" in c or "loss" in c]
     if leaking:
         failures.append(f"leakage: label-like feature names {leaking}")
