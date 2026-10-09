@@ -231,3 +231,22 @@ Code: `credit/models/ablation.py`; tests: `tests/test_ablation.py`; results: `re
 4. Conclusion for the project: the unweighted model is the best PD baseline; class weights plus calibration is acceptable but gains nothing; SMOTE is not recommended. Isotonic does not beat Platt except on ECE for SMOTE, and carries the low-risk-tail danger noted earlier.
 
 **Bug found and fixed during this step (keep for the interview).** A first SMOTE run showed predicted risk of 0.7% (below the real 2.04%), which contradicted theory (balanced training should inflate risk). Cause: XGBoost treats empty cells of a SPARSE table as missing values, not zeros; I trained SMOTE on a dense table and predicted on the sparse output of the preprocessor. Same model, three different answers: dense/dense 16.7%, dense/sparse 0.7%, sparse/sparse 13.3%. Fix: `make_preprocessor` now always outputs a dense array (`sparse_threshold=0`), guarded by a test. The logistic and XGBoost results were re-run and are unchanged (they trained and predicted in the same format), so earlier entries stand.
+
+## 2026-10-09: WoE scorecard (validation only)
+
+Code: `credit/models/scorecard.py`, `credit/models/scorecard_report.py`; tests: `tests/test_scorecard.py`; config: `config/assumptions.yaml` (scaling 600 points = 50:1 odds, +20 points doubles the odds: ILLUSTRATIVE; binning rules). Results: `results/scorecard_validation.json`, `results/scorecard_table.csv` (points per band), `results/scorecard_iv.csv`. Bands from a small decision tree on `train` (max 6 numeric bands, >= 5% of loans each; missing values get their own band; categories under 1% grouped as "other"), WoE with +0.5 smoothing, logistic regression on the WoE values (L2, C=1, unweighted), points = rescaled log-odds.
+
+**IV screen.** Kept (IV >= 0.05): int_rate 1.49, credit_score 1.29, dti 0.54, channel 0.42, orig_term 0.30, cltv 0.28, ltv 0.28, n_borrowers 0.26, state 0.15, mi_pct 0.14, super_conforming 0.055. Dropped: purpose 0.048, property_type 0.041, orig_upb 0.027, occupancy 0.011, first_time_homebuyer 0.004, ppm_flag 0.002, n_units 0.000. No coefficient has the wrong sign.
+
+**Threshold change (measured).** The textbook IV >= 0.02 let pure-noise columns in: bands are cut using the defaults, so noise columns reach IV 0.03-0.04 (max over 10 noise features, 78k loans / 2% defaults, first settings); with 6 bands of >= 5% the noise max is 0.029, so the threshold was set to 0.05. A feature with a true IV between 0.02 and 0.05 would be lost: purpose (0.048) and property_type (0.041) are close; revisit if needed.
+
+| | n | AUC | Gini | KS | Brier | mean PD | real |
+|---|---|---|---|---|---|---|---|
+| scorecard, train | 78,007 | 0.900 | 0.799 | 0.643 | 0.01757 | 2.01% | 2.01% |
+| scorecard, validation | 19,129 | 0.908 | 0.816 | 0.672 | 0.01781 | 2.06% | 2.04% |
+| scorecard, val. 2008 | 7,435 | 0.850 | 0.699 | 0.548 | 0.03986 | 4.46% | 4.65% |
+| scorecard, val. 2016 | 6,888 | 0.826 | 0.651 | 0.593 | 0.00583 | 0.69% | 0.60% |
+
+Compared with the logistic regression (validation Gini 0.826; 2008: 0.743; 2016: 0.577) and XGBoost (0.825; 0.728; 0.629): the scorecard is about 0.01 Gini lower pooled and lower inside 2008, higher inside 2016 (41 defaults: noise). Score range on validation: 465 to 751 points. Example points: credit score <= 662 -> 16, > 766 -> 88; dti <= 29.5 -> 65, > 50.5 -> 38.
+
+**Warning found: interest rate is an era proxy.** IV above 0.5 is the textbook warning sign. No leakage (the rate is known at origination), but `int_rate` mixes two things: the lender's risk pricing and the market level of the year. Average rate by vintage (kept loans, inputs only, no outcomes): 2008 6.05%, 2012 3.60%, 2016 3.78%, 2019 4.24%, 2022 5.09%. The pooled model therefore partly learns "high rate = 2008-like crisis". On the 2022 vintage (rates back near 5%) it will likely over-predict risk. This is an input shift, observed without touching test labels. Proposed fix (not yet done): replace the raw rate by a rate spread (rate minus the median rate of the same vintage quarter and term), which keeps the lender's risk pricing and removes the market level.

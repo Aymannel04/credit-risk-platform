@@ -1,0 +1,80 @@
+{
+  "model": "woe_scorecard",
+  "assumptions": {
+    "scorecard_scaling": {
+      "base_score": 600,
+      "base_odds": 50,
+      "points_to_double_odds": 20
+    },
+    "scorecard_binning": {
+      "max_bins_per_numeric": 6,
+      "min_bin_share": 0.05,
+      "min_category_share": 0.01,
+      "min_iv": 0.05
+    }
+  },
+  "features_kept": [
+    "credit_score",
+    "mi_pct",
+    "cltv",
+    "dti",
+    "ltv",
+    "int_rate",
+    "orig_term",
+    "n_borrowers",
+    "channel",
+    "state",
+    "super_conforming"
+  ],
+  "sign_violations": [],
+  "train": {
+    "n": 78007,
+    "defaults": 1566,
+    "default_rate": 0.02007512146345841,
+    "mean_predicted_pd": 0.02009011383210461,
+    "auc": 0.8995578782009741,
+    "gini": 0.7991157564019482,
+    "ks": 0.6425013586969461,
+    "pr_auc": 0.19749833545366716,
+    "brier": 0.017566081088053038
+  },
+  "validation": {
+    "n": 19129,
+    "defaults": 391,
+    "default_rate": 0.02044016937633959,
+    "mean_predicted_pd": 0.020608448699353143,
+    "auc": 0.9081963863522271,
+    "gini": 0.8163927727044542,
+    "ks": 0.6718509564791543,
+    "pr_auc": 0.20247253155017544,
+    "brier": 0.017807473051924386
+  },
+  "validation_by_vintage": {
+    "2008": {
+      "n": 7435,
+      "defaults": 346,
+      "default_rate": 0.04653665097511769,
+      "mean_predicted_pd": 0.044618745089487336,
+      "auc": 0.8497207674187068,
+      "gini": 0.6994415348374137,
+      "ks": 0.5483069511748642,
+      "pr_auc": 0.22116648411218517,
+      "brier": 0.03986023797205687
+    },
+    "2016": {
+      "n": 6888,
+      "defaults": 41,
+      "default_rate": 0.005952380952380952,
+      "mean_predicted_pd": 0.006883690687265753,
+      "auc": 0.8257363915832819,
+      "gini": 0.6514727831665639,
+      "ks": 0.5931064699868556,
+      "pr_auc": 0.04084292776808151,
+      "brier": 0.0058272591944279065
+    }
+  },
+  "score_range_validation": [
+    465.41772817876245,
+    751.0280594524254
+  ]
+}

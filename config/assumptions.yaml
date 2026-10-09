@@ -1,0 +1,16 @@
+# ASSUMPTIONS, not facts from the data. Every value below is a modelling choice or an illustration.
+# Change a value here (never inside the code) and re-run; results must always quote this file.
+
+scorecard_scaling:            # ILLUSTRATIVE convention used by many scorecards
+  base_score: 600             # score that corresponds to base_odds
+  base_odds: 50               # good loans per bad loan at the base score (50 means 50:1)
+  points_to_double_odds: 20   # PDO: +20 points doubles the good:bad odds
+
+scorecard_binning:
+  max_bins_per_numeric: 6     # at most this many bands per numeric feature
+  min_bin_share: 0.05         # each band holds at least 5% of the training loans
+  min_category_share: 0.01    # categories under 1% of loans are grouped as "other"
+  # Information Value needed to keep a feature. The textbook value is 0.02, but bands are cut using the
+  # defaults themselves, so even pure-noise columns reach an IV of 0.02-0.04 on data of this size
+  # (measured 2026-10-09: max 0.029 with these band settings on 78k loans / 2% defaults). 0.05 sits above that.
+  min_iv: 0.05
