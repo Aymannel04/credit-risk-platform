@@ -186,3 +186,25 @@ Code: `credit/models/xgboost_model.py`; tests: `tests/test_xgboost_model.py`; re
 **Reading.** On the pooled validation set the two models tie (AUC 0.913 each). Inside 2008 the logistic regression is slightly better (Gini 0.743 vs 0.728); inside 2016 XGBoost is better (0.629 vs 0.577) but that vintage has only 41 validation defaults. With 391 validation defaults the AUC standard error is about 0.01, so these differences are within noise. XGBoost fits the training data a little better (train Gini 0.834 vs 0.812) without winning on validation: mild overfitting, no real gain. Both models are already well matched to the real default rate on average.
 
 **Consequence.** On this data (few features, mostly monotonic effects) the interpretable model is competitive. The WoE scorecard is therefore a serious candidate, not only a benchmark; the decision between the models is deferred to the out-of-time exams and the calibration comparison. Bootstrap intervals are needed before claiming any winner.
+
+## 2026-10-09: calibration on validation (Platt vs isotonic)
+
+Code: `credit/models/calibration.py` (Platt scaling = 2 numbers on the log-odds; isotonic = free staircase), `credit/models/calibrate.py`; tests: `tests/test_calibration.py`; new metric `ece` (expected calibration error over 10 equal-sized risk groups). Both calibrators are fitted only on the calibration split (13,064 loans, 248 defaults) and measured on validation. Results: `results/calibration_validation.json`, chart `docs/calibration_validation.png`.
+
+| Model | Version | Brier | ECE | AUC | mean PD | real |
+|---|---|---|---|---|---|---|
+| logistic | raw | 0.01736 | 0.00169 | 0.913 | 2.07% | 2.04% |
+| logistic | Platt | 0.01736 | 0.00239 | 0.913 | 1.93% | 2.04% |
+| logistic | isotonic | 0.01738 | 0.00209 | 0.911 | 1.92% | 2.04% |
+| xgboost | raw | 0.01728 | 0.00251 | 0.913 | 2.05% | 2.04% |
+| xgboost | Platt | 0.01730 | 0.00282 | 0.913 | 1.93% | 2.04% |
+| xgboost | isotonic | 0.01736 | 0.00273 | 0.910 | 1.93% | 2.04% |
+
+Platt parameters: logistic slope 0.995 / offset -0.094; xgboost slope 1.013 / offset -0.038. A slope of 1 and a small offset mean the raw probabilities were already well calibrated.
+
+**Findings.**
+1. The unweighted models are already calibrated on average, so calibration brings no gain here (Brier unchanged, ECE slightly worse). The small shift comes from the calibration split having a lower default rate (1.90%) than validation (2.04%) with only 248 defaults: the correction learned a bit of noise. A calibrator must earn its place on validation; here it does not.
+2. Isotonic is dangerous for the safest loans: its staircase assigns predicted risks near 0.0001% to the lowest group while about 0.15% of those loans default (visible on the chart), and it creates ties (AUC 0.913 -> 0.910-0.911). Platt keeps the ranking exactly.
+3. By vintage the average is close: observed 4.65% (2008) vs predicted 4.52% raw; observed 0.60% (2016) vs 0.66% raw. Calibration across eras is the weak point to watch on the out-of-time tests.
+
+**Consequence.** Calibration stays in the pipeline as a step that is applied only if it improves validation. Its real test is the ablation (class weights and SMOTE), where the training distortion we measured on German Credit should appear again; that comparison is next. A larger calibration set or cross-fitted calibration is an option if noise remains a problem.
