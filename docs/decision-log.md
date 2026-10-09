@@ -152,3 +152,18 @@ Code: `credit/freddie/features.py`; tests: `tests/test_features.py`. Output (git
 **Consequences.** The calibration split has only 248 defaults: isotonic calibration would overfit, so Platt scaling (2 parameters) is the default choice there; isotonic only as a comparison. Default rates differ across vintages (2008 pool is crisis-heavy, 2019/2022 are not): this is the drift that Phase 3 monitors. The out-of-time sets are never used to choose models or thresholds.
 
 **Honest limits.** 5 vintages sampled at 50,000 loans each, not the full dataset; the assistance-plan rule behind label B only exists from 2014 (see 2026-10-09 entry on definition B).
+
+## 2026-10-09: baseline logistic regression and the "era mix" finding (validation only)
+
+Code: `credit/models/{data,metrics,baseline_logreg}.py`; tests: `tests/test_models_basics.py` (test splits are locked in `load`: they raise unless `allow_test=True`). Results: `results/baseline_validation.json`. Model: unweighted logistic regression (C=1, median imputation + missing flags, standardised numbers, one-hot categories), trained on `train`, measured on `train` and `validation` only.
+
+| | n | defaults | AUC | Gini | KS | Brier | mean predicted PD vs real |
+|---|---|---|---|---|---|---|---|
+| train | 78,007 | 1,566 | 0.906 | 0.812 | 0.662 | 0.01710 | 2.01% vs 2.01% |
+| validation (pooled) | 19,129 | 391 | 0.913 | 0.826 | 0.687 | 0.01736 | 2.07% vs 2.04% |
+| validation, vintage 2008 only | 7,435 | 346 | 0.872 | 0.743 | 0.607 | | |
+| validation, vintage 2016 only | 6,888 | 41 | 0.789 | 0.577 | 0.490 | | |
+
+**Finding.** The pooled Gini (0.83) looks too good because it mixes eras: the 2008 vintage has both high interest rates (avg 6.05%) and high defaults (4.50%), while 2012 and 2016 have rates of about 3.6-3.8% and defaults of 0.26% and 0.61% (train). The model earns part of its ranking by recognising the era, not by judging one borrower. The model also ranks well inside a single vintage (0.87 within 2008), so it is not only an artefact, and there is no leakage (no performance-file field is used; `int_rate` is known at origination). Single-feature AUC on validation: int_rate 0.84, credit_score 0.80, dti 0.71, ltv 0.63.
+
+**Consequences.** (1) Never quote pooled development metrics alone: always report per vintage and on the out-of-time tests. (2) The 2016 vintage has only 41 validation defaults: its numbers are noisy. (3) The out-of-time 2019 and 2022 exams are the honest test of whether the model works in an era it never saw. (4) Options to examine later, not decided: weight vintages equally, add a vintage-adjusted metric, or report a within-vintage average Gini as the headline. The calibration of the raw probabilities is already close on average (2.07% vs 2.04%) but not yet checked per risk band or per vintage.
