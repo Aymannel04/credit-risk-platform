@@ -97,6 +97,19 @@ v1 trains on a SMOTE-balanced (50/50) set but shows the model output as a "proba
 
 True default rate: 0.300. Lower Brier is better. Calibration (Platt scaling, fitted with cross-validation) improves all three variants, and class weights and SMOTE push the average predicted PD above the true rate. The effect is modest on this small dataset, and the calibrated variants differ by less than the noise. Reliability curves: `docs/calibration_experiment.png`. v2 uses an unweighted model as the PD baseline and always calibrates.
 
+## Data layers (v2 work in progress)
+
+The v2 pipeline follows the **medallion pattern** under project-specific names:
+
+| Medallion | Name here | Content |
+|---|---|---|
+| Bronze | `raw` | Source files converted to Parquet, all columns as text, nothing fixed |
+| Silver | `stg` (staging) | Typed, cleaned, validated tables (special values such as 999 become missing) |
+| Gold | `feat` (features + label) | One row per loan: features known at origination and the `default_24m` label |
+| (extra) | `ops` | Training runs, metrics, monitoring and agent evaluations |
+
+Each layer reads only from the previous one. Raw data from Freddie Mac is never committed (the dataset terms forbid redistribution); only the code that builds the layers is in this repo.
+
 ## Limitations & Next Steps
 
 **Known limitations:**
