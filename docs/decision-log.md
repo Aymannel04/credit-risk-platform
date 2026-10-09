@@ -52,3 +52,13 @@ The API holds a fixed sample of 5,000 applicants in memory (starting point; set 
 - Account security baseline: MFA on the root user, no root access keys, a non-root admin identity for daily work.
 
 **Open.** Which plan the account is on; the region; Lambda limits and cold start with the model loaded; whether Athena's per-query scan limit works as assumed. Nothing has been created in AWS yet.
+
+## 2026-10-09: AWS account setup (Phase 0 gate)
+
+Done by the owner in the console (no resource created by the agent):
+- Plan: **Free plan**. Region: **Europe (Stockholm), eu-north-1**.
+- Root user: MFA with a passkey on one device; no access keys (checked in the console). A second MFA device could not be added yet; to retry later. Root is used only for billing and account tasks.
+- Daily identity: IAM Identity Center user `ayman-admin` (single-Region instance in Stockholm, chosen over multi-Region to avoid KMS charges and replication to Oregon) with the `AdministratorAccess` permission set and an authenticator-app MFA device. Jobs and the API will get least-privilege roles later, not this permission set.
+- Budgets: a zero-spend budget and a monthly cost budget of about 5 USD, both alerting by email. Budgets only warn; they do not stop spending.
+
+Reminder: the Free plan ends after 6 months or when credits run out, whichever comes first (check the dates and credit balance in the Billing console). No AWS resource exists yet; Phases 1 and 2 run locally.
