@@ -111,3 +111,20 @@ The 2019 vintage drops from 4.63% to 1.26% under B because most of its 90+ day d
 **Other cleaning rules.** `9999` credit score, `999` for CLTV/LTV/DTI/MI percentage, `99` for number of units or borrowers, `9` for first-time buyer flag become missing. Empty fields are NULL in the Parquet files. Delinquency status is text: numbers `00`..`99` or `RA`.
 
 **Correction logged.** A first profiling query dropped loans through SQL NULL logic (a comparison with NULL returns NULL, not TRUE or FALSE). It was caught because two columns were identical in every year. Always wrap nullable comparisons in COALESCE.
+
+## 2026-10-09: staging layer built (silver)
+
+Code: `credit/freddie/staging.py`; tests: `tests/test_staging.py` (toy loans, one rule each, plus failing-check tests). Output (git-ignored): `data/interim/stg/stg_orig_<year>.parquet`, `stg_label_<year>.parquet`, `report_<year>.json`.
+
+Staging types the data and **flags** (does not remove) relief refinance and seasoned/modified loans; exclusions are applied in the features layer and counted there. Checks that stop the run: unique `loan_seq`, no performance rows without an origination row, ranges for `orig_upb`, `int_rate`, `orig_term`, `dti`, `credit_score`, at most 1% missing credit scores, labels only 0/1, default rate between 0 and 20%, and a leakage test (no label-like column in the origination table). The sanity limits are parameters (relaxed only in toy tests).
+
+Results on the real samples (default definition B = `default_24m`; A = all 90+ late; C = loss events only; counts among observable loans):
+| Vintage | Loans | Relief refi | Seasoned/modified | Not observable | Defaults B | A | C |
+|---|---|---|---|---|---|---|---|
+| 2008 | 50,000 | 0 | 287 | 0 | 2,228 | 2,237 | 229 |
+| 2012 | 50,000 | 17,399 | 55 | 0 | 369 | 376 | 86 |
+| 2016 | 50,000 | 2,525 | 103 | 0 | 328 | 407 | 12 |
+| 2019 | 50,000 | 30 | 89 | 0 | 632 | 2,315 | 3 |
+| 2022 | 50,000 | 0 | 22 | 73 | 692 | 856 | 8 |
+
+Note: the earlier profile showed 761 (B) and 926 (A) for 2022 because it counted all loans, including the 73 not observable for 24 months; the pipeline counts only observable loans.
