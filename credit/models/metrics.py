@@ -53,3 +53,10 @@ def calibration_table(y, p, n_bins: int = 10):
     df["bin"] = pd.qcut(df["p"].rank(method="first"), n_bins, labels=False)
     out = df.groupby("bin").agg(loans=("y", "size"), predicted=("p", "mean"), observed=("y", "mean")).reset_index()
     return out
+
+
+def ece(y, p, n_bins: int = 10) -> float:
+    """Expected calibration error: average gap between predicted and observed default rate,
+    over equal-sized risk groups, weighted by group size (0 = perfectly honest percentages)."""
+    t = calibration_table(y, p, n_bins=n_bins)
+    return float((t["loans"] * (t["predicted"] - t["observed"]).abs()).sum() / t["loans"].sum())
