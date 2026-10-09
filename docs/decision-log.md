@@ -128,3 +128,27 @@ Results on the real samples (default definition B = `default_24m`; A = all 90+ l
 | 2022 | 50,000 | 0 | 22 | 73 | 692 | 856 | 8 |
 
 Note: the earlier profile showed 761 (B) and 926 (A) for 2022 because it counted all loans, including the 73 not observable for 24 months; the pipeline counts only observable loans.
+
+## 2026-10-09: features layer and splits (gold)
+
+Code: `credit/freddie/features.py`; tests: `tests/test_features.py`. Output (git-ignored): `data/interim/features/features.parquet`, `report.json`.
+
+**Exclusions (applied in this order, counted per vintage).** Relief refinance, then seasoned/modified, then not observable for 24 months. Kept loans: 2008: 49,712; 2009 (one odd loan in the 2008 file): 1; 2012: 32,546; 2016: 47,372; 2019: 49,881; 2022: 49,907. Relief refinance removed 35% of the 2012 sample (17,399 loans); this is a notable choice and must be stated in the README.
+
+**Model inputs (day-one, origination file only).** Numeric: credit_score, mi_pct, n_units, cltv, dti, orig_upb, ltv, int_rate, orig_term, n_borrowers. Categorical: first_time_homebuyer, occupancy, channel, ppm_flag, property_type, purpose, state, super_conforming.
+**Deliberately not inputs:** zip3 and msa (geography proxies), seller_name (lender identity), program_indicator (affordable-housing programme: proxy for income), vintage_year (does not transfer across time; used for splitting only), maturity_date (redundant with term), amort_type / io_indicator / property_valuation_method (constant in these samples). `state` is kept for now and is a candidate to drop after the fairness review.
+
+**Splits (reproducible: hash of loan_seq with seed `split-v1`).** Development pool = vintages <= 2018 (files 2008, 2012, 2016): train 60% / calibration 10% / validation 15% / in-time test 15%. Out-of-time tests: 2019-2021 vintages (`test_oot_2019`) and 2022+ vintages (`test_oot_2022`). Vintage ranges are used rather than exact years because the 2008 file contains one 2009 loan.
+
+| Split | Loans | Defaults (B) | Default rate |
+|---|---|---|---|
+| train | 78,007 | 1,566 | 2.01% |
+| calibration | 13,064 | 248 | 1.90% |
+| validation | 19,129 | 391 | 2.04% |
+| test_in_time | 19,431 | 375 | 1.93% |
+| test_oot_2019 | 49,881 | 630 | 1.26% |
+| test_oot_2022 | 49,907 | 692 | 1.39% |
+
+**Consequences.** The calibration split has only 248 defaults: isotonic calibration would overfit, so Platt scaling (2 parameters) is the default choice there; isotonic only as a comparison. Default rates differ across vintages (2008 pool is crisis-heavy, 2019/2022 are not): this is the drift that Phase 3 monitors. The out-of-time sets are never used to choose models or thresholds.
+
+**Honest limits.** 5 vintages sampled at 50,000 loans each, not the full dataset; the assistance-plan rule behind label B only exists from 2014 (see 2026-10-09 entry on definition B).
