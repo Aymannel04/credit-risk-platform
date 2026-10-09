@@ -62,3 +62,23 @@ Done by the owner in the console (no resource created by the agent):
 - Budgets: a zero-spend budget and a monthly cost budget of about 5 USD, both alerting by email. Budgets only warn; they do not stop spending.
 
 Reminder: the Free plan ends after 6 months or when credits run out, whichever comes first (check the dates and credit balance in the Billing console). No AWS resource exists yet; Phases 1 and 2 run locally.
+
+## 2026-10-09: target definition and model scope (Freddie Mac)
+
+**Source.** Freddie Mac Single-Family Loan-Level Dataset General User Guide (January 2026), pages 10 to 23. The guide gives delinquency status, zero balance codes and actual loss fields, but **does not define "default"**. The definition below is this project's own assumption, to be validated on the data.
+
+**Model scope (option A).** An *application* PD model: it scores a loan at origination using only fields of the origination file. Performance-file fields are used only to build the target (and, later, LGD). A second *behavioural* model (score after 12 months of payment history, using both files) is an optional extension, not in the core scope.
+
+**Target.** `default_24m = 1` if, within 24 months after the loan's first reporting period, the loan either (a) reaches Current Loan Delinquency Status >= 3 (90+ days delinquent, or `RA` REO acquisition), or (b) ends with Zero Balance Code 02, 03, 09 or 15. Otherwise 0. Loans that end by voluntary payoff (01) or have a defect (96) without a prior default are 0 (not a credit loss event); to be checked on the data.
+
+**Window and censoring.** 24 months. Only loans with at least 24 months of observable history (or a termination event inside the window) are used, so that "no default yet" is not confused with "not observed long enough". Loans from the most recent vintages are excluded. The exact cutoff depends on the Performance Cutoff Date of the downloaded release (to read from the Release Notes).
+
+**Leakage rule.** No feature may come from the performance file for the application model. Allowed: credit score, first-time buyer flag, MI percentage, number of units, occupancy, original CLTV, original DTI, original UPB, original LTV, original interest rate, channel, property state/type, loan purpose, loan term, number of borrowers, and similar origination fields (to verify from the layout). Special values (e.g. 9999 credit score, 999 CLTV/DTI/LTV = not available) become missing, not numbers.
+
+**Sensitive attributes.** The dataset has no sex, race or age. Geography (state, zip3) can act as a proxy for protected characteristics: report disparities by state/region and treat zip3 with care (likely excluded from the model).
+
+**LGD.** Estimated from Actual Loss / Zero Balance Removal UPB on loans ending with codes 02, 03, 09, 15 (only where Actual Loss is populated; it is set to null for loans disposed in the last three months before the cutoff and for defect loans). Compared with the assumed LGD in `config/assumptions.yaml`; the assumption stays labelled as an assumption.
+
+**Known data issues (from the guide).** Reporting gaps and irregular delinquency progressions exist; dates are month-level only; balances rounded; the dataset is "as is" and may be corrected. Data checks must tolerate these and log counts.
+
+**Open.** Real column positions to be taken from the official file layout; the vintages to use; the default rate by vintage; whether voluntary payoff after a long delinquency should count; whether the Standard dataset sample has enough defaults per vintage (to measure before modelling).
