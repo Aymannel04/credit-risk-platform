@@ -1,6 +1,6 @@
 feature,iv,kept
-int_rate,1.4912,True
 credit_score,1.2948,True
+rate_spread,0.5783,True
 dti,0.5358,True
 channel,0.4207,True
 orig_term,0.3023,True

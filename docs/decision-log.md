@@ -250,3 +250,19 @@ Code: `credit/models/scorecard.py`, `credit/models/scorecard_report.py`; tests: 
 Compared with the logistic regression (validation Gini 0.826; 2008: 0.743; 2016: 0.577) and XGBoost (0.825; 0.728; 0.629): the scorecard is about 0.01 Gini lower pooled and lower inside 2008, higher inside 2016 (41 defaults: noise). Score range on validation: 465 to 751 points. Example points: credit score <= 662 -> 16, > 766 -> 88; dti <= 29.5 -> 65, > 50.5 -> 38.
 
 **Warning found: interest rate is an era proxy.** IV above 0.5 is the textbook warning sign. No leakage (the rate is known at origination), but `int_rate` mixes two things: the lender's risk pricing and the market level of the year. Average rate by vintage (kept loans, inputs only, no outcomes): 2008 6.05%, 2012 3.60%, 2016 3.78%, 2019 4.24%, 2022 5.09%. The pooled model therefore partly learns "high rate = 2008-like crisis". On the 2022 vintage (rates back near 5%) it will likely over-predict risk. This is an input shift, observed without touching test labels. Proposed fix (not yet done): replace the raw rate by a rate spread (rate minus the median rate of the same vintage quarter and term), which keeps the lender's risk pricing and removes the market level.
+
+## 2026-10-09: rate spread replaces the raw interest rate (decision by the owner: "go")
+
+**Change.** `rate_spread` = a loan's `int_rate` minus the median `int_rate` of the kept loans with the same vintage quarter and term class (<= 180 months vs longer). It is a model input; `int_rate` stays in the features table as a tracing/monitoring column (META) and a check forbids it as a feature. Only inputs are used, no outcomes. Deployment note: the median would come from a market rate series, since a single loan has no "same quarter" peers at scoring time. Sanity: average spread per vintage 2008 0.044, 2012 0.004, 2016 0.050, 2019 0.061, 2022 -0.014 (average raw rate 6.05 / 3.60 / 3.78 / 4.24 / 5.09). Code: `credit/freddie/features.py`; tests added in `tests/test_features.py`; 48 tests pass.
+
+**Effect on validation Gini (before with raw rate -> after with spread).**
+| Model | pooled | inside 2008 | inside 2016 |
+|---|---|---|---|
+| logistic | 0.826 -> 0.784 | 0.743 -> 0.726 | 0.577 -> 0.590 |
+| xgboost | 0.825 -> 0.785 | 0.728 -> 0.711 | 0.629 -> 0.597 |
+| scorecard | 0.816 -> 0.779 | 0.699 -> 0.691 | 0.651 -> 0.653 |
+About 0.04 of the pooled Gini was the era proxy; ranking inside a year is almost unchanged, which is the evidence that the spread keeps the lender's risk pricing. IV of the spread 0.578 (raw rate was 1.491). Validation Brier / mean PD: logistic 0.01782 / 2.06%, xgboost 0.01763 / 2.03%, scorecard 0.01811 / 2.04% (real 2.04%).
+
+**New finding: the models no longer know the era, so their average risk is about the same for every vintage, while the real default rate is not.** Logistic on validation by vintage: 2008 observed 4.65% vs predicted 3.46%; 2016 observed 0.60% vs predicted 1.51%. Loan-level day-one data cannot tell whether a year is a crisis year (a macro effect). This is a through-the-cycle model: it ranks borrowers within an era well and gives an average-era level of risk. Consequences: (1) expect the out-of-time tests (2019: 1.26%, 2022: 1.39% real) to be slightly over-predicted; (2) a bank would add a macroeconomic overlay or recalibrate per period; (3) monitoring must track observed vs predicted by period (Phase 3).
+
+**Re-run after the change (supersedes the earlier numeric tables for calibration and ablation; conclusions unchanged).** Ablation on validation (real 2.04%): unweighted raw Brier 0.01764, mean PD 2.03%, AUC 0.894; class weights raw Brier 0.13133, mean PD 27.29%, after Platt 0.01773 (offset -3.848); SMOTE raw Brier 0.06520, mean PD 17.61%, AUC 0.879 and after Platt 0.01813 (the ranking loss remains). Calibration of unweighted models: Platt slope 1.00 and 0.99, no gain (ECE rises slightly), as before.
