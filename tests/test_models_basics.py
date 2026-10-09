@@ -92,3 +92,13 @@ def test_preprocessor_handles_missing_and_unseen_categories():
     new[CATEGORICAL_FEATURES[0]] = ["NEW", "A", None]
     out = prep.transform(new)
     assert out.shape[0] == 3 and not np.isnan(np.asarray(out.todense() if hasattr(out, "todense") else out)).any()
+
+
+def test_preprocessor_always_outputs_a_dense_array():
+    """Guards the XGBoost sparse-means-missing trap: training and prediction must share one format."""
+    import scipy.sparse as sp
+
+    train = pd.DataFrame({**{c: [1.0, 2.0, np.nan, 4.0] * 30 for c in NUMERIC_FEATURES},
+                          **{c: ["A", "B", None, "A"] * 30 for c in CATEGORICAL_FEATURES}})
+    out = make_preprocessor().fit(train).transform(train)
+    assert isinstance(out, np.ndarray) and not sp.issparse(out)
