@@ -82,3 +82,16 @@ Reminder: the Free plan ends after 6 months or when credits run out, whichever c
 **Known data issues (from the guide).** Reporting gaps and irregular delinquency progressions exist; dates are month-level only; balances rounded; the dataset is "as is" and may be corrected. Data checks must tolerate these and log counts.
 
 **Open.** Real column positions to be taken from the official file layout; the vintages to use; the default rate by vintage; whether voluntary payoff after a long delinquency should count; whether the Standard dataset sample has enough defaults per vintage (to measure before modelling).
+
+## 2026-10-09: Freddie Mac sample layout verified against the real files
+
+Checked on `sample_2016` (all 50,000 origination rows, 400,000 performance rows) against the January 2026 user guide. The guide and the files differ:
+- Origination has **31** fields (guide: 32). Fields 1-23 match the guide. Field 25 is the super conforming flag (Y/N), so the servicer name is **not** in the origination file. Field 31 is always `9999` (unknown, unused).
+- Performance has **35** fields (guide: 32). Fields 1-32 match; 33 = MI cancellation indicator (`7`/`N`/`Y`), 34 = servicer name, 35 = unused amount (blank or `0.00`).
+- `Current Loan Delinquency Status` is **text** (`00`, `01`, ..., plus letters such as `RA`; 46 distinct values in the first 400,000 rows). Never read it as a number without handling the letters.
+- File names are `sample_orig_YYYY.txt` and `sample_perf_YYYY.txt` (the guide calls the second `svcg`).
+- Join key: `loan_seq` (origination column 20, performance column 1).
+
+Loaded 2008, 2012, 2016, 2019, 2022 to raw Parquet (all columns as text): 50,000 loans each; performance rows 2,456,504 / 4,510,559 / 3,379,650 / 1,934,614 / 2,034,798. Code: `credit/freddie/layout.py`, `credit/freddie/load.py`; tests: `tests/test_freddie_layout.py`. Data lives only in `data/raw/freddie/` and `data/interim/` (git-ignored; the terms forbid redistribution).
+
+Correction to the earlier year choice: 2010/2012/2015 was not a good spread (calm vintages have few defaults). Chosen instead: 2008 (crisis), 2012 (calm), 2016 (normal), 2019 (pre-COVID), 2022 (higher rates). The train/test split by year will be decided after measuring default rates per vintage.
