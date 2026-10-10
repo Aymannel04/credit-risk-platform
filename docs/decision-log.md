@@ -311,3 +311,27 @@ Code: `credit/economics/lgd.py` (+ `tests/test_lgd.py`, checked against a hand c
 3. The economics therefore depend strongly on the era (a macro effect, like the default rate itself). A cut-off derived from a single LGD would be wrong in one regime or the other: the sensitivity analysis must span LGD from below 1% to 20% of the loan amount.
 4. Definition B (90+ days late without an assistance plan) is a conservative risk flag in calm times: it flags many loans that cure. PD under B is a "serious delinquency" probability, not a loss probability; expected loss must use loss per flagged loan, not the loss severity of foreclosures. This must be stated in the model card.
 5. Only loans flagged within the first 24 months are counted: loss events after month 24 (about half of the 2008 loss events) are outside the label.
+
+## 2026-10-10: cut-off, profit, expected loss and sensitivity (scorecard; analysis made AFTER the final exam)
+
+Code: `credit/economics/cutoff.py`, `credit/economics/decision_report.py`; tests: `tests/test_cutoff.py`; assumptions: `config/economics.yaml` (margin 2% over 24 months, base loss per flagged loan 10%: ASSUMPTIONS; the loss grid 1/5/10/20% comes from the measured 0.4-20% range). Results: `results/economics_report.json|md`, `docs/economics_report.png`. Scorecard fitted on `train`, raw PD. The line (PD threshold) is chosen on validation by realised profit; test splits only report. Adding code under `credit/` means `credit.models.final_exam` now refuses to run again (by design); the exam results are not touched.
+
+**Chosen line (base case, validation).** Approve if PD <= 0.1471 (97.5% of loans approved); the textbook line margin/(margin+loss) = 0.1667. The profit curve is nearly flat near its top (chart).
+
+| Group | Approval | Default rate approved vs all | Defaults refused | Good loans refused | Profit with line | Approve all | Realised loss in the data |
+|---|---|---|---|---|---|---|---|
+| validation | 97.50% | 1.48% vs 2.04% | 29.4% | 1.9% | 1.77% of exposure | 1.75% | 0.65% |
+| test_in_time | 97.65% | 1.53% vs 1.93% | 22.7% | 1.9% | 1.77% | 1.76% | 0.65% |
+| test_oot_2019 | 99.11% | 1.21% vs 1.26% | 5.2% | 0.8% | 1.84% | 1.84% | 0.01% (incomplete) |
+| test_oot_2022 | 99.07% | 1.35% vs 1.39% | 3.5% | 0.9% | 1.83% | 1.84% | 0.01% (incomplete) |
+
+Gain of the line over "approve everyone" (% of exposure, margin 2%): at loss 1% / 5% / 10% / 20%: validation -0.027 / -0.005 / +0.024 / +0.081; in time -0.029 / -0.013 / +0.006 / +0.046; 2019 -0.013 / -0.010 / -0.008 / -0.002; 2022 -0.015 / -0.013 / -0.010 / -0.005.
+
+**Sensitivity (validation).** The best line gets stricter when the margin is lower or the loss higher, as the formula says: margin 0.5% with loss 20% refuses 28% of loans (gain +0.251% of exposure); margin 3% with loss 1-5% refuses almost nothing (gain about 0). See `results/economics_report.md` for all 16 cells.
+
+**Findings.**
+1. For these prime mortgages, refusing loans adds very little profit under the base assumptions (+0.02% of exposure on validation): approving everyone already earns about 1.75%, because only about 2% of loans are flagged and the margin on the other 98% pays for them. The scorecard separates risk well (the riskiest decile has a 12.75% default rate against 2.04% on average) but the money gain from refusing is small unless loss severity is high or margins are thin.
+2. Out of time the line does slightly harm (-0.01% of exposure in 2019 and 2022 at base loss): the PD is over-predicted by about 1.4x (see the final exam), so the line refuses loans that would have been fine, and the actual losses of those years are small. A single line chosen on a pooled validation set that includes the 2008 crisis does not transfer to calm years: the line should depend on the regime (macro overlay) or be tied to a recalibrated PD.
+3. The score has more value for pricing and provisioning than for accept/refuse: expected loss by risk band is reasonably matched in the middle bands (ratio 1.02-1.04 for bands 6-7), over-predicted in the safest bands (0.79-2.84, tiny amounts) and slightly under-predicted in the top bands (0.75-0.88).
+4. The assumed base loss (10%) gives an expected loss of about 0.2% of exposure (2% x 10%), while the realised loss in the in-time data is 0.65%: the in-time period contains the 2008 crisis (loss per flagged loan 20%). The base loss is an assumption and is shown against the measured values; the grid covers both.
+5. Limits: margin is illustrative (no margin data in the files); flagged loans earn no margin; EAD is the original amount; losses are over the whole life of loans flagged within 24 months; 2019 and 2022 realised losses are still incomplete.

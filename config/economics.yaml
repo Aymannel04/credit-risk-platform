@@ -1,0 +1,20 @@
+# ASSUMPTIONS, not facts from the data (except where a comment says "measured").
+# Change values here, never in the code. Every result must quote this file and show the sensitivity grid.
+
+exposure: orig_upb            # EAD approximated by the original loan amount
+
+# Net margin earned over the 24-month window on a loan that does NOT default, as a share of the loan amount.
+# ILLUSTRATIVE (no margin data exists in the Freddie Mac files). Funding cost and servicing are ignored.
+margin_24m:
+  base: 0.02
+  grid: [0.005, 0.01, 0.02, 0.03]
+
+# Money lost on a loan flagged as default (definition B), as a share of the loan amount, over its whole life.
+# MEASURED on the five samples (results/lgd_estimate.json): 2008 crisis 20.1%, 2012 4.4%, 2016 1.1%,
+# 2019 0.4% and 2022 0.5% (the last two are incomplete: sales of repossessed houses take years).
+# The BASE value below is an ASSUMPTION: a through-the-cycle compromise between calm years and the crisis.
+loss_per_flagged_loan:
+  base: 0.10
+  grid: [0.01, 0.05, 0.10, 0.20]
+
+# A flagged loan is assumed to earn no margin (the margin of a defaulting loan is ignored).

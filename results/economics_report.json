@@ -1,0 +1,743 @@
+{
+  "assumptions": {
+    "exposure": "orig_upb",
+    "margin_24m": {
+      "base": 0.02,
+      "grid": [
+        0.005,
+        0.01,
+        0.02,
+        0.03
+      ]
+    },
+    "loss_per_flagged_loan": {
+      "base": 0.1,
+      "grid": [
+        0.01,
+        0.05,
+        0.1,
+        0.2
+      ]
+    }
+  },
+  "scorecard": "WoE scorecard fitted on train (raw PD)",
+  "chosen_on_validation": {
+    "best_pd_threshold": 0.14709500554353985,
+    "approval_rate": 0.9749594855977834,
+    "theory_threshold_if_pd_were_honest": 0.16666666666666666
+  },
+  "reports": {
+    "validation": {
+      "loans": 19129,
+      "defaults": 391,
+      "exposure": 4235100000.0,
+      "realised_loss_from_data_pct_of_exposure": 0.0064998206724752655,
+      "base_case": {
+        "approval_rate": 0.9749594855977834,
+        "default_rate_all": 0.02044016937633959,
+        "default_rate_approved": 0.01479892761394102,
+        "defaults_refused_share": 0.29411764705882354,
+        "good_loans_refused_share": 0.01942576582346035,
+        "profit_with_line": 74954280.0,
+        "profit_approve_all": 73937640.0,
+        "profit_refuse_all": 0.0,
+        "total_exposure": 4235100000.0
+      },
+      "by_loss_scenario": {
+        "0.01": {
+          "profit_pct_of_exposure_with_line": 0.019090330806828645,
+          "profit_pct_of_exposure_approve_all": 0.01936457462633704,
+          "gain_pct_of_exposure": -0.0002742438195083941
+        },
+        "0.05": {
+          "profit_pct_of_exposure_with_line": 0.018471672451654035,
+          "profit_pct_of_exposure_approve_all": 0.018517340794786428,
+          "gain_pct_of_exposure": -4.566834313239357e-05
+        },
+        "0.1": {
+          "profit_pct_of_exposure_with_line": 0.01769834950768577,
+          "profit_pct_of_exposure_approve_all": 0.017458298505348163,
+          "gain_pct_of_exposure": 0.00024005100233760713
+        },
+        "0.2": {
+          "profit_pct_of_exposure_with_line": 0.016151703619749238,
+          "profit_pct_of_exposure_approve_all": 0.01534021392647163,
+          "gain_pct_of_exposure": 0.0008114896932776086
+        }
+      }
+    },
+    "test_in_time": {
+      "loans": 19431,
+      "defaults": 375,
+      "exposure": 4284232000.0,
+      "realised_loss_from_data_pct_of_exposure": 0.0065204930545311275,
+      "base_case": {
+        "approval_rate": 0.9765323452215532,
+        "default_rate_all": 0.01929905820595955,
+        "default_rate_approved": 0.015283267457180501,
+        "defaults_refused_share": 0.22666666666666666,
+        "good_loans_refused_share": 0.01946893366918556,
+        "profit_with_line": 75878920.0,
+        "profit_approve_all": 75608840.0,
+        "profit_refuse_all": 0.0,
+        "total_exposure": 4284232000.0
+      },
+      "by_loss_scenario": {
+        "0.01": {
+          "profit_pct_of_exposure_with_line": 0.019119933280924095,
+          "profit_pct_of_exposure_approve_all": 0.01941204164480355,
+          "gain_pct_of_exposure": -0.00029210836387945377
+        },
+        "0.05": {
+          "profit_pct_of_exposure_with_line": 0.0184938327336148,
+          "profit_pct_of_exposure_approve_all": 0.018628097171208283,
+          "gain_pct_of_exposure": -0.00013426443759348232
+        },
+        "0.1": {
+          "profit_pct_of_exposure_with_line": 0.017711207049478178,
+          "profit_pct_of_exposure_approve_all": 0.017648166579214197,
+          "gain_pct_of_exposure": 6.304047026398196e-05
+        },
+        "0.2": {
+          "profit_pct_of_exposure_with_line": 0.01614595568120494,
+          "profit_pct_of_exposure_approve_all": 0.01568830539522603,
+          "gain_pct_of_exposure": 0.00045765028597891057
+        }
+      }
+    },
+    "test_oot_2019": {
+      "loans": 49881,
+      "defaults": 630,
+      "exposure": 12699018000.0,
+      "realised_loss_from_data_pct_of_exposure": 0.00010418347780907153,
+      "base_case": {
+        "approval_rate": 0.9910787674665704,
+        "default_rate_all": 0.012630059541709268,
+        "default_rate_approved": 0.012076219758880168,
+        "defaults_refused_share": 0.05238095238095238,
+        "good_loans_refused_share": 0.008365312379444071,
+        "profit_with_line": 233218520.0,
+        "profit_approve_all": 234175800.0,
+        "profit_refuse_all": 0.0,
+        "total_exposure": 12699018000.0
+      },
+      "by_loss_scenario": {
+        "0.01": {
+          "profit_pct_of_exposure_with_line": 0.019482310364470703,
+          "profit_pct_of_exposure_approve_all": 0.019610116309780802,
+          "gain_pct_of_exposure": -0.00012780594531010194
+        },
+        "0.05": {
+          "profit_pct_of_exposure_with_line": 0.018985764883552414,
+          "profit_pct_of_exposure_approve_all": 0.01909027138948854,
+          "gain_pct_of_exposure": -0.00010450650593612828
+        },
+        "0.1": {
+          "profit_pct_of_exposure_with_line": 0.018365083032404552,
+          "profit_pct_of_exposure_approve_all": 0.018440465239123214,
+          "gain_pct_of_exposure": -7.538220671866124e-05
+        },
+        "0.2": {
+          "profit_pct_of_exposure_with_line": 0.01712371933010883,
+          "profit_pct_of_exposure_approve_all": 0.01714085293839256,
+          "gain_pct_of_exposure": -1.7133608283727137e-05
+        }
+      }
+    },
+    "test_oot_2022": {
+      "loans": 49907,
+      "defaults": 692,
+      "exposure": 14933520000.0,
+      "realised_loss_from_data_pct_of_exposure": 6.089450645259792e-05,
+      "base_case": {
+        "approval_rate": 0.9907027070350852,
+        "default_rate_all": 0.013865790370088364,
+        "default_rate_approved": 0.013510507048520519,
+        "defaults_refused_share": 0.03468208092485549,
+        "good_loans_refused_share": 0.00894036371025094,
+        "profit_with_line": 273428680.0,
+        "profit_approve_all": 274966560.0,
+        "profit_refuse_all": 0.0,
+        "total_exposure": 14933520000.0
+      },
+      "by_loss_scenario": {
+        "0.01": {
+          "profit_pct_of_exposure_with_line": 0.019448860014249822,
+          "profit_pct_of_exposure_approve_all": 0.01960317728171255,
+          "gain_pct_of_exposure": -0.00015431726746272813
+        },
+        "0.05": {
+          "profit_pct_of_exposure_with_line": 0.018942578842764464,
+          "profit_pct_of_exposure_approve_all": 0.01907408032399595,
+          "gain_pct_of_exposure": -0.0001315014812314846
+        },
+        "0.1": {
+          "profit_pct_of_exposure_with_line": 0.018309727378407768,
+          "profit_pct_of_exposure_approve_all": 0.0184127091268502,
+          "gain_pct_of_exposure": -0.00010298174844243018
+        },
+        "0.2": {
+          "profit_pct_of_exposure_with_line": 0.01704402444969438,
+          "profit_pct_of_exposure_approve_all": 0.0170899667325587,
+          "gain_pct_of_exposure": -4.5942282864321337e-05
+        }
+      }
+    }
+  },
+  "el_by_band": {
+    "validation": [
+      {
+        "band": 1,
+        "loans": 1913,
+        "mean_pd": 0.000481,
+        "default_rate": 0.0,
+        "exposure": 405484000.0,
+        "predicted_el": 19919.578586,
+        "observed_el": 0.0,
+        "el_ratio": NaN
+      },
+      {
+        "band": 2,
+        "loans": 1913,
+        "mean_pd": 0.001145,
+        "default_rate": 0.001045,
+        "exposure": 450009000.0,
+        "predicted_el": 51666.791355,
+        "observed_el": 65800.0,
+        "el_ratio": 0.78521
+      },
+      {
+        "band": 3,
+        "loans": 1913,
+        "mean_pd": 0.00196,
+        "default_rate": 0.001045,
+        "exposure": 440960000.0,
+        "predicted_el": 86747.301801,
+        "observed_el": 30500.0,
+        "el_ratio": 2.844174
+      },
+      {
+        "band": 4,
+        "loans": 1913,
+        "mean_pd": 0.003077,
+        "default_rate": 0.001568,
+        "exposure": 439279000.0,
+        "predicted_el": 134997.228719,
+        "observed_el": 73600.0,
+        "el_ratio": 1.834201
+      },
+      {
+        "band": 5,
+        "loans": 1913,
+        "mean_pd": 0.004634,
+        "default_rate": 0.002614,
+        "exposure": 442130000.0,
+        "predicted_el": 204826.952163,
+        "observed_el": 97100.0,
+        "el_ratio": 2.109443
+      },
+      {
+        "band": 6,
+        "loans": 1912,
+        "mean_pd": 0.007023,
+        "default_rate": 0.004184,
+        "exposure": 439645000.0,
+        "predicted_el": 308567.652065,
+        "observed_el": 303100.0,
+        "el_ratio": 1.018039
+      },
+      {
+        "band": 7,
+        "loans": 1913,
+        "mean_pd": 0.01071,
+        "default_rate": 0.009409,
+        "exposure": 419279000.0,
+        "predicted_el": 448759.743401,
+        "observed_el": 430400.0,
+        "el_ratio": 1.042657
+      },
+      {
+        "band": 8,
+        "loans": 1913,
+        "mean_pd": 0.017352,
+        "default_rate": 0.02091,
+        "exposure": 410724000.0,
+        "predicted_el": 711373.966297,
+        "observed_el": 954800.0,
+        "el_ratio": 0.74505
+      },
+      {
+        "band": 9,
+        "loans": 1913,
+        "mean_pd": 0.033144,
+        "default_rate": 0.036069,
+        "exposure": 399227000.0,
+        "predicted_el": 1320317.486538,
+        "observed_el": 1591700.0,
+        "el_ratio": 0.829501
+      },
+      {
+        "band": 10,
+        "loans": 1913,
+        "mean_pd": 0.124182,
+        "default_rate": 0.127548,
+        "exposure": 388363000.0,
+        "predicted_el": 4774341.512351,
+        "observed_el": 5423300.0,
+        "el_ratio": 0.880339
+      }
+    ],
+    "test_in_time": [
+      {
+        "band": 1,
+        "loans": 1944,
+        "mean_pd": 0.000474,
+        "default_rate": 0.000514,
+        "exposure": 420076000.0,
+        "predicted_el": 20088.865078,
+        "observed_el": 25600.0,
+        "el_ratio": 0.784721
+      },
+      {
+        "band": 2,
+        "loans": 1943,
+        "mean_pd": 0.001134,
+        "default_rate": 0.000515,
+        "exposure": 431811000.0,
+        "predicted_el": 49046.9152,
+        "observed_el": 10000.0,
+        "el_ratio": 4.904692
+      },
+      {
+        "band": 3,
+        "loans": 1943,
+        "mean_pd": 0.001908,
+        "default_rate": 0.002573,
+        "exposure": 439626000.0,
+        "predicted_el": 83552.512554,
+        "observed_el": 114000.0,
+        "el_ratio": 0.732917
+      },
+      {
+        "band": 4,
+        "loans": 1943,
+        "mean_pd": 0.003033,
+        "default_rate": 0.001544,
+        "exposure": 446663000.0,
+        "predicted_el": 135327.249592,
+        "observed_el": 61500.0,
+        "el_ratio": 2.200443
+      },
+      {
+        "band": 5,
+        "loans": 1943,
+        "mean_pd": 0.004618,
+        "default_rate": 0.004117,
+        "exposure": 446380000.0,
+        "predicted_el": 206198.179717,
+        "observed_el": 205300.0,
+        "el_ratio": 1.004375
+      },
+      {
+        "band": 6,
+        "loans": 1943,
+        "mean_pd": 0.006898,
+        "default_rate": 0.005147,
+        "exposure": 442976000.0,
+        "predicted_el": 305543.733373,
+        "observed_el": 238400.0,
+        "el_ratio": 1.281643
+      },
+      {
+        "band": 7,
+        "loans": 1943,
+        "mean_pd": 0.010561,
+        "default_rate": 0.011323,
+        "exposure": 424193000.0,
+        "predicted_el": 446867.738972,
+        "observed_el": 470400.0,
+        "el_ratio": 0.949974
+      },
+      {
+        "band": 8,
+        "loans": 1943,
+        "mean_pd": 0.017301,
+        "default_rate": 0.019557,
+        "exposure": 424963000.0,
+        "predicted_el": 734922.59212,
+        "observed_el": 900200.0,
+        "el_ratio": 0.816399
+      },
+      {
+        "band": 9,
+        "loans": 1943,
+        "mean_pd": 0.032418,
+        "default_rate": 0.036541,
+        "exposure": 410650000.0,
+        "predicted_el": 1334293.019897,
+        "observed_el": 1720400.0,
+        "el_ratio": 0.775571
+      },
+      {
+        "band": 10,
+        "loans": 1943,
+        "mean_pd": 0.119001,
+        "default_rate": 0.111168,
+        "exposure": 396894000.0,
+        "predicted_el": 4621431.709314,
+        "observed_el": 4650700.0,
+        "el_ratio": 0.993707
+      }
+    ],
+    "test_oot_2019": [
+      {
+        "band": 1,
+        "loans": 4989,
+        "mean_pd": 0.000747,
+        "default_rate": 0.002004,
+        "exposure": 1332756000.0,
+        "predicted_el": 100950.864432,
+        "observed_el": 362000.0,
+        "el_ratio": 0.27887
+      },
+      {
+        "band": 2,
+        "loans": 4988,
+        "mean_pd": 0.001807,
+        "default_rate": 0.003809,
+        "exposure": 1370163000.0,
+        "predicted_el": 247325.345055,
+        "observed_el": 666000.0,
+        "el_ratio": 0.371359
+      },
+      {
+        "band": 3,
+        "loans": 4988,
+        "mean_pd": 0.003009,
+        "default_rate": 0.005213,
+        "exposure": 1359108000.0,
+        "predicted_el": 409285.691519,
+        "observed_el": 921600.0,
+        "el_ratio": 0.444103
+      },
+      {
+        "band": 4,
+        "loans": 4988,
+        "mean_pd": 0.004506,
+        "default_rate": 0.007217,
+        "exposure": 1321152000.0,
+        "predicted_el": 595593.836997,
+        "observed_el": 1086000.0,
+        "el_ratio": 0.548429
+      },
+      {
+        "band": 5,
+        "loans": 4988,
+        "mean_pd": 0.00647,
+        "default_rate": 0.005413,
+        "exposure": 1306610000.0,
+        "predicted_el": 844908.374049,
+        "observed_el": 804800.0,
+        "el_ratio": 1.049836
+      },
+      {
+        "band": 6,
+        "loans": 4988,
+        "mean_pd": 0.0092,
+        "default_rate": 0.010626,
+        "exposure": 1276588000.0,
+        "predicted_el": 1172239.21529,
+        "observed_el": 1361900.0,
+        "el_ratio": 0.860738
+      },
+      {
+        "band": 7,
+        "loans": 4988,
+        "mean_pd": 0.013318,
+        "default_rate": 0.013432,
+        "exposure": 1257644000.0,
+        "predicted_el": 1674814.032234,
+        "observed_el": 1883600.0,
+        "el_ratio": 0.889156
+      },
+      {
+        "band": 8,
+        "loans": 4988,
+        "mean_pd": 0.019874,
+        "default_rate": 0.015838,
+        "exposure": 1201266000.0,
+        "predicted_el": 2390392.390309,
+        "observed_el": 2149100.0,
+        "el_ratio": 1.112276
+      },
+      {
+        "band": 9,
+        "loans": 4988,
+        "mean_pd": 0.032197,
+        "default_rate": 0.023657,
+        "exposure": 1164451000.0,
+        "predicted_el": 3744106.070463,
+        "observed_el": 2909400.0,
+        "el_ratio": 1.2869
+      },
+      {
+        "band": 10,
+        "loans": 4988,
+        "mean_pd": 0.083377,
+        "default_rate": 0.039094,
+        "exposure": 1109280000.0,
+        "predicted_el": 9107137.844157,
+        "observed_el": 4359400.0,
+        "el_ratio": 2.089081
+      }
+    ],
+    "test_oot_2022": [
+      {
+        "band": 1,
+        "loans": 4991,
+        "mean_pd": 0.00105,
+        "default_rate": 0.001002,
+        "exposure": 1429008000.0,
+        "predicted_el": 155625.919733,
+        "observed_el": 184500.0,
+        "el_ratio": 0.843501
+      },
+      {
+        "band": 2,
+        "loans": 4991,
+        "mean_pd": 0.002587,
+        "default_rate": 0.003005,
+        "exposure": 1565402000.0,
+        "predicted_el": 405606.726808,
+        "observed_el": 532600.0,
+        "el_ratio": 0.76156
+      },
+      {
+        "band": 3,
+        "loans": 4990,
+        "mean_pd": 0.0043,
+        "default_rate": 0.003407,
+        "exposure": 1574763000.0,
+        "predicted_el": 677022.911961,
+        "observed_el": 460700.0,
+        "el_ratio": 1.469553
+      },
+      {
+        "band": 4,
+        "loans": 4991,
+        "mean_pd": 0.006372,
+        "default_rate": 0.006612,
+        "exposure": 1577328000.0,
+        "predicted_el": 1006729.304327,
+        "observed_el": 777900.0,
+        "el_ratio": 1.294163
+      },
+      {
+        "band": 5,
+        "loans": 4991,
+        "mean_pd": 0.008988,
+        "default_rate": 0.006812,
+        "exposure": 1551031000.0,
+        "predicted_el": 1391221.527834,
+        "observed_el": 934700.0,
+        "el_ratio": 1.488415
+      },
+      {
+        "band": 6,
+        "loans": 4990,
+        "mean_pd": 0.012522,
+        "default_rate": 0.01002,
+        "exposure": 1529007000.0,
+        "predicted_el": 1914993.365393,
+        "observed_el": 1410700.0,
+        "el_ratio": 1.357477
+      },
+      {
+        "band": 7,
+        "loans": 4991,
+        "mean_pd": 0.017537,
+        "default_rate": 0.010419,
+        "exposure": 1492184000.0,
+        "predicted_el": 2613502.552097,
+        "observed_el": 1225600.0,
+        "el_ratio": 2.132427
+      },
+      {
+        "band": 8,
+        "loans": 4990,
+        "mean_pd": 0.025367,
+        "default_rate": 0.019038,
+        "exposure": 1450313000.0,
+        "predicted_el": 3674204.983292,
+        "observed_el": 2865400.0,
+        "el_ratio": 1.282266
+      },
+      {
+        "band": 9,
+        "loans": 4991,
+        "mean_pd": 0.039588,
+        "default_rate": 0.029653,
+        "exposure": 1405873000.0,
+        "predicted_el": 5559518.623142,
+        "observed_el": 4114600.0,
+        "el_ratio": 1.351169
+      },
+      {
+        "band": 10,
+        "loans": 4991,
+        "mean_pd": 0.089813,
+        "default_rate": 0.048688,
+        "exposure": 1358611000.0,
+        "predicted_el": 12204210.44127,
+        "observed_el": 7246500.0,
+        "el_ratio": 1.684152
+      }
+    ]
+  },
+  "sensitivity_validation": [
+    {
+      "margin": 0.005,
+      "loss": 0.01,
+      "theory_cutoff": 0.333333,
+      "best_cutoff": 0.319896,
+      "approval_rate": 0.994981,
+      "profit_gain_vs_approve_all": 32380.0,
+      "gain_pct_of_exposure": 8e-06
+    },
+    {
+      "margin": 0.005,
+      "loss": 0.05,
+      "theory_cutoff": 0.090909,
+      "best_cutoff": 0.068334,
+      "approval_rate": 0.930002,
+      "profit_gain_vs_approve_all": 1128860.0,
+      "gain_pct_of_exposure": 0.000267
+    },
+    {
+      "margin": 0.005,
+      "loss": 0.1,
+      "theory_cutoff": 0.047619,
+      "best_cutoff": 0.042122,
+      "approval_rate": 0.884991,
+      "profit_gain_vs_approve_all": 3918260.0,
+      "gain_pct_of_exposure": 0.000925
+    },
+    {
+      "margin": 0.005,
+      "loss": 0.2,
+      "theory_cutoff": 0.02439,
+      "best_cutoff": 0.014455,
+      "approval_rate": 0.720059,
+      "profit_gain_vs_approve_all": 10632380.0,
+      "gain_pct_of_exposure": 0.002511
+    },
+    {
+      "margin": 0.01,
+      "loss": 0.01,
+      "theory_cutoff": 0.5,
+      "best_cutoff": 0.708129,
+      "approval_rate": 1.0,
+      "profit_gain_vs_approve_all": 0.0,
+      "gain_pct_of_exposure": 0.0
+    },
+    {
+      "margin": 0.01,
+      "loss": 0.05,
+      "theory_cutoff": 0.166667,
+      "best_cutoff": 0.147095,
+      "approval_rate": 0.974959,
+      "profit_gain_vs_approve_all": 508320.0,
+      "gain_pct_of_exposure": 0.00012
+    },
+    {
+      "margin": 0.01,
+      "loss": 0.1,
+      "theory_cutoff": 0.090909,
+      "best_cutoff": 0.068334,
+      "approval_rate": 0.930002,
+      "profit_gain_vs_approve_all": 2257720.0,
+      "gain_pct_of_exposure": 0.000533
+    },
+    {
+      "margin": 0.01,
+      "loss": 0.2,
+      "theory_cutoff": 0.047619,
+      "best_cutoff": 0.042122,
+      "approval_rate": 0.884991,
+      "profit_gain_vs_approve_all": 7836520.0,
+      "gain_pct_of_exposure": 0.00185
+    },
+    {
+      "margin": 0.02,
+      "loss": 0.01,
+      "theory_cutoff": 0.666667,
+      "best_cutoff": 0.708129,
+      "approval_rate": 1.0,
+      "profit_gain_vs_approve_all": 0.0,
+      "gain_pct_of_exposure": 0.0
+    },
+    {
+      "margin": 0.02,
+      "loss": 0.05,
+      "theory_cutoff": 0.285714,
+      "best_cutoff": 0.319896,
+      "approval_rate": 0.994981,
+      "profit_gain_vs_approve_all": 218020.0,
+      "gain_pct_of_exposure": 5.1e-05
+    },
+    {
+      "margin": 0.02,
+      "loss": 0.1,
+      "theory_cutoff": 0.166667,
+      "best_cutoff": 0.147095,
+      "approval_rate": 0.974959,
+      "profit_gain_vs_approve_all": 1016640.0,
+      "gain_pct_of_exposure": 0.00024
+    },
+    {
+      "margin": 0.02,
+      "loss": 0.2,
+      "theory_cutoff": 0.090909,
+      "best_cutoff": 0.068334,
+      "approval_rate": 0.930002,
+      "profit_gain_vs_approve_all": 4515440.0,
+      "gain_pct_of_exposure": 0.001066
+    },
+    {
+      "margin": 0.03,
+      "loss": 0.01,
+      "theory_cutoff": 0.75,
+      "best_cutoff": 0.708129,
+      "approval_rate": 1.0,
+      "profit_gain_vs_approve_all": 0.0,
+      "gain_pct_of_exposure": 0.0
+    },
+    {
+      "margin": 0.03,
+      "loss": 0.05,
+      "theory_cutoff": 0.375,
+      "best_cutoff": 0.319896,
+      "approval_rate": 0.994981,
+      "profit_gain_vs_approve_all": 105780.0,
+      "gain_pct_of_exposure": 2.5e-05
+    },
+    {
+      "margin": 0.03,
+      "loss": 0.1,
+      "theory_cutoff": 0.230769,
+      "best_cutoff": 0.319896,
+      "approval_rate": 0.994981,
+      "profit_gain_vs_approve_all": 548280.0,
+      "gain_pct_of_exposure": 0.000129
+    },
+    {
+      "margin": 0.03,
+      "loss": 0.2,
+      "theory_cutoff": 0.130435,
+      "best_cutoff": 0.130021,
+      "approval_rate": 0.969993,
+      "profit_gain_vs_approve_all": 2854270.0,
+      "gain_pct_of_exposure": 0.000674
+    }
+  ]
+}
