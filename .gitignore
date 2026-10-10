@@ -23,3 +23,7 @@ Thumbs.db
 data/raw/freddie/
 data/interim/
 *.zip
+
+# Dagster run history (local only)
+.dagster_home/
+.dagster/

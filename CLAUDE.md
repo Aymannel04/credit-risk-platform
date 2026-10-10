@@ -18,6 +18,7 @@ Source of truth for scope and phases: `docs/technical-sheet.md` (copy of the tec
 
 ## Commands (fill in as they are created)
 - Lint and test: `ruff check . && pytest -q`
-- Run pipeline locally: `dagster dev`
-- Materialise assets: `dagster asset materialize --select '*'`
+- Run pipeline locally, one command: `.venv/Scripts/python -m pipeline.run` (skips what is up to date; `--full` forces a rebuild)
+- See the pipeline as a picture: `dagster dev` (needs `DAGSTER_HOME` pointing to `.dagster_home`, see decision log), then open http://127.0.0.1:3000
+- Materialise assets with the Dagster CLI: `python -m dagster asset materialize -m pipeline.definitions --select "raw_parquet*"` (a bare `*` does not work on Windows: the CLI expands it into file names)
 - Run API locally: `uvicorn service.main:create_app --factory --reload`, then open http://127.0.0.1:8000/docs
