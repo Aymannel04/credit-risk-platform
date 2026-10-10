@@ -292,3 +292,22 @@ No Gini difference between models is significant in any exam (all paired 95% int
 2. The level is off out of time: the models predict about 1.3-1.5x the real default rate in 2019 and 2022 (as expected from the through-the-cycle design noted on 2026-10-09). Their Brier is slightly worse than a flat forecast that already knows the true rate (2019: 0.01264-0.01281 vs 0.01247; 2022: 0.01383-0.01390 vs 0.01367), whereas in time they beat the flat forecast (0.0173-0.0175 vs 0.0189): the level error out of time costs more than the ranking brings. A macro overlay or per-period recalibration is the standard remedy and belongs to the monitoring phase.
 3. Model choice: the three models are statistically indistinguishable, so the WoE scorecard is the recommended primary model (readable points, full audit trail), with logistic regression and XGBoost kept as challengers. The cost is at most about 0.01-0.02 Gini, within the noise.
 4. Calibration of the unweighted models in time is right (ratio 1.02, interval 0.93-1.13).
+
+## 2026-10-10: LGD measured from the real loss data (all five samples, after exclusions)
+
+Code: `credit/economics/lgd.py` (+ `tests/test_lgd.py`, checked against a hand calculation); result: `results/lgd_estimate.json`. EAD = original loan amount (approximation). Actual Loss = (unpaid balance + unpaid interest) - sale proceeds - insurance and other recoveries - expenses; NULL for loans disposed in the last 3 months before the cutoff and for defect loans; gains (negative losses) are kept. This is an analysis of what happened, not a model parameter fitted for the exam.
+
+| Vintage | flagged defaults (B) | of which ended in a loss event (ever) | LGD of loss events (loss / balance at end) | median loss share | loss events with no loss or a gain | **loss per flagged loan** (sum of losses / sum of original amounts) |
+|---|---|---|---|---|---|---|
+| 2008 | 2,219 | 1,048 (47%) | **45.8%** | 45.9% | 3.1% | **20.1%** |
+| 2012 | 73 | 20 (27%) | 20.9% | 20.5% | 8.5% | 4.4% |
+| 2016 | 288 | 32 (11%) | 10.8% | 4.6% | 13.9% | 1.07% |
+| 2019 | 630 | 27 (4%) | 13.4% | 11.3% | 15.2% | 0.37% |
+| 2022 | 692 | 48 (7%) | 10.7% | 10.3% | 17.8% | 0.46% |
+
+**Findings.**
+1. Two different LGDs. The severity once a loan really ends in a loss is 11-46% (crisis 2008: 46%; calm years: about 11-21%). But most flagged defaults never end in a loss: in calm vintages only 4-27% of flagged loans have a loss event at all (2008: 47%), the others cure or are paid off.
+2. The multiplier that matches our PD (which counts every flagged loan) is the loss per flagged loan: 20.1% in the 2008 crisis vintage, 4.4% in 2012, about 1.1% in 2016, and 0.4% in 2019/2022 (2019 and 2022 are right-censored: foreclosure and sale take years, so their losses are still incomplete; the true values are higher).
+3. The economics therefore depend strongly on the era (a macro effect, like the default rate itself). A cut-off derived from a single LGD would be wrong in one regime or the other: the sensitivity analysis must span LGD from below 1% to 20% of the loan amount.
+4. Definition B (90+ days late without an assistance plan) is a conservative risk flag in calm times: it flags many loans that cure. PD under B is a "serious delinquency" probability, not a loss probability; expected loss must use loss per flagged loan, not the loss severity of foreclosures. This must be stated in the model card.
+5. Only loans flagged within the first 24 months are counted: loss events after month 24 (about half of the 2008 loss events) are outside the label.

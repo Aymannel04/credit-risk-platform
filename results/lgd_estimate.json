@@ -1,0 +1,68 @@
+[
+  {
+    "vintage_year": 2008,
+    "flagged_defaults": 2219,
+    "flagged_with_loss_event": 1048,
+    "loss_event_loans": 2127,
+    "loss_event_with_amount": 1927,
+    "lgd_loss_events": 0.4576,
+    "median_loss_share": 0.4587,
+    "share_no_loss_or_gain": 0.0306,
+    "loss_per_flag": 0.2008
+  },
+  {
+    "vintage_year": 2009,
+    "flagged_defaults": 0,
+    "flagged_with_loss_event": 0,
+    "loss_event_loans": 0,
+    "loss_event_with_amount": 0,
+    "lgd_loss_events": NaN,
+    "median_loss_share": NaN,
+    "share_no_loss_or_gain": NaN,
+    "loss_per_flag": NaN
+  },
+  {
+    "vintage_year": 2012,
+    "flagged_defaults": 73,
+    "flagged_with_loss_event": 20,
+    "loss_event_loans": 50,
+    "loss_event_with_amount": 47,
+    "lgd_loss_events": 0.2094,
+    "median_loss_share": 0.2048,
+    "share_no_loss_or_gain": 0.0851,
+    "loss_per_flag": 0.044
+  },
+  {
+    "vintage_year": 2016,
+    "flagged_defaults": 288,
+    "flagged_with_loss_event": 32,
+    "loss_event_loans": 67,
+    "loss_event_with_amount": 65,
+    "lgd_loss_events": 0.1081,
+    "median_loss_share": 0.046,
+    "share_no_loss_or_gain": 0.1385,
+    "loss_per_flag": 0.0107
+  },
+  {
+    "vintage_year": 2019,
+    "flagged_defaults": 630,
+    "flagged_with_loss_event": 27,
+    "loss_event_loans": 48,
+    "loss_event_with_amount": 46,
+    "lgd_loss_events": 0.1339,
+    "median_loss_share": 0.1125,
+    "share_no_loss_or_gain": 0.1522,
+    "loss_per_flag": 0.0037
+  },
+  {
+    "vintage_year": 2022,
+    "flagged_defaults": 692,
+    "flagged_with_loss_event": 48,
+    "loss_event_loans": 58,
+    "loss_event_with_amount": 45,
+    "lgd_loss_events": 0.1069,
+    "median_loss_share": 0.1028,
+    "share_no_loss_or_gain": 0.1778,
+    "loss_per_flag": 0.0046
+  }
+]
