@@ -1,0 +1,44 @@
+name: CI
+
+# Runs on every push and every pull request: style check, then all tests.
+# It uses NO secrets and NO data: the tests use made-up data, and the tests that need the real
+# Freddie Mac files skip themselves when the files are absent (they must never be uploaded to GitHub).
+
+on:
+  push:
+  pull_request:
+
+permissions:
+  contents: read          # the least a workflow needs: it can read the code and nothing else
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true   # a newer push on the same branch cancels the older, now useless, run
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Get the code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+          cache: pip
+          cache-dependency-path: |
+            requirements.txt
+            requirements-dev.txt
+
+      - name: Install the pinned libraries
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements-dev.txt
+
+      - name: Style and common mistakes (ruff)
+        run: ruff check .
+
+      - name: Tests (pytest)
+        run: pytest -q
