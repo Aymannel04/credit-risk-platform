@@ -97,6 +97,10 @@ v1 trains on a SMOTE-balanced (50/50) set but shows the model output as a "proba
 
 True default rate: 0.300. Lower Brier is better. Calibration (Platt scaling, fitted with cross-validation) improves all three variants, and class weights and SMOTE push the average predicted PD above the true rate. The effect is modest on this small dataset, and the calibrated variants differ by less than the noise. Reliability curves: `docs/calibration_experiment.png`. v2 uses an unweighted model as the PD baseline and always calibrates.
 
+## Learning guide
+
+New to credit risk? Start with the plain-language guide in [`docs/guide/`](docs/guide/README.md): basics, data and pipeline, how models are measured (Gini, KS, Brier, calibration), the scorecard, the story of the experiments, money and fairness, an interview cheat-sheet and a glossary. Technical record of every decision: [`docs/decision-log.md`](docs/decision-log.md); one-page summary of the model and its flaws: [`docs/model_card.md`](docs/model_card.md).
+
 ## Data layers (v2 work in progress)
 
 The v2 pipeline follows the **medallion pattern** under project-specific names:
