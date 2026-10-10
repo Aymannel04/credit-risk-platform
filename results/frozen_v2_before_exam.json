@@ -1,0 +1,39 @@
+{
+  "frozen_at_commit": "ee7f19162ca59f79dcdc6dba387744ad668f6379",
+  "dev_features_sha256": "061739242f2ed204b66166818fd703b8789ba29d1834cf06bbbd1441908b5f2a",
+  "fresh_features_sha256": "067e88d5dbb3c89fa8c884559cae2fc644c38ba8f459e3dd645035d7d62613d9",
+  "assumptions_sha256": "eb59864bae60dd2d06185e8c958fea433b43ae494fdf241a9da68ae47624e482",
+  "preregistration_sha256": "12078598582f92cc16283b6533a3d687b77bf159d912eb1b0967e46c7a8fb768",
+  "arms": {
+    "v1": "frozen v1 scorecard (train split, v1 features)",
+    "v1b": "v1 features retrained on all rows of the 5 known vintages",
+    "v2": {
+      "numeric": [
+        "credit_score",
+        "dti",
+        "rate_spread",
+        "ltv",
+        "cltv",
+        "several_borrowers",
+        "mi_pct",
+        "orig_term"
+      ],
+      "categorical": [
+        "purpose"
+      ],
+      "min_iv": 0.0,
+      "training": "same rows as v1b"
+    }
+  },
+  "fresh_vintages": [
+    2010,
+    2014,
+    2018,
+    2023
+  ],
+  "bootstrap": {
+    "resamples": 1000,
+    "seed": 20261011
+  },
+  "non_inferiority_margin_gini": 0.03
+}
