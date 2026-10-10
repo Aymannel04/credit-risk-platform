@@ -6,8 +6,9 @@ Short answers in plain words. Practise saying them out loud. Where an answer has
 "I built a credit-risk scorecard on 250,000 real US mortgages from Freddie Mac. I predicted default within 24 months using
 only information known when the loan is made, and I tested it honestly on years the model had never seen. In the same era
 it ranks well (Gini 0.74); on later years it drops to about 0.5 and over-predicts risk by about 40%. I diagnosed why,
-documented the flaws I found in my own model, and I planned a v2 that fixes them and will be tested on fresh years."
-(Say "I am fixing them" only once v2 is really done; say "planned" until then.)
+documented the flaws I found in my own model, and I built a v2 without them, with my predictions and success rules written and committed in advance. On four years nobody
+had looked at, v2 ranks slightly better (+0.024 Gini), but both models over-predict default rates by 1.4 to 2.6 times because
+they cannot see the economic cycle."
 
 ## Numbers to remember
 | What | Number |
@@ -22,7 +23,10 @@ documented the flaws I found in my own model, and I planned a v2 that fixes them
 | Best cut-off (base case) | approve if PD <= 14.7% (97.5% approved) |
 | Money gain of that cut-off over "approve all" | about +0.02% of the amount lent |
 | Loss per flagged loan (measured) | 20% (2008), 4% (2012), 1% (2016) |
-| Tests | 72 passing |
+| Tests | 91 passing |
+| v2 exam (fresh 2010/2014/2018/2023): Gini v2 | 0.628 / 0.599 / 0.543 / 0.595 |
+| v2 minus v1, mean Gini difference (95%) | +0.024 (+0.013 to +0.035) |
+| Predicted / real default rate on fresh years | 1.4 to 2.6 (the macro effect) |
 
 ## Questions about the data and the target
 **Q. How did you define default?** "Within 24 months, 90+ days late while no payment-relief plan is active, or the loan
@@ -62,9 +66,10 @@ SMOTE also damages the ranking. If you need a real probability, train on the dat
 with early stopping on an inner slice of training data; the test untouched until a committed freeze; error bars by bootstrap."
 
 ## Questions about the results
-**Q. Why does it drop to Gini 0.5 in the future?** "Hypotheses: 76% of the training defaults come from the 2008 crisis,
-so it learned crisis patterns; defaults in calm years come from events a loan application cannot show; and two features
-turned out to be era proxies. I treat the causes as hypotheses and test them in a v2 on fresh years."
+**Q. Why does it drop to Gini 0.5 in the future?** "I first suspected that the 2008 crisis dominated the training
+(76% of its defaults). I tested it with a leave-one-year-out experiment and the weakness stayed, so I rejected that
+hypothesis. On four fresh years the ranking is 0.52-0.63, so it is not a general law; defaults in calm years are probably
+harder to predict from day-one data."
 
 **Q. Why does it over-predict by 40%?** "It is a through-the-cycle model: it cannot see the economic climate. On average
 it predicts the pooled-era level, while calm years have fewer defaults. A bank would add a macro overlay or recalibrate
@@ -73,8 +78,8 @@ per period; I would monitor predicted versus observed by period and by group."
 **Q. Why didn't you improve the model until the exam was better?** "That is data snooping: the exam would then measure my
 tuning, not the model. Any improvement is a new, labelled experiment evaluated on new data."
 
-**Q. What would you do next?** "Model v2 without the era proxies, trained with equal weight on every vintage, tested once
-on years I have not looked at; then monitoring."
+**Q. What would you do next?** "Fix the level, not the ranking: a macro overlay or per-period recalibration (the models over-predict
+by 1.4 to 2.6 times), then monitoring of predicted vs observed by period and group, then a new experiment on new data."
 
 ## Questions about mistakes and honesty (these impress people)
 **Q. Tell me about a bug you found.** "My first SMOTE run predicted 0.7% risk, which contradicted theory (balancing should

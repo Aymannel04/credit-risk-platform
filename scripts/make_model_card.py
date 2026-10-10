@@ -26,12 +26,13 @@ def gini_ci(model: dict) -> str:
 def main() -> None:
     exam, score, eco = load("final_exam.json"), load("scorecard_validation.json"), load("economics_report.json")
     expl, lgd, abl = load("explain_report.json"), load("lgd_estimate.json"), load("ablation_validation.json")
+    v2x = load("v2_exam.json")
     feat_report = ROOT / "data" / "interim" / "features" / "report.json"
     waterfall = json.loads(feat_report.read_text(encoding="utf-8"))["waterfall"] if feat_report.exists() else []
     commit = subprocess.run(["git", "rev-parse", "--short", "HEAD"], cwd=ROOT, capture_output=True, text=True).stdout.strip()
 
     L = []
-    L += ["# Model card: WoE scorecard for 24-month mortgage default (portfolio project)", "",
+    L += ["# Model card: WoE scorecard for 24-month mortgage default (portfolio project). Recommended model: v2", "",
           f"Generated from `results/*.json` at commit `{commit}`. Frozen exam commit: `{exam['frozen_at_commit'][:10]}`.", "",
           "> **Not a lending product.** A learning/portfolio project on public Freddie Mac data. No claim about any real lender, "
           "no regulatory compliance claim (Basel / IFRS 9 are used only as vocabulary).", "",
@@ -62,6 +63,18 @@ def main() -> None:
         L.append(f"| {name} | {b['n']:,} / {b['defaults']} | {gini_ci(m['scorecard'])} | {gini_ci(m['logistic_regression'])} | {gini_ci(m['xgboost'])} | "
                  f"{pct(m['scorecard']['mean_predicted_pd'])} vs {pct(b['default_rate'])} |")
     L += ["", "No difference between the three models is statistically significant. The scorecard is recommended for being readable.", "",
+          "## 5b. Model v2 (recommended): exam on four FRESH vintages (run once; pre-registered and frozen)",
+          "v2 = scorecard with credit_score, dti, rate_spread, ltv, cltv, several_borrowers, mi_pct, orig_term, purpose "
+          "(no state, channel or super_conforming), trained on all five known vintages. v1b = v1 features on the same training rows.", "",
+          "| Fresh vintage | loans / defaults | real rate | Gini v1 | Gini v1b | Gini v2 | predicted/observed (v2) |", "|---|---|---|---|---|---|---|"]
+    for v, b in v2x["vintages"].items():
+        a = b["arms"]
+        L.append(f"| {v} | {b['loans']:,} / {b['defaults']} | {pct(b['default_rate'])} | {a['v1']['gini']:.3f} | {a['v1b']['gini']:.3f} | {a['v2']['gini']:.3f} | "
+                 f"{a['v2']['mean_predicted_pd'] / b['default_rate']:.2f} |")
+    sm = v2x["summary"]["mean gini difference v2 minus v1"]
+    L += ["", f"Mean Gini difference v2 minus v1 over the four vintages: {sm['difference']:+.3f} (95% interval {sm['ci95'][0]:+.3f} to {sm['ci95'][1]:+.3f}). "
+          "Pre-registered rules: non-inferiority and group-spread criteria both met (the group criterion with no margin). "
+          "The predictions are over the real default rate in every fresh vintage by a factor of 1.4 to 2.6: the level needs a macro overlay or per-period recalibration.", "",
           "## 6. Calibration and level",
           "Unweighted models are well calibrated in time (predicted/observed 1.02). Out of time the models over-predict by about 1.4x "
           "(2019) and 1.5x (2022): the model is a through-the-cycle model and cannot see the macro regime. Calibration (Platt) brought no "
@@ -84,10 +97,12 @@ def main() -> None:
           "first-time buyers more than repeat buyers, investors, broker-channel loans and Florida; refusal rates differ by group "
           "(the four-fifths rule is uninformative when 97-99% are approved).", "",
           "## 10. Known flaws and limits",
-          "- **Era proxies.** `super_conforming` (exists only after Oct 2008) and `state` (2008 housing-bust map) act as era/geography proxies; "
-          "`rate` was one and was replaced. A model v2 without them is planned and must be tested on fresh vintages (the current test sets are used).",
+          "- **Era proxies and geography.** `super_conforming` (exists only after Oct 2008) and `channel` carry almost no information inside an era; "
+          "the raw `rate` was an era proxy and was replaced by the rate spread. `state` does carry information inside each era, but it is a geography "
+          "stand-in with the largest group over-prediction (Florida) and was removed for fairness at no ranking cost. v2 (recommended) removes them "
+          "and was tested on fresh vintages (section 5b).",
           "- **Crisis-dominated training.** 76% of the training-period defaults come from the 2008 vintage.",
-          "- **Ranking falls out of time** (Gini 0.45-0.53 vs 0.74 in time); causes are hypotheses, not proven.",
+          "- **Ranking is weaker out of time in the v1 exam** (Gini 0.45-0.53 vs 0.74 in time) but 0.52-0.63 on the fresh vintages; leave-one-vintage-out shows it is not caused by the 2008 weight in training; the cause is not proven.",
           "- Only five 50,000-loan samples; margin is illustrative; 2019 and 2022 losses are incomplete; PD is for a *flagged* delinquency, not a loss.",
           "- The default definition and every number above depend on assumptions listed in `docs/decision-log.md`.", "",
           "## 11. Monitoring (planned, Phase 3)",

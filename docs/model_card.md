@@ -1,6 +1,6 @@
-# Model card: WoE scorecard for 24-month mortgage default (portfolio project)
+# Model card: WoE scorecard for 24-month mortgage default (portfolio project). Recommended model: v2
 
-Generated from `results/*.json` at commit `2ab1985`. Frozen exam commit: `1add760b87`.
+Generated from `results/*.json` at commit `d94afcd`. Frozen exam commit: `1add760b87`.
 
 > **Not a lending product.** A learning/portfolio project on public Freddie Mac data. No claim about any real lender, no regulatory compliance claim (Basel / IFRS 9 are used only as vocabulary).
 
@@ -37,6 +37,18 @@ Not used as inputs on purpose: zip3, MSA, seller name, affordable-housing progra
 
 No difference between the three models is statistically significant. The scorecard is recommended for being readable.
 
+## 5b. Model v2 (recommended): exam on four FRESH vintages (run once; pre-registered and frozen)
+v2 = scorecard with credit_score, dti, rate_spread, ltv, cltv, several_borrowers, mi_pct, orig_term, purpose (no state, channel or super_conforming), trained on all five known vintages. v1b = v1 features on the same training rows.
+
+| Fresh vintage | loans / defaults | real rate | Gini v1 | Gini v1b | Gini v2 | predicted/observed (v2) |
+|---|---|---|---|---|---|---|
+| 2010 | 35,304 / 151 | 0.43% | 0.598 | 0.616 | 0.628 | 2.03 |
+| 2014 | 42,566 / 206 | 0.48% | 0.580 | 0.586 | 0.599 | 2.64 |
+| 2018 | 49,377 / 420 | 0.85% | 0.523 | 0.543 | 0.543 | 2.11 |
+| 2023 | 49,834 / 662 | 1.33% | 0.570 | 0.585 | 0.595 | 1.41 |
+
+Mean Gini difference v2 minus v1 over the four vintages: +0.024 (95% interval +0.013 to +0.035). Pre-registered rules: non-inferiority and group-spread criteria both met (the group criterion with no margin). The predictions are over the real default rate in every fresh vintage by a factor of 1.4 to 2.6: the level needs a macro overlay or per-period recalibration.
+
 ## 6. Calibration and level
 Unweighted models are well calibrated in time (predicted/observed 1.02). Out of time the models over-predict by about 1.4x (2019) and 1.5x (2022): the model is a through-the-cycle model and cannot see the macro regime. Calibration (Platt) brought no gain on validation, so none is applied. Class weights and SMOTE inflate the PD (27.3% and 17.6% average predicted vs 2.04% real, validation ablation) and are not used.
 
@@ -50,9 +62,9 @@ Scorecard points are additive: reasons are the features where a loan loses the m
 No sex, race or age in the data: protected characteristics **cannot** be tested. Group differences that can be measured: first-time buyers, occupancy, purpose, property type, channel, state (`results/fairness_report.md`). In later years the model over-predicts first-time buyers more than repeat buyers, investors, broker-channel loans and Florida; refusal rates differ by group (the four-fifths rule is uninformative when 97-99% are approved).
 
 ## 10. Known flaws and limits
-- **Era proxies.** `super_conforming` (exists only after Oct 2008) and `state` (2008 housing-bust map) act as era/geography proxies; `rate` was one and was replaced. A model v2 without them is planned and must be tested on fresh vintages (the current test sets are used).
+- **Era proxies and geography.** `super_conforming` (exists only after Oct 2008) and `channel` carry almost no information inside an era; the raw `rate` was an era proxy and was replaced by the rate spread. `state` does carry information inside each era, but it is a geography stand-in with the largest group over-prediction (Florida) and was removed for fairness at no ranking cost. v2 (recommended) removes them and was tested on fresh vintages (section 5b).
 - **Crisis-dominated training.** 76% of the training-period defaults come from the 2008 vintage.
-- **Ranking falls out of time** (Gini 0.45-0.53 vs 0.74 in time); causes are hypotheses, not proven.
+- **Ranking is weaker out of time in the v1 exam** (Gini 0.45-0.53 vs 0.74 in time) but 0.52-0.63 on the fresh vintages; leave-one-vintage-out shows it is not caused by the 2008 weight in training; the cause is not proven.
 - Only five 50,000-loan samples; margin is illustrative; 2019 and 2022 losses are incomplete; PD is for a *flagged* delinquency, not a loss.
 - The default definition and every number above depend on assumptions listed in `docs/decision-log.md`.
 

@@ -76,12 +76,14 @@ Rules: freeze everything in a committed file; the exam script refuses to run oth
   (right), no clear winner (right).
 - **Why it drops (hypotheses, not proven):** 76% of the training defaults come from the 2008 crisis, so the model learned
   crisis patterns; defaults in calm years come from life events a loan application cannot see; the model cannot see the
-  economy ("through-the-cycle" model).
+  economy ("through-the-cycle" model). **Later tested:** the 2008-weight hypothesis was *rejected* by a leave-one-year-out
+  experiment (file 9).
 - **Lesson:** a model is only as good as the world it is tested in. Report the bad numbers too.
 
 ### Story 10: we found flaws in our own model after the exam
 - `super_conforming` only exists for loans after Oct 2008, so it mostly separates crisis loans from later ones.
-- `state` captured the 2008 housing-bust map (Florida, Arizona, Michigan...), so Florida is over-predicted by 2.2x later.
+- `state` made Florida over-predicted by 2.2x later. I first thought it was an era proxy; the later review showed it *does*
+  carry information inside each year, so we removed it for fairness reasons, not because it was an era flag (file 9).
 - **What we did:** did **not** touch the exam numbers; hid the faulty feature from the reasons; wrote it in the model card;
   planned **model v2** to be tested on **fresh years**.
 - **Lesson:** an IV screen cannot see an era proxy. For every feature ask: *does this exist and mean the same thing in
@@ -90,3 +92,10 @@ Rules: freeze everything in a committed file; the exam script refuses to run oth
 ### Story 11: honesty about our own mistakes
 We wrote a wrong count in our notes (4,225 defaults instead of 2,925). We caught it by re-checking and corrected the log,
 saying so. A project that records its corrections is more believable than one that pretends to be perfect.
+
+### Story 12: model v2, tested on four years nobody had looked at (details in file 9)
+- We reviewed every feature using only the old years, killed one of our own hypotheses, wrote predictions and success rules in
+  a committed file, froze everything, and ran one exam on 2010, 2014, 2018 and 2023.
+- **Result:** v2 ranks slightly better than v1 (+0.024 Gini on average, interval +0.013 to +0.035). Both over-predict the default
+  rate by 1.4 to 2.6 times. By the rules written in advance, v2 is adopted.
+- **Lesson:** a flaw can be fixed honestly, with a fair test, and some of your predictions will be wrong: report them.
