@@ -20,4 +20,4 @@ Source of truth for scope and phases: `docs/technical-sheet.md` (copy of the tec
 - Lint and test: `ruff check . && pytest -q`
 - Run pipeline locally: `dagster dev`
 - Materialise assets: `dagster asset materialize --select '*'`
-- Run API locally: `uvicorn service.main:app --reload`
+- Run API locally: `uvicorn service.main:create_app --factory --reload`, then open http://127.0.0.1:8000/docs

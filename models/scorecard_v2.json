@@ -305,5 +305,39 @@
  "exported_on": "2026-10-10",
  "trained_on": "all kept loans of the 2008, 2012, 2016, 2019 and 2022 Freddie Mac samples (aggregate bands only are stored)",
  "training_data_sha256": "061739242f2ed204b66166818fd703b8789ba29d1834cf06bbbd1441908b5f2a",
- "adopted_by": "pre-registered exam on fresh vintages 2010/2014/2018/2023 (docs/v2_preregistration.md, results/v2_exam.md)"
+ "adopted_by": "pre-registered exam on fresh vintages 2010/2014/2018/2023 (docs/v2_preregistration.md, results/v2_exam.md)",
+ "training_ranges": {
+  "credit_score": [
+   500.0,
+   850.0
+  ],
+  "dti": [
+   1.0,
+   65.0
+  ],
+  "rate_spread": [
+   -3.625,
+   3.625
+  ],
+  "ltv": [
+   5.0,
+   100.0
+  ],
+  "cltv": [
+   5.0,
+   113.0
+  ],
+  "several_borrowers": [
+   0.0,
+   1.0
+  ],
+  "mi_pct": [
+   0.0,
+   42.0
+  ],
+  "orig_term": [
+   60.0,
+   480.0
+  ]
+ }
 }

@@ -76,6 +76,8 @@ def main() -> None:
         "training_data_sha256": hashlib.sha256(FEATURES_PATH.read_bytes()).hexdigest(),
         "adopted_by": "pre-registered exam on fresh vintages 2010/2014/2018/2023 (docs/v2_preregistration.md, results/v2_exam.md)",
     }
+    # aggregate min/max of each numeric input over the training rows: lets the API warn when a loan is outside what the model has seen
+    meta["training_ranges"] = {c: [float(dev[c].min()), float(dev[c].max())] for c in V2_NUMERIC}
     model = export_model(sc, meta)
     MODEL_PATH.parent.mkdir(exist_ok=True)
     save_model(model, MODEL_PATH)
