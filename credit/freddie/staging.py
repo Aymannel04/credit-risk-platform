@@ -155,8 +155,8 @@ def run_checks(
         failures.append("orig_upb must be positive and present")
     if one("SELECT count(*) FROM stg_orig WHERE int_rate IS NULL OR int_rate < 0 OR int_rate > 20"):
         failures.append("int_rate outside 0-20%")
-    if one("SELECT count(*) FROM stg_orig WHERE orig_term IS NULL OR orig_term < 60 OR orig_term > 480"):
-        failures.append("orig_term outside 60-480 months")
+    if one("SELECT count(*) FROM stg_orig WHERE orig_term IS NULL OR orig_term < 60 OR orig_term > 600"):
+        failures.append("orig_term outside 60-600 months")  # 480 was too tight: a real 513-month loan exists (2010 sample)
     if one("SELECT count(*) FROM stg_orig WHERE dti IS NOT NULL AND (dti < 0 OR dti > 65)"):
         failures.append("dti outside 0-65")
     if one("SELECT count(*) FROM stg_orig WHERE credit_score < 300 OR credit_score > 850"):
