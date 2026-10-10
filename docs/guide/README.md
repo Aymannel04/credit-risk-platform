@@ -40,7 +40,7 @@ and `docs/model_card.md` (one-page summary of the model and its limits).
 
 ```
 Phase 0  Audit and preparation       DONE
-Phase 1  Data platform               ~60%  (data and checks done; pipeline tool, CI and cloud copy still to do)
+Phase 1  Data platform               ~70%  (data, checks and CI done; pipeline tool and cloud copy still to do)
 Phase 2  Modeling                    DONE  (models, exam, money, explanations, fairness, model card, model v2)
 Phase 3  Serving and monitoring      to do (API, drift alarms, pipeline, deployment on AWS)
 Phase 4  Credit-memo agent           to do
@@ -52,6 +52,6 @@ Phase 5  Final README, demo, interview preparation
 1. **Model v2: DONE.** We removed the features that only reflect the era and proved on four years nobody had looked at that
    the cleaner model ranks slightly better (+0.024 Gini). Both models still predict 1.4 to 2.6 times the real default rate:
    a macro adjustment and monitoring are the next step (see file 9).
-2. **CI**: a robot on GitHub that runs all the tests on every change.
+2. **CI: DONE.** A robot on GitHub runs the style check and all tests on every push (green tick on the repository).
 3. **Pipeline, API, monitoring, deployment on AWS.**
 4. **The memo agent**, then the final README, a short demo video and the interview-preparation session.

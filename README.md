@@ -1,6 +1,8 @@
 # Credit Scoring & Risk Analysis 🏦
 
-> **This repository is the v2 work in progress** (credit-risk platform on GCP, see `docs/technical-sheet.md` and `docs/decision-log.md`).
+[![CI](https://github.com/Aymannel04/credit-risk-platform/actions/workflows/ci.yml/badge.svg?branch=v2-prep)](https://github.com/Aymannel04/credit-risk-platform/actions/workflows/ci.yml)
+
+> **This repository is the v2 work in progress** (credit-risk platform on AWS, see `docs/technical-sheet.md` and `docs/decision-log.md`).
 > The original, frozen v1 project is at https://github.com/Aymannel04/credit_scoring_project. This repo keeps v1's code as a starting point and fixes its weaknesses first (Phase 0). Numbers below were re-measured on pinned library versions.
 
 End-to-end ML project predicting credit default risk on the German Credit dataset, with SMOTE-based class imbalance handling, a business-labelled confusion matrix, and SHAP-based explainability.
