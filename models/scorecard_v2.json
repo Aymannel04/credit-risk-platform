@@ -1,0 +1,309 @@
+{
+ "schema_version": 1,
+ "model": "woe_scorecard_v2",
+ "scaling": {
+  "base_score": 600,
+  "base_odds": 50,
+  "points_to_double_odds": 20,
+  "factor": 28.85390081777927,
+  "offset": 487.1228762045055
+ },
+ "feature_order": [
+  "credit_score",
+  "dti",
+  "rate_spread",
+  "ltv",
+  "cltv",
+  "several_borrowers",
+  "mi_pct",
+  "orig_term",
+  "purpose"
+ ],
+ "features": {
+  "credit_score": {
+   "type": "numeric",
+   "labels": [
+    "<= 663.5",
+    "(663.5, 684.5]",
+    "(684.5, 715.5]",
+    "(715.5, 737.5]",
+    "(737.5, 757.5]",
+    "> 757.5",
+    "missing"
+   ],
+   "points": [
+    24.467659301872473,
+    38.91510079751818,
+    54.22109846759702,
+    65.77734154054704,
+    75.36395704648342,
+    100.0043617322456,
+    27.293907139724325
+   ],
+   "edges": [
+    663.5,
+    684.5,
+    715.5,
+    737.5,
+    757.5
+   ]
+  },
+  "dti": {
+   "type": "numeric",
+   "labels": [
+    "<= 23.5",
+    "(23.5, 30.5]",
+    "(30.5, 38.5]",
+    "(38.5, 41.5]",
+    "(41.5, 49.5]",
+    "> 49.5",
+    "missing"
+   ],
+   "points": [
+    91.94902143461005,
+    82.36635843331224,
+    72.38985393715717,
+    65.72535852787249,
+    59.480466736998565,
+    39.877004490885845,
+    38.486147589399465
+   ],
+   "edges": [
+    23.5,
+    30.5,
+    38.5,
+    41.5,
+    49.5
+   ]
+  },
+  "rate_spread": {
+   "type": "numeric",
+   "labels": [
+    "<= 0.1015",
+    "(0.1015, 0.24975]",
+    "(0.24975, 0.3745]",
+    "(0.3745, 0.6235]",
+    "(0.6235, 0.8745]",
+    "> 0.8745",
+    "missing"
+   ],
+   "points": [
+    72.47389137989114,
+    68.95731725421854,
+    65.57744645659426,
+    62.46759829279972,
+    59.00533787375091,
+    55.50128391870021,
+    67.27618428519993
+   ],
+   "edges": [
+    0.1015000008046627,
+    0.24975000321865082,
+    0.37450000643730164,
+    0.6235000193119049,
+    0.8745000064373016
+   ]
+  },
+  "ltv": {
+   "type": "numeric",
+   "labels": [
+    "<= 44.5",
+    "(44.5, 58.5]",
+    "(58.5, 67.5]",
+    "(67.5, 82.5]",
+    "(82.5, 90.5]",
+    "> 90.5",
+    "missing"
+   ],
+   "points": [
+    74.63492031627227,
+    70.6854369399451,
+    68.51800098756488,
+    67.20130158066385,
+    63.809941222328504,
+    65.36745008316483,
+    54.69651391834895
+   ],
+   "edges": [
+    44.5,
+    58.5,
+    67.5,
+    82.5,
+    90.5
+   ]
+  },
+  "cltv": {
+   "type": "numeric",
+   "labels": [
+    "<= 50.5",
+    "(50.5, 58.5]",
+    "(58.5, 67.5]",
+    "(67.5, 83.5]",
+    "(83.5, 90.5]",
+    "> 90.5",
+    "missing"
+   ],
+   "points": [
+    90.46014052364787,
+    76.88828156840368,
+    72.846268327914,
+    67.62370389060771,
+    54.82502680712656,
+    60.1879963654235,
+    27.816151832009595
+   ],
+   "edges": [
+    50.5,
+    58.5,
+    67.5,
+    83.5,
+    90.5
+   ]
+  },
+  "several_borrowers": {
+   "type": "numeric",
+   "labels": [
+    "<= 0.5",
+    "> 0.5",
+    "missing"
+   ],
+   "points": [
+    57.72163696984481,
+    82.02411194793001,
+    61.75897857543205
+   ],
+   "edges": [
+    0.5
+   ]
+  },
+  "mi_pct": {
+   "type": "numeric",
+   "labels": [
+    "<= 10.5",
+    "(10.5, 28.5]",
+    "> 28.5",
+    "missing"
+   ],
+   "points": [
+    67.63715018305129,
+    66.23681884285243,
+    66.7351582952961,
+    60.87929266131954
+   ],
+   "edges": [
+    10.5,
+    28.5
+   ]
+  },
+  "orig_term": {
+   "type": "numeric",
+   "labels": [
+    "<= 347.5",
+    "> 347.5",
+    "missing"
+   ],
+   "points": [
+    86.63002399055163,
+    64.34716664594069,
+    67.27618428519993
+   ],
+   "edges": [
+    347.5
+   ]
+  },
+  "purpose": {
+   "type": "categorical",
+   "labels": [
+    "C",
+    "N",
+    "P",
+    "other",
+    "missing"
+   ],
+   "points": [
+    58.79632296310315,
+    72.05050585424337,
+    70.19380864377672,
+    67.27618428519993,
+    67.27618428519993
+   ],
+   "categories": [
+    "C",
+    "N",
+    "P"
+   ]
+  }
+ },
+ "best_points": {
+  "cltv": 90.46014052364787,
+  "credit_score": 100.0043617322456,
+  "dti": 91.94902143461005,
+  "ltv": 74.63492031627227,
+  "mi_pct": 67.63715018305129,
+  "orig_term": 86.63002399055163,
+  "purpose": 72.05050585424337,
+  "rate_spread": 72.47389137989114,
+  "several_borrowers": 82.02411194793001
+ },
+ "reason_codes": {
+  "credit_score": {
+   "code": "R01",
+   "phrase": "Credit score is lower than for the safest applicants",
+   "reportable": true
+  },
+  "dti": {
+   "code": "R03",
+   "phrase": "Monthly debts are a high share of income (debt-to-income ratio)",
+   "reportable": true
+  },
+  "rate_spread": {
+   "code": "R02",
+   "phrase": "Interest rate is above other loans of the same period and term (the lender priced extra risk)",
+   "reportable": true
+  },
+  "ltv": {
+   "code": "R07",
+   "phrase": "Loan is a high share of the property value (loan-to-value)",
+   "reportable": true
+  },
+  "cltv": {
+   "code": "R06",
+   "phrase": "Total borrowing is a high share of the property value (combined loan-to-value)",
+   "reportable": true
+  },
+  "several_borrowers": {
+   "code": "R13",
+   "phrase": "A single borrower on the loan is associated with a higher default rate",
+   "reportable": true
+  },
+  "mi_pct": {
+   "code": "R10",
+   "phrase": "Mortgage insurance coverage level is associated with higher risk",
+   "reportable": true
+  },
+  "orig_term": {
+   "code": "R05",
+   "phrase": "Loan term differs from the lowest-risk term group",
+   "reportable": true
+  },
+  "purpose": {
+   "code": "R12",
+   "phrase": "Loan purpose has a higher observed default rate (for example purchase versus refinance)",
+   "reportable": true
+  }
+ },
+ "known_limits": [
+  "Through-the-cycle model: it cannot see the economic climate. On four fresh vintages (2010, 2014, 2018, 2023) the predicted default rate was 1.4 to 2.6 times the real one. Use a macro overlay or per-period recalibration before using the level in money terms.",
+  "Probability of a flagged serious delinquency within 24 months (definition B), not a probability of loss.",
+  "Trained on prime fixed-rate US mortgages (Freddie Mac samples); relief-refinance and seasoned/modified loans excluded.",
+  "rate_spread = loan rate minus the typical rate of the same quarter and term: the caller must compute it with a reliable reference rate.",
+  "No protected characteristic exists in the data, so fairness toward them could not be tested.",
+  "Portfolio project, not a lending product."
+ ],
+ "model_id": "b3069001d62e",
+ "version": "2026-10-11",
+ "exported_on": "2026-10-10",
+ "trained_on": "all kept loans of the 2008, 2012, 2016, 2019 and 2022 Freddie Mac samples (aggregate bands only are stored)",
+ "training_data_sha256": "061739242f2ed204b66166818fd703b8789ba29d1834cf06bbbd1441908b5f2a",
+ "adopted_by": "pre-registered exam on fresh vintages 2010/2014/2018/2023 (docs/v2_preregistration.md, results/v2_exam.md)"
+}
