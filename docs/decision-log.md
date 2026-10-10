@@ -266,3 +266,29 @@ About 0.04 of the pooled Gini was the era proxy; ranking inside a year is almost
 **New finding: the models no longer know the era, so their average risk is about the same for every vintage, while the real default rate is not.** Logistic on validation by vintage: 2008 observed 4.65% vs predicted 3.46%; 2016 observed 0.60% vs predicted 1.51%. Loan-level day-one data cannot tell whether a year is a crisis year (a macro effect). This is a through-the-cycle model: it ranks borrowers within an era well and gives an average-era level of risk. Consequences: (1) expect the out-of-time tests (2019: 1.26%, 2022: 1.39% real) to be slightly over-predicted; (2) a bank would add a macroeconomic overlay or recalibrate per period; (3) monitoring must track observed vs predicted by period (Phase 3).
 
 **Re-run after the change (supersedes the earlier numeric tables for calibration and ablation; conclusions unchanged).** Ablation on validation (real 2.04%): unweighted raw Brier 0.01764, mean PD 2.03%, AUC 0.894; class weights raw Brier 0.13133, mean PD 27.29%, after Platt 0.01773 (offset -3.848); SMOTE raw Brier 0.06520, mean PD 17.61%, AUC 0.879 and after Platt 0.01813 (the ranking loss remains). Calibration of unweighted models: Platt slope 1.00 and 0.99, no gain (ECE rises slightly), as before.
+
+## 2026-10-10: FINAL EXAM (run once; frozen at commit 1add760, manifest committed in 178ed74 before the run)
+
+Models trained on `train` only (78,007 loans), raw probabilities (no calibration), as frozen. Code: `credit/models/final_exam.py`; the exam refused to run before the freeze (verified), and refuses if the features file, the config, or the code changed after the freeze commit. Results: `results/final_exam.json`, `results/final_exam.md`, `docs/final_exam.png` (redrawn by `scripts/plot_final_exam.py`, cosmetic). 95% intervals: paired bootstrap over loans, 1000 resamples, seed 20261010.
+
+| Exam | Loans / defaults | Model | Gini (95% CI) | KS | Brier | predicted vs real | ratio (95% CI) |
+|---|---|---|---|---|---|---|---|
+| in time (2008/2012/2016) | 19,431 / 375 | scorecard | 0.735 (0.703-0.769) | 0.584 | 0.01754 | 1.97% vs 1.93% | 1.02 (0.93-1.13) |
+| | | logistic | 0.749 (0.716-0.781) | 0.597 | 0.01727 | 1.96% | 1.02 |
+| | | xgboost | 0.747 (0.715-0.780) | 0.595 | 0.01731 | 1.96% | 1.02 |
+| out of time 2019 | 49,881 / 630 | scorecard | 0.446 (0.405-0.485) | 0.338 | 0.01264 | 1.75% vs 1.26% | 1.38 (1.28-1.50) |
+| | | logistic | 0.456 (0.418-0.493) | 0.337 | 0.01281 | 1.82% | 1.44 |
+| | | xgboost | 0.463 (0.423-0.497) | 0.354 | 0.01268 | 1.62% | 1.28 |
+| out of time 2022 | 49,907 / 692 | scorecard | 0.523 (0.487-0.557) | 0.409 | 0.01383 | 2.08% vs 1.39% | 1.50 (1.40-1.62) |
+| | | logistic | 0.529 (0.495-0.562) | 0.416 | 0.01390 | 2.07% | 1.49 |
+| | | xgboost | 0.528 (0.494-0.562) | 0.413 | 0.01385 | 2.00% | 1.44 |
+
+No Gini difference between models is significant in any exam (all paired 95% intervals include 0; scorecard minus logistic in time: -0.014, interval -0.028 to +0.001, borderline). Inside the in-time exam by vintage (point estimates): 2008 scorecard 0.654 / logistic 0.700 / xgboost 0.686; 2016 0.682 / 0.638 / 0.637.
+
+**Predictions written before the run vs outcome.** In-time Gini 0.75-0.80: observed 0.735-0.749 (low edge). Out-of-time "a bit lower": observed 0.45 (2019) and 0.52-0.53 (2022): a much larger drop than predicted. Over-prediction ratio 1.4-1.6x: observed 1.28-1.50x. No clear winner: confirmed.
+
+**Findings.**
+1. Ranking power is much weaker out of time (Gini about 0.45-0.53 vs about 0.74 in time). Untested hypotheses: (a) the training defaults are dominated by the 2008 crisis vintage (about 2,228 of the 4,225 sampled defaults across 2008/2012/2016 before splitting), so the models learned crisis-type risk patterns; (b) defaults in calm years are driven by events a day-one application cannot see (job loss, illness, divorce); (c) the 2019 label depends on the assistance-plan rule (definition B) and COVID-era servicing. To be tested only as NEW, labelled experiments (for example training on non-crisis vintages only, or vintage weights); these exam numbers stay in the record and are not to be tuned.
+2. The level is off out of time: the models predict about 1.3-1.5x the real default rate in 2019 and 2022 (as expected from the through-the-cycle design noted on 2026-10-09). Their Brier is slightly worse than a flat forecast that already knows the true rate (2019: 0.01264-0.01281 vs 0.01247; 2022: 0.01383-0.01390 vs 0.01367), whereas in time they beat the flat forecast (0.0173-0.0175 vs 0.0189): the level error out of time costs more than the ranking brings. A macro overlay or per-period recalibration is the standard remedy and belongs to the monitoring phase.
+3. Model choice: the three models are statistically indistinguishable, so the WoE scorecard is the recommended primary model (readable points, full audit trail), with logistic regression and XGBoost kept as challengers. The cost is at most about 0.01-0.02 Gini, within the noise.
+4. Calibration of the unweighted models in time is right (ratio 1.02, interval 0.93-1.13).
