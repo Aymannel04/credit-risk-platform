@@ -1,0 +1,105 @@
+{
+  "sample": 2000,
+  "agreement_top_k": {
+    "1": {
+      "loans": 1996,
+      "mean_overlap_top_k": 0.45090180360721444,
+      "top1_reason_in_shap_top_k": 0.45090180360721444
+    },
+    "3": {
+      "loans": 1996,
+      "mean_overlap_top_k": 0.5322311289245156,
+      "top1_reason_in_shap_top_k": 0.7419839679358717
+    }
+  },
+  "features_by_iv": {
+    "credit_score": 1.2948268563254695,
+    "rate_spread": 0.578280964473307,
+    "dti": 0.5358163275406278,
+    "channel": 0.42068732053549285,
+    "orig_term": 0.30231498246426364,
+    "cltv": 0.27993505263984075,
+    "ltv": 0.27691354032315246,
+    "n_borrowers": 0.2577133673218965,
+    "state": 0.14809906193148167,
+    "mi_pct": 0.13533225457046139,
+    "super_conforming": 0.055384546694321614
+  },
+  "features_by_mean_abs_shap": {
+    "credit_score": 0.8708000183105469,
+    "n_borrowers": 0.41359999775886536,
+    "dti": 0.3386000096797943,
+    "orig_term": 0.26499998569488525,
+    "rate_spread": 0.24779999256134033,
+    "cltv": 0.24719999730587006,
+    "purpose": 0.24570000171661377,
+    "channel": 0.20839999616146088,
+    "state": 0.1956000030040741,
+    "ltv": 0.1298000067472458,
+    "orig_upb": 0.11460000276565552,
+    "property_type": 0.09749999642372131,
+    "mi_pct": 0.08160000294446945,
+    "super_conforming": 0.029600000008940697,
+    "first_time_homebuyer": 0.017999999225139618,
+    "occupancy": 0.007499999832361937,
+    "n_units": 0.007000000216066837,
+    "ppm_flag": 0.0
+  },
+  "first_reason_counts": {
+    "credit_score": 753,
+    "orig_term": 468,
+    "cltv": 342,
+    "dti": 170,
+    "state": 136,
+    "n_borrowers": 57,
+    "channel": 55,
+    "rate_spread": 15
+  },
+  "examples": [
+    {
+      "scorecard_pd": 0.46915152160476375,
+      "score_points": 490.68779986031376,
+      "actual_default": 0,
+      "reasons": [
+        "R01 Credit score is lower than for the safest applicants [<= 662.5] -78 pts",
+        "R03 Monthly debts are a high share of income (debt-to-income ratio) [> 50.5] -41 pts",
+        "R04 Loan came through a channel with a higher observed default rate [T] -31 pts",
+        "R05 Loan term differs from the lowest-risk term group [> 347] -25 pts"
+      ]
+    },
+    {
+      "scorecard_pd": 0.4154286447473207,
+      "score_points": 496.9784450096669,
+      "actual_default": 1,
+      "reasons": [
+        "R01 Credit score is lower than for the safest applicants [<= 662.5] -78 pts",
+        "R09 Property location (state) has a higher observed default rate [FL] -36 pts",
+        "R05 Loan term differs from the lowest-risk term group [> 347] -25 pts",
+        "R02 Interest rate is above other loans of the same period and term (the lender priced extra risk) [> 0.745] -24 pts"
+      ]
+    },
+    {
+      "scorecard_pd": 0.4054766991840131,
+      "score_points": 498.1651630405812,
+      "actual_default": 1,
+      "reasons": [
+        "R01 Credit score is lower than for the safest applicants [<= 662.5] -78 pts",
+        "R03 Monthly debts are a high share of income (debt-to-income ratio) [(45.5, 50.5]] -27 pts",
+        "R05 Loan term differs from the lowest-risk term group [> 347] -25 pts",
+        "R09 Property location (state) has a higher observed default rate [NY] -25 pts"
+      ]
+    },
+    {
+      "scorecard_pd": 0.00011456988632581432,
+      "score_points": 748.9492599303954,
+      "actual_default": 0,
+      "reasons": []
+    },
+    {
+      "scorecard_pd": 0.00011456988632581432,
+      "score_points": 748.9492599303954,
+      "actual_default": 0,
+      "reasons": []
+    }
+  ]
+}
