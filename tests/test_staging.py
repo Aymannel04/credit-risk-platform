@@ -158,3 +158,17 @@ def test_check_fails_on_absurd_interest_rate(tmp_path):
     _write(raw / "perf_2016.parquet", _perf("F16Q10000001", range(0, 31)), PERFORMANCE_COLUMNS)
     with pytest.raises(staging.DataCheckError, match="int_rate"):
         staging.stage_year(2016, raw_dir=raw, out_dir=tmp_path / "stg")
+
+
+def test_unusual_but_real_long_term_passes_and_absurd_term_fails(tmp_path):
+    raw = tmp_path / "raw"
+    raw.mkdir()
+    _write(raw / "orig_2016.parquet", [_orig("F16Q10000001", orig_term="513")], ORIGINATION_COLUMNS)  # a real loan of that kind exists
+    _write(raw / "perf_2016.parquet", _perf("F16Q10000001", range(0, 31)), PERFORMANCE_COLUMNS)
+    staging.stage_year(2016, raw_dir=raw, out_dir=tmp_path / "stg")  # must not raise
+    raw2 = tmp_path / "raw2"
+    raw2.mkdir()
+    _write(raw2 / "orig_2016.parquet", [_orig("F16Q10000001", orig_term="900")], ORIGINATION_COLUMNS)
+    _write(raw2 / "perf_2016.parquet", _perf("F16Q10000001", range(0, 31)), PERFORMANCE_COLUMNS)
+    with pytest.raises(staging.DataCheckError, match="orig_term"):
+        staging.stage_year(2016, raw_dir=raw2, out_dir=tmp_path / "stg2")
