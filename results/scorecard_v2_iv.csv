@@ -1,0 +1,10 @@
+feature,iv_pooled
+credit_score,0.9782
+dti,0.3753
+rate_spread,0.3273
+several_borrowers,0.194
+orig_term,0.1626
+cltv,0.147
+ltv,0.139
+mi_pct,0.0685
+purpose,0.0455

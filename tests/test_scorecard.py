@@ -97,3 +97,15 @@ def test_bin_edges_respect_the_minimum_share():
     min_n = cfg["scorecard_binning"]["min_bin_share"] * len(X)
     t = bins[NUMERIC_FEATURES[0]].table
     assert (t[t["band"] != "missing"]["n"] >= min_n * 0.99).all()
+
+
+def test_a_band_never_seen_in_training_is_neutral_not_terrible(fitted):
+    card, X, _ = fitted
+    cat = CATEGORICAL_FEATURES[0]
+    assert card.bins_[cat].table.set_index("band").loc["other", "n"] == 0  # no rare category in this data
+    assert card.bins_[cat].table.set_index("band").loc["other", "woe"] == 0.0
+    new = X.head(1).copy()
+    new[cat] = "NEVER_SEEN"
+    known = X.head(1).copy()
+    p_unseen, p_known = card.predict_proba(new)[0], card.predict_proba(known)[0]
+    assert abs(p_unseen - p_known) < 0.2  # an unseen value moves the risk a little, it does not explode it

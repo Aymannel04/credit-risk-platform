@@ -26,7 +26,7 @@ def sc():
 
 def test_every_feature_has_a_fixed_sentence_and_a_unique_code():
     table = rs.load_reason_table()
-    assert set(table) <= set(FEATURES)
+    assert set(table) <= set(FEATURES) | {"several_borrowers"}  # v2 adds one input
     codes = [v["code"] for v in table.values()]
     assert len(codes) == len(set(codes))
     assert all(len(v["phrase"]) > 10 for v in table.values())
