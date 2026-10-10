@@ -1,0 +1,49 @@
+{
+  "frozen_at_commit": "1add760b87ca15b5e25dddbd0c0f8d76bd6b4ba7",
+  "features_sha256": "061739242f2ed204b66166818fd703b8789ba29d1834cf06bbbd1441908b5f2a",
+  "assumptions_sha256": "eb59864bae60dd2d06185e8c958fea433b43ae494fdf241a9da68ae47624e482",
+  "xgboost_params": {
+    "n_estimators": 600,
+    "learning_rate": 0.05,
+    "max_depth": 3,
+    "min_child_weight": 5,
+    "subsample": 0.8,
+    "colsample_bytree": 0.8,
+    "reg_lambda": 5.0,
+    "eval_metric": "logloss",
+    "early_stopping_rounds": 40,
+    "random_state": 42,
+    "n_jobs": 4
+  },
+  "rules": {
+    "models": [
+      "scorecard",
+      "logistic_regression",
+      "xgboost"
+    ],
+    "trained_on": "split == 'train' only (calibration and validation rows are NOT used for the final fit)",
+    "calibration": "none: raw probabilities. Reason (validation, 2026-10-09): Platt slope 1.00 and no Brier gain for the unweighted models; a calibrator must earn its place on validation.",
+    "exams": [
+      "test_in_time",
+      "test_oot_2019",
+      "test_oot_2022"
+    ],
+    "metrics": [
+      "gini",
+      "auc",
+      "ks",
+      "pr_auc",
+      "brier",
+      "ece",
+      "mean_predicted_pd",
+      "default_rate"
+    ],
+    "confidence_intervals": {
+      "method": "bootstrap over loans, paired across models",
+      "resamples": 1000,
+      "seed": 20261010,
+      "interval": "2.5% - 97.5%"
+    },
+    "after_the_exam": "no model, feature, setting or rule may be changed to improve these results; any later change is a new, labelled experiment and these numbers stay in the record"
+  }
+}
