@@ -65,6 +65,9 @@ def _woe_table(bands: np.ndarray, y: np.ndarray, n_bands: int, labels: list[str]
     for b in range(n_bands):
         m = bands == b
         bad, good = y[m].sum(), (1 - y[m]).sum()
+        if m.sum() == 0:  # a band the training data never saw (unseen category, missing never observed): neutral, not "terrible"
+            rows.append({"band": labels[b], "n": 0, "defaults": 0, "default_rate": np.nan, "woe": 0.0, "iv_part": 0.0})
+            continue
         woe = np.log(((good + SMOOTH) / (total_good + SMOOTH * n_bands)) / ((bad + SMOOTH) / (total_bad + SMOOTH * n_bands)))
         iv_part = ((good + SMOOTH) / (total_good + SMOOTH * n_bands) - (bad + SMOOTH) / (total_bad + SMOOTH * n_bands)) * woe
         rows.append({"band": labels[b], "n": int(m.sum()), "defaults": int(bad),

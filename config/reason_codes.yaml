@@ -13,3 +13,5 @@ mi_pct:           {code: R10, phrase: "Mortgage insurance coverage level is asso
 # NOT reportable: the flag only exists for loans after October 2008, so in these data it mostly separates
 # crisis-era loans from later ones (an era proxy, found on 2026-10-10). It must not be shown to an applicant.
 super_conforming: {code: R11, phrase: "Loan size is above the standard conforming limit", reportable: false}
+purpose:          {code: R12, phrase: "Loan purpose has a higher observed default rate (for example purchase versus refinance)"}
+several_borrowers: {code: R13, phrase: "A single borrower on the loan is associated with a higher default rate"}

@@ -407,3 +407,30 @@ Code: `credit/models/era_review.py` (+ `tests/test_era_review.py`: a made-up era
 4. **Hypothesis (a) of the exam findings is not supported.** The weak ranking of 2019 (Gini 0.46-0.47) and 2022 (0.52-0.53) persists when the held-out vintage is predicted by models trained on the other four vintages, which include the other recent vintage and have different 2008 weight. So the weak out-of-time ranking is not caused by the 2008 dominance of the training defaults; it looks intrinsic (defaults in calm years are harder to predict from day-one data).
 5. The LEVEL is a macro effect that no feature choice fixes: predicted/observed on the held-out vintage ranges from 0.25 (2008 predicted by calm-year models) to 3.0-3.6 (2012, 2016 predicted by models that saw 2008). Equal weighting of vintages is therefore not expected to fix the level.
 6. `several_borrowers` gives the same results as `n_borrowers` (the scorecard bands n_borrowers into 1 versus 2 or more anyway); it is still safer because the definition changed in 2018Q2.
+
+## 2026-10-11: MODEL v2 EXAM (fresh vintages 2010, 2014, 2018, 2023; run once; frozen at commit ee7f191, manifest committed in 1b78c97 before the run)
+
+Pre-registration: `docs/v2_preregistration.md` (arms, features, predictions and success rules written and committed before any fresh label was opened; the exam refused to run before the freeze, verified). Code: `credit/models/v2_exam.py`, `credit/freddie/fresh.py` (labels of the fresh table are locked behind `allow_exam`; a test shows that the fresh builder reproduces the development `rate_spread` exactly on the known vintages). Results: `results/v2_exam.json|md`, `docs/v2_exam.png`. Paired bootstrap, 1000 resamples, seed 20261011.
+
+| Vintage | loans / defaults / real rate | Gini v1 | Gini v1b | Gini v2 | predicted/observed v1 / v1b / v2 |
+|---|---|---|---|---|---|
+| 2010 | 35,304 / 151 / 0.43% | 0.598 | 0.616 | **0.628** | 2.04 / 1.80 / 2.03 |
+| 2014 | 42,566 / 206 / 0.48% | 0.580 | 0.586 | **0.599** | 2.73 / 2.44 / 2.64 |
+| 2018 | 49,377 / 420 / 0.85% | 0.523 | 0.543 | **0.543** | 2.22 / 1.91 / 2.11 |
+| 2023 | 49,834 / 662 / 1.33% | 0.570 | 0.585 | **0.595** | 1.60 / 1.33 / 1.41 |
+
+Mean Gini difference over the four vintages (95% paired-bootstrap interval): **v2 minus v1 +0.024 (+0.013 to +0.035)**; v2 minus v1b +0.009 (+0.002 to +0.017); v1b minus v1 +0.014 (+0.006 to +0.022). So of the +0.024, about +0.014 comes from retraining on more and more varied data and about +0.009 from the feature changes.
+
+**Verdict by the pre-registered rules.** R1 (non-inferior: lower bound above -0.03): yes; v2 is even superior (lower bound above 0). R2 (smaller group spread than v1 in at least 4 of 6 slice variables): yes, but only just, exactly 4 (occupancy 1.85 -> 1.60, purpose 1.33 -> 1.11, channel 1.72 -> 1.13, state 2.20 -> 2.17); first-time buyer got worse (1.02 -> 1.15) and property type slightly worse (3.04 -> 3.20). **v2 is adopted as the recommended model; v1 stays in the record.**
+
+**Predictions vs outcome.** P1 (Gini 0.45-0.70 on 2010/2014/2018, 0.40-0.60 on 2023): right. P2 (mean difference within +/-0.03, "superior" under 25%): the difference is inside the range but it was statistically superior, which I had rated unlikely. P3 (|v1b - v1| < 0.03): right (+0.014, but significant). P4 (level): right for 2014 (2.4-2.7), 2018 (1.9-2.2) and 2023 (1.3-1.6); **wrong for 2010** (I said 0.5-1.6; observed 1.8-2.0). v2 within 0.25 of v1b: right. P5 (>= 4 of 6 variables): right, with no margin.
+
+**Findings.**
+1. Ranking on fresh years is clearly useful: Gini 0.52-0.63. The 2023 vintage, the real future, scores 0.57-0.60, better than the 0.52 of the 2022 vintage in the v1 exam: the weak 2019/2022 ranking is not a general "future drops" law. With 151 to 662 defaults per vintage the intervals are wide (for example 2010: 0.56-0.70 for v2).
+2. The level is wrong in every fresh vintage: the models predict 1.3 to 2.7 times the real default rate (real rates 0.43%, 0.48%, 0.85%, 1.33% against a training mix of about 2%). This confirms on four new years that the scorecard is a through-the-cycle model and that the level needs a macro overlay or a per-period recalibration. v2 does not change that (within 0.25 of v1b).
+3. The geographic pattern in group over-prediction persists without the state feature (state spread 2.20 -> 2.17): it does not come from the feature itself, so removing `state` is not enough to remove it; other features correlate with geography. First-time buyers are slightly worse off in v2.
+4. Honest limits: R2 passed with no margin; fairness here covers only groups present in the data; 2010 has only 151 defaults.
+
+**Follow-ups done after the exam (the exam numbers were not touched).** (a) `scripts/export_v2_scorecard.py` exports the adopted v2 scorecard (`results/scorecard_v2_table.csv`, `scorecard_v2_iv.csv`; 9 features; no sign violations; score range 486-738 on the development rows). (b) Reason sentences R12 (purpose) and R13 (several borrowers) added to `config/reason_codes.yaml`. (c) Flaw found while exporting: a band never seen in training (unseen category, never-observed missing) got a very negative WoE (smoothing: ln(bad total / good total), about -3.9, i.e. -38 points), so an unusual applicant would have been punished only for being unusual. Now such a band is neutral (WoE 0); test added. Impact on the exam: 1 of 177,081 fresh loans (v1 arm, `mi_pct`) fell in such a band, none for v1b and v2, so the results stand.
+
+**Next experiments (new data needed, not tuning).** Per-period or macro recalibration of the level; a calibration check on 2019/2022-type data used as an anchor; monitoring of predicted vs observed by period and group (Phase 3).
