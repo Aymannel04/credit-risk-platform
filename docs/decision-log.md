@@ -370,3 +370,40 @@ Code: `credit/models/fairness.py`; tests: `tests/test_fairness.py` (72 tests pas
 | 2023 | 50,000 | 0 | 52 | 144 |
 
 **Guard corrected.** The 2010 sample was stopped by the staging check "orig_term outside 60-480 months": one real loan has a 513-month term (first payment May 2010, maturity January 2053). The 480 limit was my own assumption (a 40-year maximum), not a rule of the data. The limit is now 60-600 months, with a test for both sides (513 passes, 900 fails). A guard that rejects real data means the assumption was wrong; the check stays.
+
+## 2026-10-11: v2 step 3, era-stability review and leave-one-vintage-out (five known vintages only; fresh vintages not read)
+
+Code: `credit/models/era_review.py` (+ `tests/test_era_review.py`: a made-up era proxy is exposed, a genuine feature is kept, a vanishing level and a direction flip are detected); the scorecard now accepts a chosen feature list (defaults unchanged). Results: `results/v2_feature_review.json`. Method: bands fitted on all five vintages pooled; for each feature and vintage the information value INSIDE that vintage minus the IV of a randomly shuffled copy of the feature (noise floor); `keep ratio` = median within-vintage excess / pooled IV.
+
+| Feature | pooled IV | median within-vintage excess IV | min | keep ratio | notes |
+|---|---|---|---|---|---|
+| credit_score | 0.978 | 0.842 | 0.444 | 0.86 | real in every era |
+| dti | 0.375 | 0.214 | 0.120 | 0.57 | |
+| rate_spread | 0.328 | 0.180 | 0.045 | 0.55 | |
+| channel | 0.271 | 0.040 | 0.007 | **0.15** | mostly era; levels B, C, T change a lot between vintages |
+| n_borrowers | 0.194 | 0.177 | 0.098 | 0.91 | real, but definition changed in 2018Q2 |
+| orig_term | 0.163 | 0.059 | 0.009 | 0.36 | partly era |
+| cltv / ltv | 0.147 / 0.139 | 0.089 / 0.109 | 0.020 / 0.018 | 0.61 / 0.78 | |
+| state | 0.099 | 0.115 | 0.013 | 1.16 | carries information inside each era (NOT a pure era proxy) |
+| mi_pct | 0.069 | 0.136 | 0.010 | 1.99 | real, masked when pooling |
+| purpose | 0.047 | 0.077 | 0.003 | 1.65 | real, masked when pooling (dropped by the v1 pooled IV rule) |
+| property_type | 0.028 | 0.010 | 0.001 | 0.35 | weak |
+| super_conforming | 0.011 | -0.0002 | -0.012 | **-0.01** | NO information inside any era: pure era flag |
+| orig_upb | 0.006 | 0.025 | 0.004 | 4.2 | weak, direction flips across vintages |
+| occupancy, ppm_flag, first_time_homebuyer, n_units | ~0 | <= 0.025 | | | nothing |
+
+**Leave-one-vintage-out (scorecard trained on four vintages, Gini and predicted/observed on the held-out one).**
+| Feature set | 2008 | 2012 | 2016 | 2019 | 2022 | mean Gini |
+|---|---|---|---|---|---|---|
+| A v1 features | 0.620 / 0.25 | 0.633 / 2.92 | 0.658 / 2.43 | 0.471 / 1.20 | 0.523 / 1.36 | 0.581 |
+| D minus state and super_conforming | 0.614 / 0.25 | 0.642 / 3.01 | 0.646 / 2.38 | 0.461 / 1.20 | 0.529 / 1.33 | 0.579 |
+| H D minus channel (several_borrowers) | 0.614 / 0.25 | 0.644 / 3.26 | 0.638 / 2.67 | 0.462 / 1.37 | 0.528 / 1.52 | 0.577 |
+| G core only (6 features) | 0.608 / 0.25 | 0.633 / 3.57 | 0.642 / 2.79 | 0.460 / 1.38 | 0.529 / 1.49 | 0.575 |
+
+**Findings (they correct earlier statements).**
+1. Removing `state`, `super_conforming` and `channel` costs at most 0.005 Gini (noise): dropping them is free in ranking power.
+2. `super_conforming` and `channel` are era proxies (no or little information inside an era). **`state` is NOT an era proxy by this test** (information inside every vintage, keep ratio 1.16): my earlier statement that it "captured only the 2008 housing-bust map" was too strong. The reasons to drop it are different: its removal costs nothing, it is a geography stand-in (fairness), and it drives the Florida over-prediction seen in later years.
+3. `channel` was the 4th strongest v1 feature (IV 0.42) and is mostly an era effect: another case where the pooled IV screen misled. Selection by within-era information is the right rule: the pooled IV dropped `purpose`, `mi_pct`-type features that are informative inside eras.
+4. **Hypothesis (a) of the exam findings is not supported.** The weak ranking of 2019 (Gini 0.46-0.47) and 2022 (0.52-0.53) persists when the held-out vintage is predicted by models trained on the other four vintages, which include the other recent vintage and have different 2008 weight. So the weak out-of-time ranking is not caused by the 2008 dominance of the training defaults; it looks intrinsic (defaults in calm years are harder to predict from day-one data).
+5. The LEVEL is a macro effect that no feature choice fixes: predicted/observed on the held-out vintage ranges from 0.25 (2008 predicted by calm-year models) to 3.0-3.6 (2012, 2016 predicted by models that saw 2008). Equal weighting of vintages is therefore not expected to fix the level.
+6. `several_borrowers` gives the same results as `n_borrowers` (the scorecard bands n_borrowers into 1 versus 2 or more anyway); it is still safer because the definition changed in 2018Q2.

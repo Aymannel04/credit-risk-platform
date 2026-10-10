@@ -73,12 +73,16 @@ def _woe_table(bands: np.ndarray, y: np.ndarray, n_bands: int, labels: list[str]
     return t, float(t["iv_part"].sum())
 
 
-def fit_bins(X: pd.DataFrame, y: pd.Series, cfg: dict) -> dict[str, FeatureBins]:
+def fit_bins(
+    X: pd.DataFrame, y: pd.Series, cfg: dict, numeric: list | None = None, categorical: list | None = None
+) -> dict[str, FeatureBins]:
+    numeric = NUMERIC_FEATURES if numeric is None else numeric
+    categorical = CATEGORICAL_FEATURES if categorical is None else categorical
     b = cfg["scorecard_binning"]
     n = len(X)
     y_arr = np.asarray(y)
     out = {}
-    for col in NUMERIC_FEATURES:
+    for col in numeric:
         v = pd.to_numeric(X[col], errors="coerce")
         known = v.notna().to_numpy()
         edges = []
@@ -91,7 +95,7 @@ def fit_bins(X: pd.DataFrame, y: pd.Series, cfg: dict) -> dict[str, FeatureBins]
         bands = fb.assign(X[col])
         fb.table, fb.iv = _woe_table(bands, y_arr, len(edges) + 2, fb.band_labels())
         out[col] = fb
-    for col in CATEGORICAL_FEATURES:
+    for col in categorical:
         counts = X[col].value_counts()
         kept = [c for c, k in counts.items() if k >= b["min_category_share"] * n]
         fb = FeatureBins(col, "categorical", categories=sorted(kept, key=str))
@@ -104,11 +108,12 @@ def fit_bins(X: pd.DataFrame, y: pd.Series, cfg: dict) -> dict[str, FeatureBins]
 class Scorecard:
     """Fit on a training dataframe (features + y). Use predict_proba / score on new loans."""
 
-    def __init__(self, cfg: dict | None = None):
+    def __init__(self, cfg: dict | None = None, numeric: list | None = None, categorical: list | None = None):
         self.cfg = cfg or load_config()
+        self.numeric, self.categorical = numeric, categorical  # None = the default feature lists
 
     def fit(self, X: pd.DataFrame, y: pd.Series) -> "Scorecard":
-        self.bins_ = fit_bins(X, y, self.cfg)
+        self.bins_ = fit_bins(X, y, self.cfg, self.numeric, self.categorical)
         min_iv = self.cfg["scorecard_binning"]["min_iv"]
         self.selected_ = [c for c, fb in self.bins_.items() if fb.iv >= min_iv]
         self.lr_ = LogisticRegression(max_iter=2000, C=1.0).fit(self.woe(X), np.asarray(y))
