@@ -1,0 +1,37 @@
+# ASSUMPTIONS for the monitors, not facts from the data. Fixed on 2026-10-11 BEFORE any monitoring result existed
+# (see docs/monitoring_preregistration.md). Changing a value after seeing results is a new, dated decision.
+
+reference_vintages: [2008, 2012, 2016, 2019, 2022]     # development vintages: the model was fitted on them
+fresh_vintages: [2010, 2014, 2018, 2023]               # out-of-sample for the model
+
+psi:                       # general practice for stability indices; used for the score and for every input
+  warn: 0.10
+  alert: 0.25
+  share_floor: 0.0001      # a share below this is raised to it, so ln() stays finite
+  score_band_points: 20    # score is cut in bands of 20 points (one "doubling of the odds")
+
+level_ratio:               # observed default rate / mean predicted PD
+  warn_outside: [0.80, 1.25]
+  alert_outside: [0.67, 1.50]
+
+simulation:                # fire drills: SIMULATED, never mixed with real results
+  batch_size: 10000
+  seed: 20261012
+  shifts:
+    S1: {kind: shift, feature: credit_score, delta: -30}
+    S2: {kind: shift, feature: credit_score, delta: -10}
+    S3: {kind: shift, feature: dti, delta: 10}
+    S4: {kind: missing, feature: credit_score, share: 0.10}
+    S5: {kind: new_category, feature: purpose, value: "X", share: 0.20}
+    S6: {kind: shift_many, features: [ltv, cltv], delta: 10}
+    S7: {kind: shift, feature: rate_spread, delta: 0.5}
+    S8: {kind: default_rate, factor: 1.25}
+    S9: {kind: default_rate, factor: 2.0}
+  expect_alert: [S1, S3, S4, S5, S6, S7, S9]           # S2 and S8 are subtle: either outcome accepted
+  min_alerts_expected: 6                               # R-M2
+
+recalibration:
+  label_lag_years: 3                # vintage Y is "known" when vintage V starts if Y <= V - 3
+  min_mean_improvement: 0.20        # R-C1 (1): mean level error falls by at least 20% vs static
+  min_targets_improved: 5           # R-C1 (2): of the 7 targets
+  max_single_worsening: 0.30        # R-C1 (3): in log-units
