@@ -483,3 +483,26 @@ Code: `pipeline/` (`steps.py` plain functions, `checks.py` file checks, `freshne
 **Problems found.** (a) `staging.stage_year` has `raw_dir` as a default argument frozen at import time, so a test that redirected the path silently read the real 2016 file (it only wrote to the temp folder). The step now passes the path explicitly; a test would catch a regression (it expects the 60 made-up loans). (b) The features and fresh steps could "reuse" an old result when their staged folder was empty; they now raise. (c) On Windows the Dagster CLI (Click) expands a bare `*` into file names, so `--select '*'` fails; use `raw_parquet*`. (d) `workspace.yaml` needs `working_directory: .` or the module `pipeline` is not found. (e) Dagster starts one process per step by default: a no-op run took 255 s through the CLI; the in-process executor brings it to 63 s. (f) `dagster dev` answers on its port and shows the 7 assets with the right dependencies (checked by GraphQL).
 
 **Local history.** Run history lives in `.dagster_home/` (git-ignored). Set `DAGSTER_HOME` to that folder before `dagster dev` or it is lost when the process stops (an empty `dagster.yaml` is not needed; Dagster only prints a notice).
+
+## 2026-10-11: what the cloud is for (decision after steps 3.2 to 3.4)
+
+**Question.** With the data staying on the owner's computer so far, what is AWS for? Judged first on engineering value and cost, then on story and CV value, always keeping the framing honest. The owner's reading of the data terms is that private cloud storage is allowed; the decision below does not depend on that point except for the S3 data lake.
+
+**Decisions (ranked by value).**
+1. **Honest-evaluation workflow** is the core of the story (already built: freeze, pre-registration, exam on fresh vintages, leakage guards, documented 1.4-2.6x over-prediction in calm years). Keep saying it.
+2. **Scoring API on AWS Lambda** (container image, Function URL), deployed by GitHub Actions through **OIDC** (no stored keys), least-privilege IAM, a budget alert and a cap on concurrent executions (a budget alert only warns; the cap limits spend). Cold-start time is measured and reported, not hidden.
+3. **Data in the owner's private S3** (Parquet, partitioned by vintage) so the platform reads from a cloud data lake. Stated as a design choice, not as forced by data size.
+4. **Athena, scoped.** Earlier today the answer was "no" (about 15 million rows run in seconds in DuckDB, so Athena is not needed). Changed to a scoped yes for story value, on one condition: it is never claimed to be necessary. Its honest value is the **parity test** (same SQL, identical numbers in DuckDB and Athena) and the monitoring summaries, with a per-query scan limit set on the workgroup.
+5. **Scheduled retraining becomes ONE recorded run of the pipeline container on ECS Fargate**, then the resources are deleted. Labelled an infrastructure demonstration. Not "continuous retraining": the data never changes, so retraining would give the same model.
+6. **Monitoring (Evidently) with simulated months** taken from past vintages and labelled as simulated; includes the recalibration experiment for the calm-year over-prediction.
+7. **Credit-memo agent (Phase 4)**: read-only, recommendation computed by code, validator checks every number. Needs an LLM API budget decision from the owner when we get there.
+8. **Dagster stays local.** No server running 24/7.
+9. **Model file baked into the container image** (7 KB), not loaded from S3 at start-up: the image is the version, nothing can drift between code and model, `/health` shows the model id. S3 keeps an archive of each model version.
+
+**Changed from the sheet v1.3.** The 5,000-applicant snapshot inside the API is dropped (the API takes the loan facts directly); scheduled retraining is reduced to one recorded demonstration run; Athena is scoped (parity + monitoring), not the main query engine. The sheet is now v1.4.
+
+**What would hurt credibility (avoid).** Calling it continuous retraining; saying Athena was required for this data size; showing a high Gini without the freeze, the exam and the failure mode; presenting it as a production lending product.
+
+**Draft CV lines (numbers stay TBD until measured; nothing invented).** (a) End-to-end mortgage credit-risk platform on Freddie Mac data (450,000 loans, 9 vintage samples): reproducible Dagster pipeline with blocking data checks, WoE scorecard vs XGBoost, Gini TBD, calibration TBD. (b) Pre-registered, frozen evaluation on 4 unseen vintages (177,081 loans): documented a 1.4-2.6x over-prediction in calm years and tested recalibration (result TBD). (c) Scoring API (FastAPI, Docker, AWS Lambda) with CI/CD through GitHub OIDC (no stored keys), strict input validation and a golden-loan regression test.
+
+**Order from here.** 3.5 monitoring, 3.6 S3 + Athena parity + Lambda deployment + the single ECS run, Phase 4 memo agent, Phase 5 README, demo video, risk register. AWS Free plan clock: record the demo and results early.
