@@ -104,10 +104,29 @@ def scorecard_v2_valid_and_golden_loan() -> AssetCheckResult:
     return AssetCheckResult(passed=not problems, metadata={"problems": MetadataValue.json(problems)})
 
 
+@asset(deps=[features_dev, features_fresh, scorecard_v2], group_name="monitoring",
+       description="Drift per vintage, observed vs predicted level, simulated shifts (fire drills) and the pre-registered recalibration experiment.")
+def monitoring_report() -> MaterializeResult:
+    r = steps.monitoring_step()
+    return MaterializeResult(metadata={k: v for k, v in r.items()})
+
+
+@asset_check(asset=monitoring_report, blocking=True)
+def monitoring_self_test_passed() -> AssetCheckResult:
+    problems = checks.check_monitoring(report_json_path(), export.MODEL_PATH)
+    return AssetCheckResult(passed=not problems, metadata={"problems": MetadataValue.json(problems)})
+
+
+def report_json_path():
+    from credit.monitoring import report
+
+    return report.RESULTS / "monitoring_report.json"
+
+
 EXECUTABLE = [
-    raw_parquet, staging_dev, staging_fresh, features_dev, features_fresh, scorecard_v2,
+    raw_parquet, staging_dev, staging_fresh, features_dev, features_fresh, scorecard_v2, monitoring_report,
     raw_files_present_and_not_empty, staging_dev_data_checks, staging_fresh_data_checks,
-    features_dev_checks, features_fresh_checks, scorecard_v2_valid_and_golden_loan,
+    features_dev_checks, features_fresh_checks, scorecard_v2_valid_and_golden_loan, monitoring_self_test_passed,
 ]
 # one process for all steps: they run one after the other anyway, and a new process per step is slow on Windows
 defs = Definitions(assets=[freddie_zips, *EXECUTABLE], executor=in_process_executor)

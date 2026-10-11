@@ -69,6 +69,7 @@ def test_graph_dependencies():
     assert parents == {
         "freddie_zips": [], "raw_parquet": ["freddie_zips"], "staging_dev": ["raw_parquet"], "staging_fresh": ["raw_parquet"],
         "features_dev": ["staging_dev"], "features_fresh": ["staging_fresh"], "scorecard_v2": ["features_dev"],
+        "monitoring_report": ["features_dev", "features_fresh", "scorecard_v2"],
     }
 
 
@@ -87,7 +88,7 @@ def test_the_model_never_depends_on_the_fresh_vintages():
 def test_every_executable_asset_has_a_blocking_check():
     g = defs.resolve_asset_graph()
     checked = {ck.asset_key.to_user_string() for ck in g.asset_check_keys}
-    assert checked == {"raw_parquet", "staging_dev", "staging_fresh", "features_dev", "features_fresh", "scorecard_v2"}
+    assert checked == {"raw_parquet", "staging_dev", "staging_fresh", "features_dev", "features_fresh", "scorecard_v2", "monitoring_report"}
     for ck in g.asset_check_keys:
         assert g.get_check_spec(ck).blocking, ck
 
@@ -227,3 +228,41 @@ def test_model_check_fails_on_a_broken_file(tmp_path):
     bad = tmp_path / "m.json"
     bad.write_text("{}", encoding="utf-8")
     assert checks.check_model(bad)[0].startswith("model file invalid")
+
+
+# ---------- the monitoring check ----------
+
+def _report_copy(tmp_path, **edits):
+    from credit.monitoring import report
+
+    data = json.loads((report.RESULTS / "monitoring_report.json").read_text(encoding="utf-8"))
+    for dotted, value in edits.items():
+        node = data
+        *path, last = dotted.split(".")
+        for key in path:
+            node = node[key]
+        node[last] = value
+    out = tmp_path / "monitoring_report.json"
+    out.write_text(json.dumps(data), encoding="utf-8")
+    return out
+
+
+def test_monitoring_check_passes_on_the_committed_report():
+    from credit.monitoring import report
+
+    assert checks.check_monitoring(report.RESULTS / "monitoring_report.json", MODEL_PATH) == []
+
+
+def test_monitoring_check_fails_when_the_monitors_fail_their_self_test(tmp_path):
+    assert any("false alarm" in p for p in checks.check_monitoring(_report_copy(tmp_path, **{"part_b.R_M1_control_clean": False}), MODEL_PATH))
+    assert any("missed" in p for p in checks.check_monitoring(_report_copy(tmp_path, **{"part_b.R_M2_enough_alerts": False}), MODEL_PATH))
+    assert any("Gini" in p for p in checks.check_monitoring(_report_copy(tmp_path, **{"part_c_verdict.R_C2_gini_unchanged": False}), MODEL_PATH))
+
+
+def test_monitoring_check_fails_for_a_report_about_another_model(tmp_path):
+    problems = checks.check_monitoring(_report_copy(tmp_path, model_id="deadbeef0000"), MODEL_PATH)
+    assert any("not the current model" in p for p in problems)
+
+
+def test_monitoring_check_reports_a_missing_file(tmp_path):
+    assert checks.check_monitoring(tmp_path / "nope.json", MODEL_PATH) == ["missing nope.json"]

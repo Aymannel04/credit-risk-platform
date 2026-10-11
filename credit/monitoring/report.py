@@ -179,7 +179,7 @@ def chart(a: dict, c: dict, path: Path) -> None:
     plt.close(fig)
 
 
-def main() -> dict:
+def main(verbose: bool = True) -> dict:
     state = prereg_state()
     bad = [f for f, s in state.items() if s["commit"] is None or not s["clean"]]
     if bad:
@@ -209,7 +209,8 @@ def main() -> dict:
     md_input = {**result, "part_a": a, "part_c": c_rows}
     (RESULTS / "monitoring_report.md").write_text(to_markdown(md_input), encoding="utf-8")
     chart(a, c_rows, ROOT / "docs" / "monitoring.png")
-    print(to_markdown(md_input))
+    if verbose:
+        print(to_markdown(md_input))
     return result
 
 

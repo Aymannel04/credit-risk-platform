@@ -72,3 +72,24 @@ def check_model(path: Path) -> list[str]:
     if abs(out["score"] - GOLDEN_SCORE) > GOLDEN_TOLERANCE:
         return [f"golden loan scores {out['score']:.2f}, expected {GOLDEN_SCORE} +/- {GOLDEN_TOLERANCE}: the model changed"]
     return []
+
+
+def check_monitoring(report_path: Path, model_path: Path) -> list[str]:
+    """The monitors' own self-test must still pass, and the report must be about the CURRENT model."""
+    import json
+
+    if not report_path.exists():
+        return [f"missing {report_path.name}"]
+    r = json.loads(report_path.read_text(encoding="utf-8"))
+    problems = []
+    if r["model_id"] != load_model(model_path)["model_id"]:
+        problems.append(f"report is about model {r['model_id']}, not the current model")
+    if not r["part_b"]["R_M1_control_clean"]:
+        problems.append("the control batch raised a warning (false alarm)")
+    if not r["part_b"]["R_M2_enough_alerts"]:
+        problems.append(f"monitors missed simulated shifts: {r['part_b']['missed']}")
+    if not r["part_c_verdict"]["R_C2_gini_unchanged"]:
+        problems.append("recalibration changed the Gini (it must not)")
+    if not all(s["commit"] and s["clean"] for s in r["preregistration"].values()):
+        problems.append("pre-registration was not committed and clean when the report was produced")
+    return problems

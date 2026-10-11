@@ -87,7 +87,7 @@ def model_step() -> dict:
 
     root = export.ROOT
     inputs = [ft.OUT_DIR / "features.parquet", *_code(export, model_file, scorecard, v2_exam, reasons, era_review),
-              *sorted((root / "config").glob("*.yaml"))]
+              root / "config" / "assumptions.yaml", root / "config" / "reason_codes.yaml"]  # only the configs the model reads
     if is_stale([export.MODEL_PATH], inputs):
         export.main()
         status = "rebuilt"
@@ -95,6 +95,24 @@ def model_step() -> dict:
         status = "reused"
     model = model_file.load_model(export.MODEL_PATH)
     return {"status": status, "model_id": model["model_id"], "bytes": export.MODEL_PATH.stat().st_size}
+
+
+def monitoring_step() -> dict:
+    """model + development and fresh features -> drift per vintage, simulated drills, recalibration experiment (pre-registered)."""
+    from credit.monitoring import report
+
+    outputs = [report.RESULTS / "monitoring_report.json", report.RESULTS / "monitoring_report.md", report.ROOT / "docs" / "monitoring.png"]
+    inputs = [ft.OUT_DIR / "features.parquet", fresh.FRESH_PATH, export.MODEL_PATH, report.CONFIG, report.PREREG,
+              *sorted(Path(report.__file__).parent.glob("*.py"))]
+    if is_stale(outputs, inputs):
+        _run_main(lambda: report.main(verbose=False))
+        status = "rebuilt"
+    else:
+        status = "reused"
+    data = json.loads(outputs[0].read_text(encoding="utf-8"))
+    return {"status": status, "model_id": data["model_id"], "drills_caught": len(data["part_b"]["caught"]),
+            "drills_expected": len(data["part_b"]["expected_alerts"]),
+            "predictions_hit": sum(p["hit"] for p in data["predictions"]), "predictions_total": len(data["predictions"])}
 
 
 def _run_main(fn) -> None:
