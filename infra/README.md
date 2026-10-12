@@ -26,6 +26,9 @@ powershell -ExecutionPolicy Bypass -File infra\01_create_ecr.ps1
 | Script | Step | Creates |
 |---|---|---|
 | `01_create_ecr.ps1` | 3.6b-2 | A private container repository with immutable tags and a keep-last-3 rule |
+| `02_push_image.ps1` | 3.6b-3 | Builds the image (one architecture), smoke-tests it, pushes it tagged with the git commit, and checks what was stored |
 | `99_teardown.ps1` | any | Deletes what the scripts above created |
 
-More scripts are added here as steps are approved (image upload, the Lambda function with a locked URL).
+More scripts are added here as steps are approved (the Lambda function with a locked URL).
+
+Before `02_push_image.ps1`: Docker Desktop must be running and every change must be committed (the image tag is the git commit).

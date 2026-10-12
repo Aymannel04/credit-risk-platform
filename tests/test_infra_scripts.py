@@ -47,14 +47,38 @@ def test_teardown_asks_for_confirmation_before_deleting():
     assert "exit 1" in text[text.index("Read-Host"):real_delete], "a wrong answer must stop the script before deleting"
 
 
-@pytest.mark.parametrize("path", SCRIPTS, ids=lambda p: p.name)
-def test_scripts_handle_stderr_safely_on_windows_powershell(path):
+@pytest.mark.parametrize("path", [p for p in SCRIPTS if p.name != "02_push_image.ps1"], ids=lambda p: p.name)
+def test_aws_scripts_handle_stderr_safely_on_windows_powershell(path):
     """Windows PowerShell 5.1 throws on any native stderr text when ErrorActionPreference is Stop (even with 2>$null): every aws call
     must go through the helper that relaxes it and checks the exit code, and the helper must return only the exit code."""
     text = path.read_text(encoding="utf-8")
     assert "function Invoke-Aws" in text and '$ErrorActionPreference = "Continue"' in text
     assert "return $LASTEXITCODE" in text
     assert "| Out-Host" in text or "| Out-Null" in text, "command output must not leak into the returned value"
+
+
+def test_push_script_handles_stderr_safely_and_returns_only_text():
+    text = (INFRA / "02_push_image.ps1").read_text(encoding="utf-8")
+    assert "function Invoke-Cmd" in text and 'cmd /c "$Line 2>&1"' in text, "stderr is merged inside cmd.exe so PowerShell never sees it"
+    assert "function Get-Text" in text and '$ErrorActionPreference = "Continue"' in text
+    assert "$script:ExitCode = $LASTEXITCODE" in text
+
+
+def test_push_script_builds_one_architecture_without_attestation_and_tests_before_pushing():
+    text = (INFRA / "02_push_image.ps1").read_text(encoding="utf-8")
+    assert "--platform linux/amd64" in text and "--provenance=false" in text and "--sbom=false" in text
+    assert text.index("docker build") < text.index("smoke_test_api.py") < text.index("docker push"), "build, then test the exact image, then push"
+    assert "docker logout" in text and "finally" in text, "sign out even when something fails"
+    assert ":latest" not in text and "--force" not in text
+    assert "rev-parse" in text and "--porcelain" in text
+    assert text.index("--porcelain") < text.index("docker build"), "the dirty-tree check must come before building"
+
+
+def test_push_script_refuses_an_index_manifest_and_never_prints_the_password():
+    text = (INFRA / "02_push_image.ps1").read_text(encoding="utf-8")
+    assert "application/vnd.docker.distribution.manifest.v2+json" in text and "application/vnd.oci.image.manifest.v1+json" in text
+    assert "image.index" not in text.replace("not an index", "")
+    assert "--password-stdin" in text and "Write-Host $password" not in text and "Remove-Variable password" in text
 
 
 def test_lifecycle_policy_obeys_the_ecr_rules():
