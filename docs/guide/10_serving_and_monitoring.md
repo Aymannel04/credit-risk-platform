@@ -47,7 +47,7 @@ Rule of thumb: under 0.10 stable, 0.10 to 0.25 look closer, 0.25 or more a big c
 
 ## Why not just delete the 2008 year? (tested, exploratory)
 It is the obvious question, so we tested it: refit the model without 2008 and compare. Plain words:
-- **Calm years get much closer to reality** (for example 2018: the model was 2.1 times too scared, now 1.3 times too relaxed in the later years).
+- **Calm years get much closer to reality.** Example 2018: the model was 2.1 times too scared, now 1.3 times. The most recent years (2019, 2022, 2023) flip to mildly too relaxed (reality 14% to 26% above the prediction).
 - **The crisis becomes invisible**: for 2008 the new model predicts 1.11% of loans defaulting, reality was 4.46%, four times more.
 - **The plain average looks better without 2008**, because eight of the nine years are calm. That is the trap: an average hides how much more expensive it is to be wrong in a crisis.
 - The right choice depends on the purpose: a calm-weather view, or a model that must survive a downturn. We kept the second one and wrote it in the model's limits.
