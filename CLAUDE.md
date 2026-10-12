@@ -22,3 +22,4 @@ Source of truth for scope and phases: `docs/technical-sheet.md` (copy of the tec
 - See the pipeline as a picture: `dagster dev` (needs `DAGSTER_HOME` pointing to `.dagster_home`, see decision log), then open http://127.0.0.1:3000
 - Materialise assets with the Dagster CLI: `python -m dagster asset materialize -m pipeline.definitions --select "raw_parquet*"` (a bare `*` does not work on Windows: the CLI expands it into file names)
 - Run API locally: `uvicorn service.main:create_app --factory --reload`, then open http://127.0.0.1:8000/docs
+- Build and test the API container (Docker Desktop must be running): `docker build -t scoring-api:local .`, `docker run --rm -p 8080:8080 scoring-api:local`, then `python scripts/smoke_test_api.py --url http://127.0.0.1:8080 --wait 60`

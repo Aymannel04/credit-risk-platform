@@ -42,3 +42,22 @@ jobs:
 
       - name: Tests (pytest)
         run: pytest -q
+
+      # --- the API container: built and tested on every push, so a broken image is found before any deployment ---
+      - name: Build the API container image
+        run: docker build -t scoring-api:ci .
+
+      - name: Check what is inside the image (only the expected files, no data, no tests)
+        run: |
+          docker run --rm --entrypoint sh scoring-api:ci -c 'find /app -type f | sort' > /tmp/image_files.txt
+          cat /tmp/image_files.txt
+          diff scripts/expected_image_files.txt /tmp/image_files.txt
+
+      - name: Smoke-test the running container (health, golden loan, clean refusals)
+        run: |
+          docker run -d --name api -p 8080:8080 scoring-api:ci
+          python scripts/smoke_test_api.py --url http://127.0.0.1:8080 --wait 60
+
+      - name: Container logs (only when something failed)
+        if: failure()
+        run: docker logs api || true

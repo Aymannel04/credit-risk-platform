@@ -1,0 +1,13 @@
+# ALLOW-LIST: nothing is sent to Docker (and so nothing can end up in the image) unless it is listed here.
+# Data, results, secrets, tests and the .git folder are therefore never part of a build.
+*
+!requirements-service.txt
+!credit/__init__.py
+!credit/serving/__init__.py
+!credit/serving/model_file.py
+!service
+!models/scorecard_v2.json
+
+# exclusions must come last
+**/__pycache__
+**/*.pyc

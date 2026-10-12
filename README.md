@@ -103,6 +103,24 @@ True default rate: 0.300. Lower Brier is better. Calibration (Platt scaling, fit
 
 New to credit risk? Start with the plain-language guide in [`docs/guide/`](docs/guide/README.md): basics, data and pipeline, how models are measured (Gini, KS, Brier, calibration), the scorecard, the story of the experiments, money and fairness, an interview cheat-sheet and a glossary. Technical record of every decision: [`docs/decision-log.md`](docs/decision-log.md); one-page summary of the model and its flaws: [`docs/model_card.md`](docs/model_card.md).
 
+## Scoring API and container (v2 work in progress)
+
+The v2 scorecard is saved as a small JSON file (`models/scorecard_v2.json`) and served by a strict FastAPI service (`service/`) with four endpoints: `/health`, `/model-info`, `/score`, `/explain`. The API never approves or refuses a loan, stores nothing, and refuses to start if the model file is damaged. Run it locally:
+
+```bash
+uvicorn service.main:create_app --factory --reload   # then open http://127.0.0.1:8000/docs
+```
+
+It also runs as a container (only 14 small libraries, no data, non-root user), the same image that is meant for AWS Lambda:
+
+```bash
+docker build -t scoring-api:local .
+docker run --rm -p 8080:8080 scoring-api:local
+python scripts/smoke_test_api.py --url http://127.0.0.1:8080 --wait 60
+```
+
+CI builds the image on every push, checks that it holds exactly the expected files, and runs the smoke test against the running container.
+
 ## Data layers (v2 work in progress)
 
 The v2 pipeline follows the **medallion pattern** under project-specific names:

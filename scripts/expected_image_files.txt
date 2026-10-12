@@ -1,0 +1,8 @@
+/app/credit/__init__.py
+/app/credit/serving/__init__.py
+/app/credit/serving/model_file.py
+/app/models/scorecard_v2.json
+/app/requirements-service.txt
+/app/service/__init__.py
+/app/service/main.py
+/app/service/schemas.py
