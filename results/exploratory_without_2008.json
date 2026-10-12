@@ -1,0 +1,247 @@
+{
+ "exploratory": true,
+ "sanity_refit_reproduces_committed_model": true,
+ "committed_model_id": "b3069001d62e",
+ "training_default_rate": {
+  "with_2008": 0.01700818153683871,
+  "without_2008": 0.009365296651196954
+ },
+ "spearman_between_scores": 0.9239194070457563,
+ "mean_level_error": {
+  "committed": 0.6519833949359473,
+  "without_2008": 0.4393084304696573
+ },
+ "total_default_count_miss": {
+  "committed": 3210.4353620045235,
+  "without_2008": 2489.619304599796
+ },
+ "committed": {
+  "2008": {
+   "loans": 49713,
+   "defaults": 2219,
+   "predicted_defaults": 1231.1661019438388,
+   "observed_rate": 0.04463621185605375,
+   "predicted_rate": 0.024765475870372717,
+   "ratio": 1.8023563160945626,
+   "level_error": 0.5890948733211956,
+   "default_count_miss": 987.8338980561612,
+   "gini": 0.6592985830633513
+  },
+  "2010": {
+   "loans": 35304,
+   "defaults": 151,
+   "predicted_defaults": 306.2049838519564,
+   "observed_rate": 0.004277135735327442,
+   "predicted_rate": 0.008673379329593145,
+   "ratio": 0.4931337109555516,
+   "level_error": 0.7069749227358866,
+   "default_count_miss": 155.2049838519564,
+   "gini": 0.628475558970879
+  },
+  "2012": {
+   "loans": 32546,
+   "defaults": 73,
+   "predicted_defaults": 210.84306086937315,
+   "observed_rate": 0.002242979167946906,
+   "predicted_rate": 0.006478309496385828,
+   "ratio": 0.34622908479414843,
+   "level_error": 1.0606546282316869,
+   "default_count_miss": 137.84306086937315,
+   "gini": 0.6419988956051581
+  },
+  "2014": {
+   "loans": 42566,
+   "defaults": 206,
+   "predicted_defaults": 542.8693472954908,
+   "observed_rate": 0.004839543297467462,
+   "predicted_rate": 0.012753590830604022,
+   "ratio": 0.3794651531280353,
+   "level_error": 0.9689925094769842,
+   "default_count_miss": 336.8693472954908,
+   "gini": 0.5985419703512198
+  },
+  "2016": {
+   "loans": 47372,
+   "defaults": 288,
+   "predicted_defaults": 674.235770887228,
+   "observed_rate": 0.006079540656928143,
+   "predicted_rate": 0.014232790907861776,
+   "ratio": 0.42715028249097536,
+   "level_error": 0.8506193780456777,
+   "default_count_miss": 386.235770887228,
+   "gini": 0.643466773921785
+  },
+  "2018": {
+   "loans": 49377,
+   "defaults": 420,
+   "predicted_defaults": 886.4628282126446,
+   "observed_rate": 0.008505984567713712,
+   "predicted_rate": 0.017952950325306208,
+   "ratio": 0.4737931322476732,
+   "level_error": 0.7469844824075184,
+   "default_count_miss": 466.4628282126446,
+   "gini": 0.5431894072251937
+  },
+  "2019": {
+   "loans": 49881,
+   "defaults": 630,
+   "predicted_defaults": 814.9684500292951,
+   "observed_rate": 0.012630059541709268,
+   "predicted_rate": 0.01633825404521351,
+   "ratio": 0.7730360604479276,
+   "level_error": 0.25742958148547335,
+   "default_count_miss": 184.96845002929513,
+   "gini": 0.4720937098046192
+  },
+  "2022": {
+   "loans": 49907,
+   "defaults": 692,
+   "predicted_defaults": 974.5607525934951,
+   "observed_rate": 0.013865790370088364,
+   "predicted_rate": 0.019527536269330858,
+   "ratio": 0.710063480556193,
+   "level_error": 0.3424009037094688,
+   "default_count_miss": 282.56075259349507,
+   "gini": 0.564667710805308
+  },
+  "2023": {
+   "loans": 49834,
+   "defaults": 662,
+   "predicted_defaults": 934.4562702088792,
+   "observed_rate": 0.013284103222699363,
+   "predicted_rate": 0.018751379985730208,
+   "ratio": 0.7084333650541219,
+   "level_error": 0.3446992750096341,
+   "default_count_miss": 272.45627020887923,
+   "gini": 0.5953985307876686
+  }
+ },
+ "without_2008": {
+  "2008": {
+   "loans": 49713,
+   "defaults": 2219,
+   "predicted_defaults": 550.7287771288454,
+   "observed_rate": 0.04463621185605375,
+   "predicted_rate": 0.011078164205114264,
+   "ratio": 4.029206557115963,
+   "level_error": 1.3935694724840433,
+   "default_count_miss": 1668.2712228711546,
+   "gini": 0.6145327946645303
+  },
+  "2010": {
+   "loans": 35304,
+   "defaults": 151,
+   "predicted_defaults": 180.44092607799683,
+   "observed_rate": 0.004277135735327442,
+   "predicted_rate": 0.0051110618082369375,
+   "ratio": 0.8368389770662628,
+   "level_error": 0.17812360804416003,
+   "default_count_miss": 29.440926077996835,
+   "gini": 0.617462396641512
+  },
+  "2012": {
+   "loans": 32546,
+   "defaults": 73,
+   "predicted_defaults": 143.24769761305274,
+   "observed_rate": 0.002242979167946906,
+   "predicted_rate": 0.0044013918027730825,
+   "ratio": 0.50960679449935,
+   "level_error": 0.6741158418080633,
+   "default_count_miss": 70.24769761305274,
+   "gini": 0.6546007241421639
+  },
+  "2014": {
+   "loans": 42566,
+   "defaults": 206,
+   "predicted_defaults": 351.79690605678417,
+   "observed_rate": 0.004839543297467462,
+   "predicted_rate": 0.008264739605713108,
+   "ratio": 0.5855651270757599,
+   "level_error": 0.5351778688668588,
+   "default_count_miss": 145.79690605678417,
+   "gini": 0.6273078880057208
+  },
+  "2016": {
+   "loans": 47372,
+   "defaults": 288,
+   "predicted_defaults": 423.9999455543297,
+   "observed_rate": 0.006079540656928143,
+   "predicted_rate": 0.008950433706711343,
+   "ratio": 0.679245370240494,
+   "level_error": 0.3867728466864039,
+   "default_count_miss": 135.9999455543297,
+   "gini": 0.665941529441471
+  },
+  "2018": {
+   "loans": 49377,
+   "defaults": 420,
+   "predicted_defaults": 537.5868928346995,
+   "observed_rate": 0.008505984567713712,
+   "predicted_rate": 0.010887394795850285,
+   "ratio": 0.7812690480330295,
+   "level_error": 0.24683569674647143,
+   "default_count_miss": 117.58689283469948,
+   "gini": 0.5492635422533088
+  },
+  "2019": {
+   "loans": 49881,
+   "defaults": 630,
+   "predicted_defaults": 498.56692281675515,
+   "observed_rate": 0.012630059541709268,
+   "predicted_rate": 0.009995126858257757,
+   "ratio": 1.2636217349532275,
+   "level_error": 0.23398199061554623,
+   "default_count_miss": 131.43307718324485,
+   "gini": 0.4759056056552555
+  },
+  "2022": {
+   "loans": 49907,
+   "defaults": 692,
+   "predicted_defaults": 606.511311298672,
+   "observed_rate": 0.013865790370088364,
+   "predicted_rate": 0.012152830490686117,
+   "ratio": 1.1409515158394625,
+   "level_error": 0.1318625772860053,
+   "default_count_miss": 85.48868870132799,
+   "gini": 0.5783733811593461
+  },
+  "2023": {
+   "loans": 49834,
+   "defaults": 662,
+   "predicted_defaults": 556.6460522927944,
+   "observed_rate": 0.013284103222699363,
+   "predicted_rate": 0.011170005463996355,
+   "ratio": 1.1892655975431041,
+   "level_error": 0.17333597168936296,
+   "default_count_miss": 105.35394770720563,
+   "gini": 0.5990362640984248
+  }
+ },
+ "predictions": [
+  {
+   "id": "E1",
+   "text": "2010-2018 ratios move closer to 1",
+   "hit": true
+  },
+  {
+   "id": "E2",
+   "text": "2019, 2022, 2023 cross above 1",
+   "hit": true
+  },
+  {
+   "id": "E3",
+   "text": "2008 ratio rises to at least 2.5",
+   "hit": true
+  },
+  {
+   "id": "E4",
+   "text": "|Gini difference| < 0.02 everywhere and Spearman > 0.95",
+   "hit": false
+  },
+  {
+   "id": "E5",
+   "text": "average level error falls while the 2008 default-count miss rises",
+   "hit": true
+  }
+ ]
+}

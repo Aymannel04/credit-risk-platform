@@ -45,6 +45,14 @@ Rule of thumb: under 0.10 stable, 0.10 to 0.25 look closer, 0.25 or more a big c
 - **Can history repair the level?** We wrote the rule before looking. Shifting the level using the last known year cut the error by 31% on average and by a lot in stable years, but made it worse at turning points (2012, 2019), exactly when you need it. Verdict: not an automatic fix. A macro signal would be the next experiment.
 - **11 of 13 predictions hit.** The two misses are in the decision log. Being able to say "I predicted X, I was wrong" is the point.
 
+## Why not just delete the 2008 year? (tested, exploratory)
+It is the obvious question, so we tested it: refit the model without 2008 and compare. Plain words:
+- **Calm years get much closer to reality** (for example 2018: the model was 2.1 times too scared, now 1.3 times too relaxed in the later years).
+- **The crisis becomes invisible**: for 2008 the new model predicts 1.11% of loans defaulting, reality was 4.46%, four times more.
+- **The plain average looks better without 2008**, because eight of the nine years are calm. That is the trap: an average hides how much more expensive it is to be wrong in a crisis.
+- The right choice depends on the purpose: a calm-weather view, or a model that must survive a downturn. We kept the second one and wrote it in the model's limits.
+- Fixing the level properly needs the state of the economy (unemployment, house prices). That is not in our data and is a bigger piece of future work, with a trap: with only 9 sample years a model can memorise the eras instead of learning a rule.
+
 ## Questions to test yourself
 1. Why does a model file with only band edges and points need no machine-learning library?
 2. Why is a PSI alert not the same as "the model is broken"? Give the 2012 example.
