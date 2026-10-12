@@ -1,10 +1,14 @@
 """Smoke test for the running scoring API (standard library only, so it runs anywhere: a laptop, CI, after a deploy).
 
     python scripts/smoke_test_api.py --url http://127.0.0.1:8080 [--wait 60] [--expect-model-id b3069001d62e]
+    python scripts/smoke_test_api.py --url https://<id>.lambda-url.eu-north-1.on.aws --aws-profile credit-admin   # a locked (AWS_IAM) Lambda URL
 
 Checks: the service is alive and runs the expected model; the golden loan scores as agreed (553.3 points, 9.17%);
 reasons are returned; bad input is refused cleanly (422, never a server error); the API never decides approve/refuse.
 Exit code 0 = all good, 1 = something failed. It prints no loan data other than the made-up golden loan.
+Locked URLs (Lambda Function URL with AWS_IAM) refuse unsigned requests: with --aws-profile every request is signed (SigV4, service
+"lambda") using your SSO session. That is the only part that needs botocore (a dev-only library); without the option the script
+uses the standard library only.
 """
 import argparse
 import json
@@ -21,10 +25,36 @@ GOLDEN = {
 GOLDEN_SCORE, GOLDEN_SCORE_TOLERANCE = 553.3, 0.2
 GOLDEN_PD, GOLDEN_PD_TOLERANCE = 0.09165, 5e-4
 MODEL_FILE = Path(__file__).resolve().parents[1] / "models" / "scorecard_v2.json"
+SIGNER = None  # set by main() when --aws-profile is given: a function (method, url, body, headers) -> signed headers
+
+
+def make_signer(credentials, region: str, service: str = "lambda"):
+    """Build a SigV4 signer from botocore credentials (frozen: they do not refresh while the script runs)."""
+    from botocore.auth import SigV4Auth
+    from botocore.awsrequest import AWSRequest
+
+    def sign(method: str, url: str, body: bytes | None, headers: dict) -> dict:
+        request = AWSRequest(method=method, url=url, data=body, headers=dict(headers))
+        SigV4Auth(credentials, service, region).add_auth(request)
+        return dict(request.headers)
+
+    return sign
+
+
+def signer_from_profile(profile: str, region: str):
+    import botocore.session
+
+    credentials = botocore.session.Session(profile=profile).get_credentials()
+    if credentials is None:
+        raise SystemExit(f"no credentials for the profile '{profile}': run  aws sso login --profile {profile}")
+    return make_signer(credentials.get_frozen_credentials(), region)
 
 
 def call(base: str, method: str, path: str, body: bytes | None = None) -> tuple[int, dict | str]:
-    req = urllib.request.Request(base + path, data=body, method=method, headers={"content-type": "application/json"})
+    headers = {"content-type": "application/json"}
+    if SIGNER is not None:
+        headers = SIGNER(method, base + path, body, headers)
+    req = urllib.request.Request(base + path, data=body, method=method, headers=headers)
     try:
         with urllib.request.urlopen(req, timeout=15) as r:
             raw, status = r.read().decode("utf-8"), r.status
@@ -97,7 +127,12 @@ def main() -> int:
     ap.add_argument("--url", default="http://127.0.0.1:8080")
     ap.add_argument("--wait", type=float, default=0, help="seconds to wait for the service to come alive")
     ap.add_argument("--expect-model-id", default=None)
+    ap.add_argument("--aws-profile", default=None, help="sign every request (SigV4) with this AWS profile, for a locked Function URL")
+    ap.add_argument("--aws-region", default="eu-north-1")
     a = ap.parse_args()
+    global SIGNER
+    if a.aws_profile:
+        SIGNER = signer_from_profile(a.aws_profile, a.aws_region)
     base = a.url.rstrip("/")
     if a.wait and not wait_until_alive(base, a.wait):
         print(f"FAIL: the service at {base} did not answer /health within {a.wait:.0f} s")

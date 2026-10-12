@@ -166,3 +166,68 @@ def test_smoke_script_reports_a_dead_service():
         s.bind(("127.0.0.1", 0))
         port = s.getsockname()[1]
     assert smoke.wait_until_alive(f"http://127.0.0.1:{port}", 1) is False
+
+
+# ---------- signed requests (for the locked Lambda Function URL) ----------
+
+def _fake_credentials():
+    from botocore.credentials import Credentials
+
+    # AWS's own documentation example values, assembled at run time: they are not real and open nothing
+    return Credentials("AKIA" + "IOSFODNN7EXAMPLE", "wJalrXUtnFEMI/K7MDENG/bPx" + "RfiCYEXAMPLEKEY", token="example-session-token")
+
+
+def test_signer_adds_a_sigv4_authorization_for_the_lambda_service():
+    smoke = _load_smoke()
+    sign = smoke.make_signer(_fake_credentials(), "eu-north-1")
+    headers = sign("POST", "https://abc123.lambda-url.eu-north-1.on.aws/score", b'{"a": 1}', {"content-type": "application/json"})
+    lowered = {k.lower(): v for k, v in headers.items()}
+    auth = lowered["authorization"]
+    assert auth.startswith("AWS4-HMAC-SHA256 Credential=AKIA")
+    assert "/eu-north-1/lambda/aws4_request" in auth, "the signing scope must name the region and the service 'lambda'"
+    assert "SignedHeaders=" in auth and "host" in auth.split("SignedHeaders=")[1].split(",")[0]
+    assert "x-amz-date" in lowered and lowered["x-amz-security-token"] == "example-session-token"
+    assert lowered["content-type"] == "application/json"
+
+
+def test_signature_depends_on_the_body_and_the_credentials():
+    smoke = _load_smoke()
+    sign = smoke.make_signer(_fake_credentials(), "eu-north-1")
+    url = "https://abc123.lambda-url.eu-north-1.on.aws/score"
+    one = {k.lower(): v for k, v in sign("POST", url, b"one", {}).items()}
+    two = {k.lower(): v for k, v in sign("POST", url, b"two", {}).items()}
+    assert one["authorization"].split("Signature=")[1] != two["authorization"].split("Signature=")[1]
+
+
+def test_call_sends_the_signed_headers_and_stays_unsigned_by_default():
+    import http.server
+
+    seen = []
+
+    class Capture(http.server.BaseHTTPRequestHandler):
+        def do_GET(self):
+            seen.append({k.lower(): v for k, v in self.headers.items()})
+            body = b'{"status": "ok"}'
+            self.send_response(200)
+            self.send_header("content-type", "application/json")
+            self.send_header("content-length", str(len(body)))
+            self.end_headers()
+            self.wfile.write(body)
+
+        def log_message(self, *args):
+            pass
+
+    server = http.server.HTTPServer(("127.0.0.1", 0), Capture)
+    thread = threading.Thread(target=server.serve_forever, daemon=True)
+    thread.start()
+    try:
+        base = f"http://127.0.0.1:{server.server_address[1]}"
+        smoke = _load_smoke()
+        assert smoke.call(base, "GET", "/health")[0] == 200
+        assert "authorization" not in seen[-1], "no signing unless asked"
+        smoke.SIGNER = smoke.make_signer(_fake_credentials(), "eu-north-1")
+        assert smoke.call(base, "GET", "/health")[0] == 200
+        assert seen[-1]["authorization"].startswith("AWS4-HMAC-SHA256")
+    finally:
+        server.shutdown()
+        thread.join(timeout=5)

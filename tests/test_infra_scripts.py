@@ -11,7 +11,7 @@ ALL_FILES = [*SCRIPTS, *INFRA.glob("*.json"), *INFRA.glob("*.md")]
 
 
 def test_there_are_scripts_to_check():
-    assert {p.name for p in SCRIPTS} >= {"01_create_ecr.ps1", "99_teardown.ps1"}
+    assert {p.name for p in SCRIPTS} >= {"01_create_ecr.ps1", "02_push_image.ps1", "03_create_lambda.ps1", "99_teardown.ps1"}
 
 
 @pytest.mark.parametrize("path", ALL_FILES, ids=lambda p: p.name)
@@ -39,15 +39,21 @@ def test_ecr_script_creates_a_private_immutable_tagged_repository_with_cleanup()
     assert "--force" not in text, "the create script must never delete anything"
 
 
-def test_teardown_asks_for_confirmation_before_deleting():
+def test_teardown_asks_for_confirmation_before_every_delete_and_deletes_in_a_safe_order():
     text = (INFRA / "99_teardown.ps1").read_text(encoding="utf-8")
-    assert "Read-Host" in text and "delete-repository" in text
-    real_delete = text.index('Invoke-Aws @("ecr", "delete-repository"')
-    assert text.index("Read-Host") < real_delete, "confirmation must come before the real delete"
-    assert "exit 1" in text[text.index("Read-Host"):real_delete], "a wrong answer must stop the script before deleting"
+    # every real delete lives inside a script block handed to Remove-AfterConfirmation, which asks first and stops on a wrong answer
+    helper = text[text.index("function Remove-AfterConfirmation"):text.index("function Test-Exists")]
+    assert "Read-Host" in helper and "exit 1" in helper and helper.index("Read-Host") < helper.index("& $Delete")
+    deletes = [m.start() for m in re.finditer(r'"(delete-function|delete-function-url-config|delete-log-group|delete-role|delete-repository)"', text)]
+    assert len(deletes) == 5
+    for pos in deletes:
+        before = text[:pos]
+        assert before.rfind("Remove-AfterConfirmation ") > before.rfind(chr(10) + "}"), "a delete must sit inside a confirmed block"
+    order = [text.index(f'"{c}"') for c in ("delete-function", "delete-log-group", "delete-role", "delete-repository")]
+    assert order == sorted(order), "function first, then logs, then role, then the repository"
 
 
-@pytest.mark.parametrize("path", [p for p in SCRIPTS if p.name != "02_push_image.ps1"], ids=lambda p: p.name)
+@pytest.mark.parametrize("path", [p for p in SCRIPTS if p.name in ("01_create_ecr.ps1", "99_teardown.ps1")], ids=lambda p: p.name)
 def test_aws_scripts_handle_stderr_safely_on_windows_powershell(path):
     """Windows PowerShell 5.1 throws on any native stderr text when ErrorActionPreference is Stop (even with 2>$null): every aws call
     must go through the helper that relaxes it and checks the exit code, and the helper must return only the exit code."""
@@ -92,3 +98,52 @@ def test_lifecycle_policy_obeys_the_ecr_rules():
     keep = any_rules[0]["selection"]
     assert keep["countType"] == "imageCountMoreThan" and keep["countNumber"] == 3
     assert all(r["action"] == {"type": "expire"} for r in rules)
+
+
+# ---------- step 3.6b-4: the Lambda script and its policies ----------
+
+LAMBDA = INFRA / "03_create_lambda.ps1"
+
+
+def test_lambda_script_creates_a_locked_url_a_least_privilege_role_and_a_short_log_retention():
+    text = LAMBDA.read_text(encoding="utf-8")
+    assert "--auth-type AWS_IAM" in text
+    assert "--auth-type NONE" not in text, "the function URL must stay locked"
+    assert "put-retention-policy" in text and "$LogRetentionDays" in text
+    assert "--package-type Image" in text and "--architectures x86_64" in text
+    assert "AdministratorAccess" not in text and "AWSLambdaBasicExecutionRole" not in text and "*:*" not in text
+    assert "add-permission" not in text, "no resource policy that could open the function to others"
+
+
+def test_lambda_script_defaults_are_small_and_it_checks_before_creating():
+    text = LAMBDA.read_text(encoding="utf-8")
+    assert "[int]$MemoryMb = 512" in text and "[int]$TimeoutSeconds = 10" in text and "[int]$LogRetentionDays = 14" in text
+    for check in ("get-role", "describe-log-groups", '"get-function"', "get-function-url-config"):
+        assert check in text, check
+    assert text.index('"get-function"') < text.index("lambda create-function "), "look before creating"
+    assert "Test-Path" in text and "smoke_test_api.py" in text and "--aws-profile" in text
+
+
+def test_lambda_script_handles_stderr_safely_and_returns_only_text():
+    text = LAMBDA.read_text(encoding="utf-8")
+    assert 'cmd /c "$Line 2>&1"' in text and "function Get-Text" in text and '$ErrorActionPreference = "Continue"' in text
+    assert "$script:ExitCode = $LASTEXITCODE" in text
+
+
+def test_trust_policy_lets_only_lambda_assume_the_role():
+    policy = json.loads((INFRA / "lambda_trust_policy.json").read_text(encoding="utf-8"))
+    (stmt,) = policy["Statement"]
+    assert stmt["Effect"] == "Allow" and stmt["Action"] == "sts:AssumeRole"
+    assert stmt["Principal"] == {"Service": "lambda.amazonaws.com"}
+
+
+def test_logs_policy_allows_two_log_actions_on_its_own_log_group_only():
+    template = (INFRA / "lambda_logs_policy.template.json").read_text(encoding="utf-8")
+    policy = json.loads(template)
+    (stmt,) = policy["Statement"]
+    assert stmt["Effect"] == "Allow"
+    assert sorted(stmt["Action"]) == ["logs:CreateLogStream", "logs:PutLogEvents"]
+    assert stmt["Resource"] == "arn:aws:logs:__REGION__:__ACCOUNT__:log-group:/aws/lambda/__FUNCTION__:*"
+    assert "*" not in stmt["Resource"].replace(":*", "", 1)
+    rendered = template.replace("__REGION__", "eu-north-1").replace("__ACCOUNT__", "123456789012").replace("__FUNCTION__", "credit-scoring-api")
+    assert json.loads(rendered)["Statement"][0]["Resource"].endswith("log-group:/aws/lambda/credit-scoring-api:*")
