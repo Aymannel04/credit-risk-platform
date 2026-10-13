@@ -28,7 +28,7 @@ An end-to-end credit-risk project on real, public mortgage data (Freddie Mac): a
 ## Architecture
 
 ```mermaid
-flowchart LR
+flowchart TB
     Z["Freddie Mac zips<br/>9 vintages, 450k loans"] --> R["raw<br/>Parquet"]
     R --> S["staging<br/>typed, labelled, checked"]
     S --> F["features<br/>hash-based splits"]
