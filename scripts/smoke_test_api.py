@@ -50,16 +50,29 @@ def signer_from_profile(profile: str, region: str):
     return make_signer(credentials.get_frozen_credentials(), region)
 
 
-def call(base: str, method: str, path: str, body: bytes | None = None) -> tuple[int, dict | str]:
-    headers = {"content-type": "application/json"}
-    if SIGNER is not None:
-        headers = SIGNER(method, base + path, body, headers)
-    req = urllib.request.Request(base + path, data=body, method=method, headers=headers)
-    try:
-        with urllib.request.urlopen(req, timeout=15) as r:
-            raw, status = r.read().decode("utf-8"), r.status
-    except urllib.error.HTTPError as e:
-        raw, status = e.read().decode("utf-8", "replace"), e.code
+TRANSIENT = (urllib.error.URLError, TimeoutError, ConnectionError, OSError)  # network trouble, not an answer from the server
+
+
+def call(base: str, method: str, path: str, body: bytes | None = None, attempts: int = 3) -> tuple[int, dict | str]:
+    """One request. Network trouble (a slow TLS handshake, a dropped connection) is retried, then reported as status 0.
+    Any real answer from the server, even an error such as 403 or 422, is returned at once and never retried.
+    Every attempt is signed again, so the signature is always fresh."""
+    for attempt in range(1, attempts + 1):
+        headers = {"content-type": "application/json"}
+        if SIGNER is not None:
+            headers = SIGNER(method, base + path, body, headers)
+        req = urllib.request.Request(base + path, data=body, method=method, headers=headers)
+        try:
+            with urllib.request.urlopen(req, timeout=15) as r:
+                raw, status = r.read().decode("utf-8"), r.status
+            break
+        except urllib.error.HTTPError as e:  # must come first: HTTPError is a kind of URLError
+            raw, status = e.read().decode("utf-8", "replace"), e.code
+            break
+        except TRANSIENT as e:
+            if attempt == attempts:
+                return 0, f"network error after {attempts} attempts: {e}"
+            time.sleep(2.0 * attempt)
     try:
         return status, json.loads(raw)
     except ValueError:

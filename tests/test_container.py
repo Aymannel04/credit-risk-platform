@@ -231,3 +231,86 @@ def test_call_sends_the_signed_headers_and_stays_unsigned_by_default():
     finally:
         server.shutdown()
         thread.join(timeout=5)
+
+
+# ---------- network trouble must not crash the smoke test ----------
+
+class _FakeResponse:
+    def __init__(self, body: bytes, status: int = 200):
+        self._body, self.status = body, status
+
+    def read(self):
+        return self._body
+
+    def __enter__(self):
+        return self
+
+    def __exit__(self, *exc):
+        return False
+
+
+def test_a_slow_handshake_is_retried_and_then_succeeds(monkeypatch):
+    import urllib.error
+
+    smoke = _load_smoke()
+    monkeypatch.setattr(smoke.time, "sleep", lambda s: None)
+    calls = []
+
+    def flaky(req, timeout=None):
+        calls.append(req.full_url)
+        if len(calls) < 3:
+            raise urllib.error.URLError(TimeoutError("_ssl.c:1011: The handshake operation timed out"))
+        return _FakeResponse(b'{"status": "ok"}')
+
+    monkeypatch.setattr(smoke.urllib.request, "urlopen", flaky)
+    assert smoke.call("https://example.test", "GET", "/health") == (200, {"status": "ok"})
+    assert len(calls) == 3
+
+
+def test_persistent_network_trouble_becomes_a_failed_check_not_a_traceback(monkeypatch):
+    import urllib.error
+
+    smoke = _load_smoke()
+    monkeypatch.setattr(smoke.time, "sleep", lambda s: None)
+
+    def always_down(req, timeout=None):
+        raise urllib.error.URLError(TimeoutError("handshake timed out"))
+
+    monkeypatch.setattr(smoke.urllib.request, "urlopen", always_down)
+    status, text = smoke.call("https://example.test", "GET", "/health")
+    assert status == 0 and "network error after 3 attempts" in text
+    fails = smoke.run_checks("https://example.test", expect_model_id="x")
+    assert fails and any("got 0" in f or "answered 0" in f for f in fails)  # reported, not raised
+
+
+def test_a_real_error_answer_is_never_retried(monkeypatch):
+    import io
+    import urllib.error
+
+    smoke = _load_smoke()
+    monkeypatch.setattr(smoke.time, "sleep", lambda s: pytest.fail("a real HTTP answer must not be retried"))
+    seen = []
+
+    def forbidden(req, timeout=None):
+        seen.append(1)
+        raise urllib.error.HTTPError(req.full_url, 403, "Forbidden", {}, io.BytesIO(b'{"message": "Forbidden"}'))
+
+    monkeypatch.setattr(smoke.urllib.request, "urlopen", forbidden)
+    assert smoke.call("https://example.test", "GET", "/health") == (403, {"message": "Forbidden"})
+    assert len(seen) == 1
+
+
+def test_every_retry_is_signed_again(monkeypatch):
+    import urllib.error
+
+    smoke = _load_smoke()
+    monkeypatch.setattr(smoke.time, "sleep", lambda s: None)
+    signed = []
+    monkeypatch.setattr(smoke, "SIGNER", lambda method, url, body, headers: signed.append(1) or dict(headers))
+
+    def down(req, timeout=None):
+        raise urllib.error.URLError(TimeoutError("x"))
+
+    monkeypatch.setattr(smoke.urllib.request, "urlopen", down)
+    smoke.call("https://example.test", "GET", "/health", attempts=3)
+    assert len(signed) == 3

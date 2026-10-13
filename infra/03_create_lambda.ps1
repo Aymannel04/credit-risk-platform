@@ -165,6 +165,13 @@ if (-not $SkipSmokeTest) {
     Write-Host ""
     Write-Host "Smoke-testing the locked URL with signed requests (the first call is slow: a cold start)..."
     $python = if (Test-Path ".venv\Scripts\python.exe") { ".venv\Scripts\python.exe" } else { "python" }
-    Invoke-Cmd "$python scripts\smoke_test_api.py --url $url --aws-profile $Profile --aws-region $Region --wait 90"
-    Assert-Ok "the smoke test against the Lambda URL"
+    $smokeLine = "$python scripts\smoke_test_api.py --url $url --aws-profile $Profile --aws-region $Region --wait 90"
+    Invoke-Cmd $smokeLine
+    if ($script:ExitCode -ne 0) {
+        Write-Host ""
+        Write-Host "Everything above WAS CREATED. Only the smoke test failed (a slow network is the usual cause)." -ForegroundColor Yellow
+        Write-Host "Run just the test again, as often as you like, nothing needs to be recreated:" -ForegroundColor Yellow
+        Write-Host "  $smokeLine"
+        exit 1
+    }
 }
