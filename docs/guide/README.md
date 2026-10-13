@@ -33,6 +33,7 @@ The most important lesson of the project is not a number. It is this:
 | 8 | [08_glossary.md](08_glossary.md) | Every term, A to Z | Any time |
 | 9 | [09_model_v2.md](09_model_v2.md) | Finding our own flaws, pre-registration, the exam on fresh years | After file 5 |
 | 10 | [10_serving_and_monitoring.md](10_serving_and_monitoring.md) | The model file, the API, the pipeline (Dagster) and the monitors, with real results | After file 9 |
+| 11 | [11_interview_project_qa.md](11_interview_project_qa.md) | 37 interview questions about this project with honest model answers, and a drill | Before any interview |
 
 Deeper, more technical records live next to this guide: `docs/decision-log.md` (every decision with its evidence)
 and `docs/model_card.md` (one-page summary of the model and its limits).
