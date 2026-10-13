@@ -1,6 +1,6 @@
 # 11. Interview question bank for this project
 
-How to use it: read a question, **answer out loud first**, then read the model answer. Every number is from a file in this repository. `[TBD]` means "not measured yet: do not quote". An honest "I haven't done that yet, here is how I would" beats a bluff.
+How to use it: read a question, **answer out loud first**, then read the model answer. Every number is from a file in this repository. A number in brackets that says it is not measured yet means: do not quote it. An honest "I haven't done that yet, here is how I would" beats a bluff.
 
 ## A. The project
 
@@ -88,10 +88,10 @@ Reason codes: the features where the loan loses the most points versus the best 
 ## D. Cloud, MLOps and security
 
 **26. Why a container on Lambda?**
-It scales to zero and costs nothing when idle, and a container is the same artifact on my laptop, in CI and in AWS. A 51 MB image with 14 small libraries keeps cold starts short. Alternatives (ECS, App Runner) keep an instance running. Latency: **[TBD: `results/lambda_latency.md`]**.
+It scales to zero and costs nothing when idle, and a container is the same artifact on my laptop, in CI and in AWS. A 51 MB image with 14 small libraries keeps cold starts short. Alternatives (ECS, App Runner) keep an instance running. Measured on the live function: a warm request is **2.7 ms** of compute (median; p95 3.0 ms), memory used **78 MB of 512 MB**, 71 invocations observed.
 
 **27. What is a cold start?**
-When no prepared container is waiting, Lambda prepares one (the Init Duration in the log); later calls reuse it. I report both, never one blended number.
+When no prepared container is waiting, Lambda prepares one (the Init Duration in the log); later calls reuse it. Measured: **about 1.2 to 1.3 s** over the 2 cold starts I observed (a small sample, so I say "about"), against 2.7 ms for a warm request. I report both, never one blended number.
 
 **28. How is it secured?**
 The Function URL uses `AWS_IAM`: every request must be signed (SigV4), so a browser gets 403. The function's role can write its own logs and nothing else (least privilege). Images are tagged with the git commit and immutable, so a tag always means the same code. No access keys exist anywhere.
@@ -100,7 +100,7 @@ The Function URL uses `AWS_IAM`: every request must be signed (SigV4), so a brow
 A tag is a human label; a digest is a fingerprint of the content. If tags could be overwritten, "v5" today and tomorrow could differ, and rollbacks and audits would be guesswork. The digest stored in AWS equals the one I tested locally.
 
 **30. What does your CI do? Why test the container?**
-Lint, 240 tests, then it builds the image, compares its exact file list to an expected list (no data, no tests inside) and smoke-tests it. The Python tests run in a full environment; the image has 14 libraries, so only a test of the image can catch a missing file or library.
+Lint, 245 tests, then it builds the image, compares its exact file list to an expected list (no data, no tests inside) and smoke-tests it. The Python tests run in a full environment; the image has 14 libraries, so only a test of the image can catch a missing file or library.
 
 **31. How do you monitor drift?**
 PSI per variable band (CSI) and on the score, plus the observed/predicted level ratio. PSI = sum over bands of (share now − share before) · ln(share now / share before); under 0.10 stable, 0.25 or more a big change.
@@ -110,6 +110,9 @@ I damaged batches on purpose (simulated, labelled so): 7 of 7 expected alerts fi
 
 **33. A PSI alert fired. Is the model broken?**
 Not necessarily. In 2012 the score PSI was 0.454 because of the refinance wave (the mix of loans changed), yet the Gini was still 0.642. Drift says "look"; the level ratio and Gini say whether the model fails.
+
+**38. Your laptop sees 0.68 s but Lambda reports 3 ms. Which is the latency?**
+Both are true and they measure different things. The 3 ms is the function's own compute, read from Lambda's logs. The 0.68 s median (p95 1.5 s) is what my laptop sees: the internet trip to Stockholm, a fresh TLS handshake on every call (my script opens a new connection each time) and request signing. For a user the second number matters; for sizing and cost the first one does. I label which one I quote.
 
 ## E. Honest "weak spot" questions
 

@@ -1,0 +1,73 @@
+{
+ "measured_at_utc": "2026-10-13 18:06",
+ "region": "eu-north-1",
+ "model_id": "b3069001d62e",
+ "function": {
+  "memory_mb": 512,
+  "timeout_s": 10,
+  "architecture": "x86_64",
+  "image_tag": "ac13c6b"
+ },
+ "client_side": {
+  "note": "Measured from the owner's computer; it depends on the distance to Stockholm and on the local network.",
+  "calls": 30,
+  "score": {
+   "errors": 0,
+   "n": 30,
+   "min": 353.35740000300575,
+   "median": 681.4427999997861,
+   "p95": 1505.038000002969,
+   "max": 2277.4866000108887
+  },
+  "health": {
+   "errors": 0,
+   "n": 30,
+   "min": 246.43850000575185,
+   "median": 366.10920000384795,
+   "p95": 677.7440000005299,
+   "max": 1257.2534999926575
+  }
+ },
+ "server_side": {
+  "invocations": 71,
+  "cold_starts": 2,
+  "memory_size_mb": 512.0,
+  "init_duration_ms": {
+   "n": 2,
+   "min": 1188.21,
+   "median": 1251.79,
+   "p95": 1315.37,
+   "max": 1315.37
+  },
+  "duration_ms_warm": {
+   "n": 69,
+   "min": 2.19,
+   "median": 2.68,
+   "p95": 3.05,
+   "max": 3.29
+  },
+  "duration_ms_cold": {
+   "n": 2,
+   "min": 2.84,
+   "median": 3.13,
+   "p95": 3.42,
+   "max": 3.42
+  },
+  "billed_duration_ms": {
+   "n": 71,
+   "min": 3.0,
+   "median": 3.0,
+   "p95": 4.0,
+   "max": 1319.0
+  },
+  "max_memory_used_mb": {
+   "n": 71,
+   "min": 78.0,
+   "median": 78.0,
+   "p95": 78.0,
+   "max": 78.0
+  },
+  "billed_gb_seconds_in_window": 1.3615,
+  "window_minutes": 240
+ }
+}

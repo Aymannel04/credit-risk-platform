@@ -21,7 +21,8 @@ An end-to-end credit-risk project on real, public mortgage data (Freddie Mac): a
 | "Why not just delete 2008?" (exploratory) | Calm years look better, but the crisis is then under-predicted about 4 times: the plain average hides the cost (`results/exploratory_without_2008.md`) |
 | Monitoring | PSI/CSI and level monitors; fire drills with simulated shifts: **7 of 7** expected alerts caught, 2 subtle shifts missed and reported (`results/monitoring_report.md`) |
 | Pre-registered predictions | 11 of 13 hit for the monitoring study; the misses are published |
-| Engineering | 240 automated tests; CI also builds the container and smoke-tests it; a full rebuild from the raw files reproduces the same data and the same model (checked by a fingerprint of every row and the model id) |
+| Live API on AWS Lambda (measured) | Warm request **2.7 ms** median (p95 3.0 ms); cold start about **1.2 to 1.3 s**; **78 MB** used of 512 MB; 71 invocations observed (`results/lambda_latency.md`) |
+| Engineering | 245 automated tests; CI also builds the container and smoke-tests it; a full rebuild from the raw files reproduces the same data and the same model (checked by a fingerprint of every row and the model id) |
 
 ![Monitoring: level per vintage and the recalibration experiment](docs/monitoring.png)
 
@@ -45,7 +46,7 @@ flowchart TB
       M
       MON
     end
-    CI["GitHub Actions<br/>lint, 240 tests, build + smoke-test the image"] -.-> IMG
+    CI["GitHub Actions<br/>lint, 245 tests, build + smoke-test the image"] -.-> IMG
 ```
 
 | Part | What it does | Where |
@@ -64,7 +65,7 @@ flowchart TB
 
 The scoring API runs as a container image on **AWS Lambda** (eu-north-1) behind a **Function URL locked with `AWS_IAM`**: every request must be signed, so an anonymous visitor gets `403 Forbidden`. The function's role can write its own logs and nothing else. Infrastructure is created by PowerShell scripts in `infra/` that have a `-DryRun` mode, are safe to run twice, and come with a teardown. Images are tagged with the git commit and immutable.
 
-Latency and memory, measured on the live function: see `results/lambda_latency.md` (**TBD until `scripts/measure_latency.py` has been run; no estimate is quoted here**).
+**Measured on the live function (2026-10-13, 71 invocations):** a warm request takes **2.7 ms** of compute (median; p95 3.0 ms); a **cold start** (a new container is prepared) adds about **1.2 to 1.3 s** (2 observed); memory used **78 MB of 512 MB**. From my laptop the full round trip to Stockholm, including the internet and a fresh TLS handshake per call, is **0.68 s median (p95 1.5 s)**: that part is the network, not the function. Details and caveats: `results/lambda_latency.md`.
 
 There is no public demo URL on purpose (it would need a spending guard); a recorded demo is planned. The old Streamlit demo of v1 is still at https://creditscoringproject.streamlit.app/.
 
@@ -87,7 +88,7 @@ python -m venv .venv
 .venv/Scripts/python -m pip install -r requirements-dev.txt      # Linux/macOS: .venv/bin/python
 
 .venv/Scripts/python -m pipeline.run            # data, features, model file, monitoring report (steps already up to date are skipped)
-.venv/Scripts/python -m pytest -q               # 240 tests
+.venv/Scripts/python -m pytest -q               # 245 tests
 .venv/Scripts/python -m ruff check .
 
 # the API
