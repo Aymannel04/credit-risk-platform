@@ -1,0 +1,23 @@
+{
+  "Rules": [
+    {
+      "ID": "athena-results-expire-after-7-days",
+      "Status": "Enabled",
+      "Filter": { "Prefix": "athena-results/" },
+      "Expiration": { "Days": 7 },
+      "NoncurrentVersionExpiration": { "NoncurrentDays": 1 }
+    },
+    {
+      "ID": "abandoned-partial-uploads-after-1-day",
+      "Status": "Enabled",
+      "Filter": { "Prefix": "" },
+      "AbortIncompleteMultipartUpload": { "DaysAfterInitiation": 1 }
+    },
+    {
+      "ID": "overwritten-versions-expire-after-30-days",
+      "Status": "Enabled",
+      "Filter": { "Prefix": "lake/" },
+      "NoncurrentVersionExpiration": { "NoncurrentDays": 30 }
+    }
+  ]
+}

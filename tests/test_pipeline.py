@@ -69,6 +69,7 @@ def test_graph_dependencies():
     assert parents == {
         "freddie_zips": [], "raw_parquet": ["freddie_zips"], "staging_dev": ["raw_parquet"], "staging_fresh": ["raw_parquet"],
         "features_dev": ["staging_dev"], "features_fresh": ["staging_fresh"], "scorecard_v2": ["features_dev"],
+        "data_lake": ["features_dev", "features_fresh", "raw_parquet"],
         "monitoring_report": ["features_dev", "features_fresh", "scorecard_v2"],
     }
 
@@ -88,7 +89,7 @@ def test_the_model_never_depends_on_the_fresh_vintages():
 def test_every_executable_asset_has_a_blocking_check():
     g = defs.resolve_asset_graph()
     checked = {ck.asset_key.to_user_string() for ck in g.asset_check_keys}
-    assert checked == {"raw_parquet", "staging_dev", "staging_fresh", "features_dev", "features_fresh", "scorecard_v2", "monitoring_report"}
+    assert checked == {"raw_parquet", "staging_dev", "staging_fresh", "features_dev", "features_fresh", "data_lake", "scorecard_v2", "monitoring_report"}
     for ck in g.asset_check_keys:
         assert g.get_check_spec(ck).blocking, ck
 
@@ -266,3 +267,28 @@ def test_monitoring_check_fails_for_a_report_about_another_model(tmp_path):
 
 def test_monitoring_check_reports_a_missing_file(tmp_path):
     assert checks.check_monitoring(tmp_path / "nope.json", MODEL_PATH) == ["missing nope.json"]
+
+
+# ---------- the S3 lake step is opt-in and stays offline by default ----------
+
+def test_lake_step_is_skipped_and_touches_no_cloud_code_unless_asked(monkeypatch):
+    monkeypatch.delenv("CREDIT_LAKE", raising=False)
+    monkeypatch.setattr("builtins.__import__", _forbid_boto3(__import__))
+    r = steps.lake_step()
+    assert r["status"].startswith("skipped") and r["files"] == 0
+    assert checks.check_lake(False) == []
+
+
+def test_lake_step_switch_reads_the_environment(monkeypatch):
+    monkeypatch.setenv("CREDIT_LAKE", "1")
+    assert steps.lake_enabled()
+    monkeypatch.setenv("CREDIT_LAKE", "0")
+    assert not steps.lake_enabled()
+
+
+def _forbid_boto3(real_import):
+    def guarded(name, *args, **kwargs):
+        if name.split(".")[0] in ("boto3", "botocore"):
+            raise AssertionError("the offline pipeline must not load AWS libraries")
+        return real_import(name, *args, **kwargs)
+    return guarded

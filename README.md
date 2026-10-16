@@ -59,13 +59,15 @@ flowchart TB
 | API | `/health`, `/model-info`, `/score`, `/explain`; strict input; never decides approve/refuse; stores nothing | `service/` |
 | Pipeline | one command, up-to-date steps skipped, blocking checks | `pipeline/` (Dagster) |
 | Monitoring | PSI/CSI, observed/predicted level, simulated-shift drills | `credit/monitoring/` |
-| Cloud | container, ECR, Lambda, least-privilege role, locked URL; scripts with dry-run and teardown | `Dockerfile`, `infra/` |
+| Cloud | container, ECR, Lambda, least-privilege role, locked URL; private S3 data lake read by Athena; scripts with dry-run and teardown | `Dockerfile`, `infra/`, `credit/cloud/` |
 
 ## What runs on AWS
 
 The scoring API runs as a container image on **AWS Lambda** (eu-north-1) behind a **Function URL locked with `AWS_IAM`**: every request must be signed, so an anonymous visitor gets `403 Forbidden`. The function's role can write its own logs and nothing else. Infrastructure is created by PowerShell scripts in `infra/` that have a `-DryRun` mode, are safe to run twice, and come with a teardown. Images are tagged with the git commit and immutable.
 
 **Measured on the live function (2026-10-13, 71 invocations):** a warm request takes **2.7 ms** of compute (median; p95 3.0 ms); a **cold start** (a new container is prepared) adds about **1.2 to 1.3 s** (2 observed); memory used **78 MB of 512 MB**. From my laptop the full round trip to Stockholm, including the internet and a fresh TLS handshake per call, is **0.68 s median (p95 1.5 s)**: that part is the network, not the function. Details and caveats: `results/lambda_latency.md`.
+
+**Data lake (S3 + Athena).** The pipeline's Parquet tables (20 files, 261.7 MB: raw originations, the 24.7 million monthly rows, and the model-ready feature tables) are copied to a **private S3 bucket** (all public access blocked, encrypted, versioned, HTTPS only, cleanup rules) and described to **Athena** through a Glue database. The Athena workgroup **cancels any query that would scan more than 200 MB**. A parity test runs the same 6 SQL queries on the local DuckDB and on Athena: **6 of 6 gave identical answers** (counts and sums exact), and the whole test scanned about 6 MB (`results/lake_parity.md`). Files are uploaded only when their checksum changed. The upload is a script (`scripts/lake_sync.py`) and an opt-in Dagster step (`CREDIT_LAKE=1`), not yet part of an automatic deployment; the API does not read from the lake.
 
 There is no public demo URL on purpose (it would need a spending guard); a recorded demo is planned. The old Streamlit demo of v1 is still at https://creditscoringproject.streamlit.app/.
 
@@ -113,8 +115,8 @@ docker run --rm -p 8080:8080 scoring-api:local
 
 ## Stack
 
-Python 3.13 · pandas · DuckDB · Parquet · scikit-learn · XGBoost · SHAP · Dagster · FastAPI · Pydantic · Docker · AWS (Lambda, ECR, IAM, CloudWatch) · GitHub Actions · pytest · ruff
+Python 3.13 · pandas · DuckDB · Parquet · scikit-learn · XGBoost · SHAP · Dagster · FastAPI · Pydantic · Docker · AWS (Lambda, ECR, IAM, CloudWatch, S3, Glue, Athena) · GitHub Actions · pytest · ruff
 
 ## Status
 
-A working first version: data to model to a live, locked API, with tested monitors. Next: automatic deployment through GitHub OIDC (no stored keys), an S3 data lake with an Athena parity test, and a small read-only LLM memo agent. See the roadmap in [`docs/technical-sheet.md`](docs/technical-sheet.md).
+A working first version: data to model to a live, locked API, with tested monitors. Next: automatic deployment through GitHub OIDC (no stored keys) and a small read-only LLM memo agent. See the roadmap in [`docs/technical-sheet.md`](docs/technical-sheet.md).

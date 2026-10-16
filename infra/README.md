@@ -28,8 +28,10 @@ powershell -ExecutionPolicy Bypass -File infra\01_create_ecr.ps1
 | `01_create_ecr.ps1` | 3.6b-2 | A private container repository with immutable tags and a keep-last-3 rule |
 | `02_push_image.ps1` | 3.6b-3 | Builds the image (one architecture), smoke-tests it, pushes it tagged with the git commit, and checks what was stored |
 | `03_create_lambda.ps1` | 3.6b-4 | A least-privilege role (logs only), a log group (14 days), the Lambda function from the pushed image, and a LOCKED Function URL (AWS_IAM) |
-| `99_teardown.ps1` | any | Deletes what the scripts above created, in a safe order, asking you to type each name |
+| `04_create_lake.ps1` | 3.7 | A private S3 bucket (no public access, encrypted, versioned, HTTPS only, cleanup rules), a Glue database, and an Athena workgroup that cancels any query scanning more than 200 MB |
+| `99_teardown.ps1` | any | Deletes what the scripts above created, in a safe order (the S3 bucket is emptied of every version first), asking you to type each name |
 
-More scripts are added here as steps are approved (the deploy workflow with OIDC, the S3 data lake).
+After `04_create_lake.ps1`, the data goes up with `python scripts/lake_sync.py upload`, then `tables`, then `parity` (see the header of that script).
+More scripts are added here as steps are approved (the deploy workflow with OIDC).
 
 Before `02_push_image.ps1`: Docker Desktop must be running and every change must be committed (the image tag is the git commit).

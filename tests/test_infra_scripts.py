@@ -11,7 +11,7 @@ ALL_FILES = [*SCRIPTS, *INFRA.glob("*.json"), *INFRA.glob("*.md")]
 
 
 def test_there_are_scripts_to_check():
-    assert {p.name for p in SCRIPTS} >= {"01_create_ecr.ps1", "02_push_image.ps1", "03_create_lambda.ps1", "99_teardown.ps1"}
+    assert {p.name for p in SCRIPTS} >= {"01_create_ecr.ps1", "02_push_image.ps1", "03_create_lambda.ps1", "04_create_lake.ps1", "99_teardown.ps1"}
 
 
 @pytest.mark.parametrize("path", ALL_FILES, ids=lambda p: p.name)
@@ -45,7 +45,7 @@ def test_teardown_asks_for_confirmation_before_every_delete_and_deletes_in_a_saf
     helper = text[text.index("function Remove-AfterConfirmation"):text.index("function Test-Exists")]
     assert "Read-Host" in helper and "exit 1" in helper and helper.index("Read-Host") < helper.index("& $Delete")
     deletes = [m.start() for m in re.finditer(r'"(delete-function|delete-function-url-config|delete-log-group|delete-role|delete-repository)"', text)]
-    assert len(deletes) == 5
+    assert len(deletes) == 5  # the lake deletes are checked in their own tests below
     for pos in deletes:
         before = text[:pos]
         assert before.rfind("Remove-AfterConfirmation ") > before.rfind(chr(10) + "}"), "a delete must sit inside a confirmed block"
@@ -147,3 +147,64 @@ def test_logs_policy_allows_two_log_actions_on_its_own_log_group_only():
     assert "*" not in stmt["Resource"].replace(":*", "", 1)
     rendered = template.replace("__REGION__", "eu-north-1").replace("__ACCOUNT__", "123456789012").replace("__FUNCTION__", "credit-scoring-api")
     assert json.loads(rendered)["Statement"][0]["Resource"].endswith("log-group:/aws/lambda/credit-scoring-api:*")
+
+
+# ---------- day 1: the S3 lake script, its policies, and the teardown of the lake ----------
+
+LAKE = INFRA / "04_create_lake.ps1"
+
+
+def test_lake_script_makes_a_private_encrypted_versioned_https_only_bucket():
+    text = LAKE.read_text(encoding="utf-8")
+    for needle in ("BlockPublicAcls=true", "IgnorePublicAcls=true", "BlockPublicPolicy=true", "RestrictPublicBuckets=true",
+                   "put-bucket-encryption", "AES256", "put-bucket-versioning", "put-bucket-policy", "put-bucket-lifecycle-configuration"):
+        assert needle in text, needle
+    assert "=false" not in text, "no protection may be switched off"
+    assert "public-read" not in text and "--acl" not in text
+
+
+def test_lake_script_never_deletes_and_sets_a_scan_limit_that_is_enforced():
+    text = LAKE.read_text(encoding="utf-8")
+    body = text[text.index("$ErrorActionPreference"):]
+    assert not re.search(r"(delete-|rm |rb |--force)", body), "the create script must never delete anything"
+    assert "[int]$ScanLimitMb = 200" in text and "BytesScannedCutoffPerQuery" in text and "EnforceWorkGroupConfiguration = $true" in text
+    assert text.index("$ScanLimitMb -lt 10") < text.index("Write-Host \"Profile:"), "refuse a limit below Athena's 10 MB minimum before touching anything"
+
+
+def test_lake_script_checks_before_creating_and_handles_stderr_safely():
+    text = LAKE.read_text(encoding="utf-8")
+    for check in ("head-bucket", "get-database", "get-work-group"):
+        assert check in text, check
+    assert text.index("head-bucket") < text.index("create-bucket")
+    assert text.index("put-public-access-block") < text.index("put-bucket-policy"), "close the doors before anything else"
+    assert 'cmd /c "$Line 2>&1"' in text and "function Get-Text" in text and '$ErrorActionPreference = "Continue"' in text
+    assert "UTF8Encoding($false)" in text, "AWS rejects JSON files that start with a byte-order mark"
+
+
+def test_bucket_policy_denies_everything_that_is_not_https_on_this_bucket_only():
+    policy = json.loads((INFRA / "lake_bucket_policy.template.json").read_text(encoding="utf-8"))
+    (stmt,) = policy["Statement"]
+    assert stmt["Effect"] == "Deny" and stmt["Principal"] == "*" and stmt["Condition"] == {"Bool": {"aws:SecureTransport": "false"}}
+    assert stmt["Resource"] == ["arn:aws:s3:::__BUCKET__", "arn:aws:s3:::__BUCKET__/*"]
+
+
+def test_lifecycle_rules_clean_results_partial_uploads_and_old_versions():
+    rules = {r["ID"]: r for r in json.loads((INFRA / "lake_lifecycle.json").read_text(encoding="utf-8"))["Rules"]}
+    assert len(rules) == 3 and all(r["Status"] == "Enabled" and "Filter" in r for r in rules.values())
+    assert rules["athena-results-expire-after-7-days"]["Filter"] == {"Prefix": "athena-results/"}
+    assert rules["athena-results-expire-after-7-days"]["Expiration"] == {"Days": 7}
+    assert rules["abandoned-partial-uploads-after-1-day"]["AbortIncompleteMultipartUpload"] == {"DaysAfterInitiation": 1}
+    assert rules["overwritten-versions-expire-after-30-days"]["Filter"] == {"Prefix": "lake/"}, "never expire the CURRENT data files"
+    assert "Expiration" not in rules["overwritten-versions-expire-after-30-days"]
+
+
+def test_teardown_removes_the_lake_after_confirmation_and_the_bucket_last():
+    text = (INFRA / "99_teardown.ps1").read_text(encoding="utf-8")
+    for call in ("delete-work-group", "delete-database", "delete-bucket"):
+        pos = text.index(f'"{call}"')
+        before = text[:pos]
+        assert before.rfind("Remove-AfterConfirmation ") > before.rfind(chr(10) + "}"), f"{call} must sit inside a confirmed block"
+    order = [text.index(f'"{c}"') for c in ("delete-repository", "delete-work-group", "delete-database", "delete-bucket")]
+    assert order == sorted(order), "workgroup, then database, then the bucket they point to"
+    assert "list-object-versions" in text and "DeleteMarkers" in text, "a versioned bucket must be emptied of every version first"
+    assert text.index("Remove-AllObjectVersions $bucket") < text.index('"delete-bucket"')

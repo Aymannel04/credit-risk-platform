@@ -7,6 +7,7 @@ The staging report of a fresh vintage also contains default counts, which are lo
 ever returns the structural counts (loans, exclusions, observability).
 """
 import json
+import os
 from pathlib import Path
 
 from credit.freddie import features as ft
@@ -113,6 +114,31 @@ def monitoring_step() -> dict:
     return {"status": status, "model_id": data["model_id"], "drills_caught": len(data["part_b"]["caught"]),
             "drills_expected": len(data["part_b"]["expected_alerts"]),
             "predictions_hit": sum(p["hit"] for p in data["predictions"]), "predictions_total": len(data["predictions"])}
+
+
+def lake_enabled() -> bool:
+    return os.environ.get("CREDIT_LAKE", "") == "1"
+
+
+def lake_step() -> dict:
+    """local Parquet tables -> the private S3 lake, only when CREDIT_LAKE=1 (otherwise the pipeline stays fully local and offline).
+
+    Files whose checksum did not change are skipped. Returns file counts and sizes only (the fresh table holds exam labels).
+    """
+    if not lake_enabled():
+        return {"status": "skipped (set CREDIT_LAKE=1 and sign in to AWS to publish to S3)", "files": 0, "megabytes": 0.0}
+    from credit.cloud import lake
+
+    session = lake.make_session()
+    s3, bucket = session.client("s3"), lake.bucket_name(session)
+    items, unexpected = lake.plan_upload(s3, bucket)
+    if unexpected:
+        raise RuntimeError(f"{len(unexpected)} object(s) in a table folder match no local file: Athena would read them")
+    sent = lake.upload(s3, bucket, items)
+    problems = lake.verify_uploaded(s3, bucket, items)
+    if problems:
+        raise RuntimeError(f"upload verification failed: {problems[:3]}")
+    return {"status": f"uploaded {sent} file(s)" if sent else "reused", "files": len(items), "megabytes": round(sum(i.size for i in items) / 1e6, 1)}
 
 
 def _run_main(fn) -> None:

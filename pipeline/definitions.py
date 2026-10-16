@@ -1,4 +1,4 @@
-"""The Dagster pipeline: freddie_zips -> raw_parquet -> staging -> features -> scorecard_v2.
+"""The Dagster pipeline: freddie_zips -> raw_parquet -> staging -> features -> (data_lake) and scorecard_v2.
 
     dagster dev                                   # opens the picture of the pipeline in the browser
     dagster asset materialize --select '*'        # runs everything, skipping what is already up to date
@@ -92,6 +92,18 @@ def features_fresh_checks() -> AssetCheckResult:
     return AssetCheckResult(passed=not problems, metadata={"problems": MetadataValue.json(problems)})
 
 
+@asset(deps=[raw_parquet, features_dev, features_fresh], group_name="lake",
+       description="The Parquet tables copied to the private S3 lake (only when CREDIT_LAKE=1; checksum-skipped when unchanged). Athena reads them there.")
+def data_lake() -> MaterializeResult:
+    return MaterializeResult(metadata=steps.lake_step())
+
+
+@asset_check(asset=data_lake, blocking=True)
+def data_lake_matches_local() -> AssetCheckResult:
+    problems = checks.check_lake(steps.lake_enabled())
+    return AssetCheckResult(passed=not problems, metadata={"problems": MetadataValue.json(problems)})
+
+
 @asset(deps=[features_dev], group_name="model", description="The adopted v2 scorecard as a small JSON file (models/scorecard_v2.json).")
 def scorecard_v2() -> MaterializeResult:
     r = steps.model_step()
@@ -124,9 +136,9 @@ def report_json_path():
 
 
 EXECUTABLE = [
-    raw_parquet, staging_dev, staging_fresh, features_dev, features_fresh, scorecard_v2, monitoring_report,
+    raw_parquet, staging_dev, staging_fresh, features_dev, features_fresh, data_lake, scorecard_v2, monitoring_report,
     raw_files_present_and_not_empty, staging_dev_data_checks, staging_fresh_data_checks,
-    features_dev_checks, features_fresh_checks, scorecard_v2_valid_and_golden_loan, monitoring_self_test_passed,
+    features_dev_checks, features_fresh_checks, data_lake_matches_local, scorecard_v2_valid_and_golden_loan, monitoring_self_test_passed,
 ]
 # one process for all steps: they run one after the other anyway, and a new process per step is slow on Windows
 defs = Definitions(assets=[freddie_zips, *EXECUTABLE], executor=in_process_executor)

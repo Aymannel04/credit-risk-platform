@@ -93,3 +93,18 @@ def check_monitoring(report_path: Path, model_path: Path) -> list[str]:
     if not all(s["commit"] and s["clean"] for s in r["preregistration"].values()):
         problems.append("pre-registration was not committed and clean when the report was produced")
     return problems
+
+
+def check_lake(enabled: bool) -> list[str]:
+    """When publishing is on: every local table file is in S3 with the same size and checksum, and S3 holds nothing else in the table folders.
+    When it is off (the default) there is nothing to check."""
+    if not enabled:
+        return []
+    from credit.cloud import lake
+
+    session = lake.make_session()
+    s3, bucket = session.client("s3"), lake.bucket_name(session)
+    items, unexpected = lake.plan_upload(s3, bucket)
+    problems = [f"{i.key}: S3 is not up to date" for i in items if i.action == "upload"]
+    problems += [f"{k}: in S3 but not a local file" for k in unexpected]
+    return problems + lake.verify_uploaded(s3, bucket, [i for i in items if i.action == "skip"])

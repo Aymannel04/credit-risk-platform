@@ -1,0 +1,92 @@
+{
+  "generated_utc": "2026-10-16 19:20",
+  "files": 20,
+  "bytes": 261682764,
+  "all_same": true,
+  "queries": [
+    {
+      "name": "dev_split_counts",
+      "sql": "SELECT split, count(*) AS loans, sum(default_24m) AS defaults FROM features_dev GROUP BY split ORDER BY split",
+      "passed": true,
+      "differences": [],
+      "rows": 6,
+      "first_row_local": [
+        "calibration",
+        "13064",
+        "248"
+      ],
+      "athena_bytes_scanned": 43227,
+      "athena_engine_ms": 491
+    },
+    {
+      "name": "dev_vintage_sums",
+      "sql": "SELECT vintage_year, count(*) AS loans, sum(credit_score) AS sum_score, sum(dti) AS sum_dti, sum(orig_term) AS sum_term, round(avg(rate_spread), 6) AS avg_spread FROM features_dev GROUP BY vintage_year ORDER BY vintage_year",
+      "passed": true,
+      "differences": [],
+      "rows": 6,
+      "first_row_local": [
+        "2008",
+        "49712",
+        "36853367",
+        "1760584",
+        "16605736",
+        "0.043503"
+      ],
+      "athena_bytes_scanned": 662914,
+      "athena_engine_ms": 528
+    },
+    {
+      "name": "fresh_structure",
+      "sql": "SELECT vintage_year, count(*) AS loans, count(DISTINCT loan_seq) AS distinct_loans, sum(credit_score) AS sum_score, min(first_payment_date) AS first_payment_min FROM features_fresh GROUP BY vintage_year ORDER BY vintage_year",
+      "passed": true,
+      "differences": [],
+      "rows": 4,
+      "first_row_local": [
+        "2010",
+        "35304",
+        "35304",
+        "26916932",
+        "2010-02-01"
+      ],
+      "athena_bytes_scanned": 850781,
+      "athena_engine_ms": 762
+    },
+    {
+      "name": "raw_orig_loans",
+      "sql": "SELECT count(*) AS n_rows, count(DISTINCT loan_seq) AS loans FROM raw_orig",
+      "passed": true,
+      "differences": [],
+      "rows": 1,
+      "first_row_local": [
+        "450000",
+        "450000"
+      ],
+      "athena_bytes_scanned": 1565793,
+      "athena_engine_ms": 681
+    },
+    {
+      "name": "raw_perf_rows",
+      "sql": "SELECT count(*) AS monthly_rows FROM raw_perf",
+      "passed": true,
+      "differences": [],
+      "rows": 1,
+      "first_row_local": [
+        "24674152"
+      ],
+      "athena_bytes_scanned": 0,
+      "athena_engine_ms": 644
+    },
+    {
+      "name": "raw_perf_loans",
+      "sql": "SELECT count(DISTINCT loan_seq) AS loans FROM raw_perf",
+      "passed": true,
+      "differences": [],
+      "rows": 1,
+      "first_row_local": [
+        "450000"
+      ],
+      "athena_bytes_scanned": 2689350,
+      "athena_engine_ms": 1418
+    }
+  ]
+}
