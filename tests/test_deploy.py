@@ -268,3 +268,11 @@ def test_the_runner_image_is_pinned(wf):
 
 def test_a_refused_login_fails_fast(steps):
     assert steps[_index(steps, "Get a temporary AWS key")]["with"]["retry-max-attempts"] == 3
+
+
+def test_both_image_builds_retry_when_a_public_registry_answers_429():
+    """The first CI failures were `429 Too Many Requests` from public.ecr.aws (anonymous downloads from shared GitHub machines)."""
+    for name in ("ci.yml", "deploy.yml"):
+        text = (WORKFLOWS / name).read_text(encoding="utf-8")
+        build = text[text.index("for attempt in 1 2 3 4"):]
+        assert "docker build" in build.split("done")[0] and "sleep $((attempt * 30))" in build and "exit 1" in build, name

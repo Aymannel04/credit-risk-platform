@@ -51,7 +51,7 @@ def test_dockerignore_is_an_allowlist_that_excludes_data_and_secrets():
 def test_dockerfile_pins_the_base_image_and_the_adapter():
     base = re.search(r"^FROM\s+(\S+)", DOCKERFILE, re.M).group(1)
     assert ":" in base and not base.endswith(":latest"), base
-    assert re.search(r"aws-lambda-adapter:\d+\.\d+\.\d+ ", DOCKERFILE), "the Lambda adapter must be pinned to an exact version"
+    assert re.search(r"aws-lambda-adapter:\d+\.\d+\.\d+@sha256:[0-9a-f]{64} ", DOCKERFILE), "the Lambda adapter must be pinned to an exact version AND its content fingerprint"
 
 
 def test_dockerfile_never_copies_the_whole_context_and_never_runs_as_root():

@@ -63,7 +63,12 @@ jobs:
       - name: Build the API container image
         run: |
           echo "TAG=$(git rev-parse --short=7 HEAD)" >> "$GITHUB_ENV"
-          docker build --platform linux/amd64 --provenance=false --sbom=false -t scoring-api:deploy .
+          for attempt in 1 2 3 4; do
+            if docker build --platform linux/amd64 --provenance=false --sbom=false -t scoring-api:deploy .; then exit 0; fi
+            echo "Build failed (attempt $attempt of 4). The base images come from public registries that sometimes answer 429 Too Many Requests to the shared GitHub machines: waiting, then trying again."
+            sleep $((attempt * 30))
+          done
+          exit 1
 
       - name: Check what is inside the image (only the expected files, no data, no tests)
         run: |

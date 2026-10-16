@@ -5,7 +5,7 @@ FROM python:3.13-slim-bookworm
 
 # Lets this ordinary web app run inside AWS Lambda with no code change. v1.1.0 is the latest release (checked 2026-10-12).
 # Outside Lambda it does nothing.
-COPY --from=public.ecr.aws/awsguru/aws-lambda-adapter:1.1.0 /lambda-adapter /opt/extensions/lambda-adapter
+COPY --from=public.ecr.aws/awsguru/aws-lambda-adapter:1.1.0@sha256:17cfd08eff1dfea3f6a9a1e9c65fdac80aa4919b6085e746615530f43f57d2f1 /lambda-adapter /opt/extensions/lambda-adapter
 
 ENV PYTHONDONTWRITEBYTECODE=1 \
     PYTHONUNBUFFERED=1 \
