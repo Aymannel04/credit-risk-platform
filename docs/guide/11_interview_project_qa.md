@@ -100,7 +100,7 @@ The Function URL uses `AWS_IAM`: every request must be signed (SigV4), so a brow
 A tag is a human label; a digest is a fingerprint of the content. If tags could be overwritten, "v5" today and tomorrow could differ, and rollbacks and audits would be guesswork. The digest stored in AWS equals the one I tested locally.
 
 **30. What does your CI do? Why test the container?**
-Lint, 245 tests, then it builds the image, compares its exact file list to an expected list (no data, no tests inside) and smoke-tests it. The Python tests run in a full environment; the image has 14 libraries, so only a test of the image can catch a missing file or library.
+Lint, 307 tests, then it builds the image, compares its exact file list to an expected list (no data, no tests inside) and smoke-tests it. The Python tests run in a full environment; the image has 14 libraries, so only a test of the image can catch a missing file or library.
 
 **31. How do you monitor drift?**
 PSI per variable band (CSI) and on the score, plus the observed/predicted level ratio. PSI = sum over bands of (share now − share before) · ln(share now / share before); under 0.10 stable, 0.25 or more a big change.
@@ -117,10 +117,10 @@ Both are true and they measure different things. The 3 ms is the function's own 
 ## E. Honest "weak spot" questions
 
 **34. Is it production-ready?**
-No, and the README says so. Missing: automatic deployment (CI builds and tests, but the push to AWS is a scripted manual step; GitHub OIDC is next), alerting, a public endpoint, a scheduler, partitions, model governance, real-time features.
+No, and the README says so. Missing: an automatic rollback (deployment is automatic, but if the live check fails the previous image is put back by hand), alerting, a public endpoint, a scheduler, partitions, model governance, real-time features.
 
 **35. What would you do with one more month?**
-(1) Automatic deployment through GitHub OIDC with no stored keys. (2) S3 plus Athena with a test that the same SQL gives identical numbers in DuckDB and Athena. (3) The Vasicek climate dial or a house-price variable for the level. (4) A read-only memo agent whose numbers are all checked by a validator.
+(1) An automatic rollback when the live check fails, and a deploy that skips documentation-only pushes. (2) The lake read by the monitoring, not only tested for parity. (3) The Vasicek climate dial or a house-price variable for the level. (4) A read-only memo agent whose numbers are all checked by a validator.
 
 **36. What did you not do that you would normally do?**
 Hyper-parameter tuning (the question was validation, not squeezing a score), a macro model for the level, a public demo, Evidently.
@@ -134,3 +134,13 @@ Sending the JSON value `Infinity` to the API made FastAPI's own error reply cras
 3. Explain least privilege using your Lambda role.
 4. Explain PSI to a non-technical person using the 50/50 → 90/10 example (PSI ≈ 0.88).
 5. Say, calmly, what the project does **not** do.
+
+
+**39. How does GitHub deploy to AWS without a stored password?**
+OIDC. Each run gets a short-lived signed ID card from GitHub (who I am: this repository, this branch, this audience). AWS has a trust entry for GitHub's signer and a role whose rule says: accept only a card whose subject is exactly my repository and my main branch. If the card matches, AWS hands out a temporary key (about an hour). Nothing permanent exists in GitHub. The role can only push to one ECR repository and update one Lambda function, and I asked AWS's policy simulator to prove 3 allowed and 7 forbidden actions.
+
+**40. Your first deploy was refused by AWS. What happened?**
+The trust rule used the subject format from the documentation example (`repo:owner/name:ref:...`). GitHub writes the permanent numeric ids of the owner and the repository into the subject of repositories created after 2026-07-15 (`repo:owner@id/name@id:ref:...`), and AWS compares the text exactly, so it said no. I found it by adding a step that runs only on failure and prints the non-secret claims of the card, then changed the rule to the real format. It is also stricter: a deleted and re-created repository name has other ids and cannot take the role. The lesson: write a trust rule from the claim that is actually sent, not from an example.
+
+**41. Why is the image built and tested before AWS is touched?**
+So that an AWS key never exists while untested code runs: the job has no AWS access until lint, tests, the image build, the check of the image's exact file list and the container smoke test have passed. After the update, the job checks that the function runs exactly the digest that was pushed, then calls the live locked URL with signed requests.

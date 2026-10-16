@@ -12,7 +12,7 @@ Every number below comes from a result file in this repository (see the README t
 **Data / AI engineering**
 1. Built a reproducible **Dagster** pipeline (raw → staging → features → model → monitoring) on Freddie Mac loan-level data (450k loans, 9 vintages) with blocking data-quality checks and hash-based splits; a full rebuild reproduces the same data and model (row fingerprint, model id).
 2. Served the model through a strict **FastAPI** service (typed validation, no decision logic, no data stored) packaged as a 51 MB **Docker** image on **AWS Lambda** behind a signature-protected Function URL, with a least-privilege IAM role and scripted infrastructure (dry-run, idempotent, teardown).
-3. **CI** with 245 automated tests that also builds the container, checks its exact contents and smoke-tests it; immutable, commit-tagged images.
+3. **CI** with 307 automated tests that also builds the container, checks its exact contents and smoke-tests it; immutable, commit-tagged images.
 4. Drift monitoring (**PSI/CSI**, level ratio) validated with simulated-shift drills: 7/7 expected alerts caught, 2 blind spots documented. Measured on the live Lambda: **2.7 ms** median warm request (p95 3.0 ms), **about 1.2 s** cold start, **78 MB** of 512 MB used.
 
 **ML / data science**
@@ -32,8 +32,8 @@ Every number below comes from a result file in this repository (see the README t
 1. **Problem (15 s).** A bank wants the probability that a new mortgage goes seriously delinquent within two years, using only what is known at origination. I used Freddie Mac's public loan-level data: nine yearly samples, 450,000 loans.
 2. **Build (30 s).** A Dagster pipeline: raw, staging, features, model, with checks that stop the chain if data is wrong. The model is a points-based scorecard (weight of evidence plus logistic regression), compared with XGBoost. Every decision is in a decision log, including my mistakes.
 3. **Honesty (35 s).** I froze the model and committed the success rules first, then tested on four unseen vintages, 177,000 loans: Gini between 0.54 and 0.63. The scorecard and XGBoost were statistically tied, so I kept the readable one. The model over-predicts defaults in calm years, because the 2008 crisis anchors its level. I tested "recalibrate from history": it cut the average error by 31% but got worse at turning points, so my pre-written rule rejected it. I also showed that simply deleting 2008 makes calm years look better but under-predicts the crisis four times.
-4. **Cloud (25 s).** The model is a 7 KB JSON file; the API is FastAPI in a 51 MB Docker image on Lambda, behind a signature-protected URL, with a role that can only write its own logs. CI runs 245 tests and smoke-tests the container. A warm request costs about 3 ms of compute; a cold start about 1.2 seconds, measured. Monitors for drift were tested with simulated shifts: 7 of 7 expected alerts caught, two subtle ones missed, reported.
-5. **Limits (15 s).** It's a portfolio project, not a lending product: deployment is scripted rather than automatic, and the next step is deployment through GitHub OIDC and a macro-aware level.
+4. **Cloud (25 s).** The model is a 7 KB JSON file; the API is FastAPI in a 51 MB Docker image on Lambda, behind a signature-protected URL, with a role that can only write its own logs. CI runs 307 tests and smoke-tests the container. A warm request costs about 3 ms of compute; a cold start about 1.2 seconds, measured. Monitors for drift were tested with simulated shifts: 7 of 7 expected alerts caught, two subtle ones missed, reported.
+5. **Limits (15 s).** It's a portfolio project, not a lending product: deployment is automatic but has no automatic rollback, and the next steps are a read-only memo agent and a macro-aware level.
 
 ## 5. LinkedIn "Projects" blurb (3 lines)
 

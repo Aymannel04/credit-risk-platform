@@ -22,7 +22,7 @@ An end-to-end credit-risk project on real, public mortgage data (Freddie Mac): a
 | Monitoring | PSI/CSI and level monitors; fire drills with simulated shifts: **7 of 7** expected alerts caught, 2 subtle shifts missed and reported (`results/monitoring_report.md`) |
 | Pre-registered predictions | 11 of 13 hit for the monitoring study; the misses are published |
 | Live API on AWS Lambda (measured) | Warm request **2.7 ms** median (p95 3.0 ms); cold start about **1.2 to 1.3 s**; **78 MB** used of 512 MB; 71 invocations observed (`results/lambda_latency.md`) |
-| Engineering | 245 automated tests; CI also builds the container and smoke-tests it; a full rebuild from the raw files reproduces the same data and the same model (checked by a fingerprint of every row and the model id) |
+| Engineering | 307 automated tests; CI also builds the container and smoke-tests it; a full rebuild from the raw files reproduces the same data and the same model (checked by a fingerprint of every row and the model id) |
 
 ![Monitoring: level per vintage and the recalibration experiment](docs/monitoring.png)
 
@@ -46,7 +46,7 @@ flowchart TB
       M
       MON
     end
-    CI["GitHub Actions<br/>lint, 245 tests, build + smoke-test the image"] -.-> IMG
+    CI["GitHub Actions<br/>lint, 307 tests, build + smoke-test the image"] -.-> IMG
 ```
 
 | Part | What it does | Where |
@@ -69,6 +69,8 @@ The scoring API runs as a container image on **AWS Lambda** (eu-north-1) behind 
 
 **Data lake (S3 + Athena).** The pipeline's Parquet tables (20 files, 261.7 MB: raw originations, the 24.7 million monthly rows, and the model-ready feature tables) are copied to a **private S3 bucket** (all public access blocked, encrypted, versioned, HTTPS only, cleanup rules) and described to **Athena** through a Glue database. The Athena workgroup **cancels any query that would scan more than 200 MB**. A parity test runs the same 6 SQL queries on the local DuckDB and on Athena: **6 of 6 gave identical answers** (counts and sums exact), and the whole test scanned about 6 MB (`results/lake_parity.md`). Files are uploaded only when their checksum changed. The upload is a script (`scripts/lake_sync.py`) and an opt-in Dagster step (`CREDIT_LAKE=1`), not yet part of an automatic deployment; the API does not read from the lake.
 
+**Automatic deployment (GitHub Actions + OIDC, no stored keys).** A push to `main` runs lint, the tests, the image build, a check of the image's exact file list and a container smoke test, all **without any AWS access**. Only then does the job show GitHub's signed ID card to AWS and receive a temporary key (about an hour). The role behind it trusts one repository on one branch (matched on the owner's and the repository's permanent numeric ids) and may only push to one ECR repository and update one Lambda function; AWS's policy simulator was asked to prove 3 allowed and 7 forbidden actions. The job then pushes the image tagged with the git commit, updates the function, checks that the function runs exactly the pushed image digest, and calls the live locked URL with signed requests. First fully green run (Deploy #3): 162 s in total (tests 30 s, image build 13 s, temporary key 2 s, push 19 s, Lambda update 15 s, live check 8 s).
+
 There is no public demo URL on purpose (it would need a spending guard); a recorded demo is planned. The old Streamlit demo of v1 is still at https://creditscoringproject.streamlit.app/.
 
 ## Honest limitations
@@ -77,7 +79,7 @@ There is no public demo URL on purpose (it would need a spending guard); a recor
 - The target is a **flagged serious delinquency within 24 months**, not a loss. Prime US fixed-rate mortgages only.
 - `rate_spread` needs a reliable reference rate from the caller.
 - The money analysis rests on **assumed** margin and loss rates (`config/economics.yaml`); the cut-off barely beats "approve everyone" on prime mortgages. No sex, race or age exists in the data, so fairness toward protected groups could not be tested.
-- Deployment is **scripted, not yet automatic**: CI builds and tests the image, but pushing it to AWS is done by `infra/` scripts run by hand (GitHub OIDC deployment is the next step).
+- Deployment is **automatic but has no automatic rollback**: a push to `main` deploys (see above). If the final live check fails, the run turns red and the previous image (the last 3 are kept) must be put back by hand with two commands. The infrastructure itself (ECR, Lambda, the lake) is still created by scripts run by hand.
 - Monitors use my own PSI/CSI code (not Evidently), and two subtle shifts are invisible to them (reported).
 - The AWS account is on the Free plan, which ends in about six months; the live API will then disappear.
 
@@ -90,7 +92,7 @@ python -m venv .venv
 .venv/Scripts/python -m pip install -r requirements-dev.txt      # Linux/macOS: .venv/bin/python
 
 .venv/Scripts/python -m pipeline.run            # data, features, model file, monitoring report (steps already up to date are skipped)
-.venv/Scripts/python -m pytest -q               # 245 tests
+.venv/Scripts/python -m pytest -q               # 307 tests
 .venv/Scripts/python -m ruff check .
 
 # the API
@@ -119,4 +121,4 @@ Python 3.13 · pandas · DuckDB · Parquet · scikit-learn · XGBoost · SHAP ·
 
 ## Status
 
-A working first version: data to model to a live, locked API, with tested monitors. Next: automatic deployment through GitHub OIDC (no stored keys) and a small read-only LLM memo agent. See the roadmap in [`docs/technical-sheet.md`](docs/technical-sheet.md).
+A working first version: data to model to a live, locked API with automatic deployment from GitHub (no stored keys), a private S3 + Athena data lake, and tested monitors. Next: a small read-only LLM memo agent. See the roadmap in [`docs/technical-sheet.md`](docs/technical-sheet.md).
