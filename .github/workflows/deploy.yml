@@ -88,6 +88,7 @@ jobs:
           role-to-assume: ${{ vars.AWS_DEPLOY_ROLE_ARN }}
           aws-region: ${{ env.AWS_REGION }}
           role-session-name: github-deploy-${{ github.run_id }}
+          retry-max-attempts: 3   # default is 12 (about a minute lost when AWS says no); a refused ID card does not become valid on the 12th try
 
       # Only runs when the login above failed: prints the NON-secret claims on GitHub's ID card (what AWS compares with the role's trust rule).
       # The token itself is never printed.

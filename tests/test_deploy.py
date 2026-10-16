@@ -117,25 +117,30 @@ def test_only_one_repository_on_one_branch_may_take_the_role():
     assert set(stmt["Condition"]) == {"StringEquals"}, "StringLike would allow wildcards"
     conditions = stmt["Condition"]["StringEquals"]
     assert conditions["token.actions.githubusercontent.com:aud"] == "sts.amazonaws.com"
-    assert conditions["token.actions.githubusercontent.com:sub"] == "repo:__GITHUB_REPO__:ref:refs/heads/__BRANCH__"
-    rendered = json.loads(_render(INFRA / "github_oidc_trust_policy.template.json", ACCOUNT="111122223333",
-                                  GITHUB_REPO="Aymannel04/credit-risk-platform", BRANCH="main"))
+    # GitHub writes the permanent numeric ids of the owner and the repository into the subject of repositories created after 2026-07-15
+    # (found in the first real run: repo:Aymannel04@207994149/credit-risk-platform@1410817428:ref:refs/heads/main)
+    assert conditions["token.actions.githubusercontent.com:sub"] == "repo:__OWNER__@__OWNER_ID__/__REPO__@__REPO_ID__:ref:refs/heads/__BRANCH__"
+    rendered = json.loads(_render(INFRA / "github_oidc_trust_policy.template.json", ACCOUNT="111122223333", OWNER="Aymannel04",
+                                  OWNER_ID="207994149", REPO="credit-risk-platform", REPO_ID="1410817428", BRANCH="main"))
     sub = rendered["Statement"][0]["Condition"]["StringEquals"]["token.actions.githubusercontent.com:sub"]
-    assert sub == "repo:Aymannel04/credit-risk-platform:ref:refs/heads/main" and "*" not in sub
+    assert sub == "repo:Aymannel04@207994149/credit-risk-platform@1410817428:ref:refs/heads/main" and "*" not in sub
 
 
 def test_the_script_refuses_wildcards_and_leftover_placeholders_before_creating_anything():
     text = SCRIPT.read_text(encoding="utf-8")
     assert "-notmatch '^[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+$'" in text and "-notmatch '^[A-Za-z0-9_./-]+$'" in text
     assert "-match '\\*'" in text and '-match "__"' in text
+    assert "GithubOwnerId -notmatch '^\\d+$'" in text and "GithubRepoId -notmatch '^\\d+$'" in text, "the numeric ids must be plain numbers"
     assert text.index("GithubRepo must look like") < text.index("create-open-id-connect-provider")
     assert text.index('-match "__"') < text.index("iam create-role")
 
 
 def test_the_repository_in_the_script_default_is_the_real_one():
     remote = (ROOT / ".git" / "config").read_text(encoding="utf-8") if (ROOT / ".git" / "config").exists() else ""
-    default = re.search(r'\[string\]\$GithubRepo = "([^"]+)"', SCRIPT.read_text(encoding="utf-8")).group(1)
+    script = SCRIPT.read_text(encoding="utf-8")
+    default = re.search(r'\[string\]\$GithubRepo = "([^"]+)"', script).group(1)
     assert default == "Aymannel04/credit-risk-platform"
+    assert re.search(r'\[string\]\$GithubOwnerId = "\d+"', script) and re.search(r'\[string\]\$GithubRepoId = "\d+"', script)
     if "github.com" in remote:
         assert default in remote or "Aymannel04/credit-risk-platform" in remote
 
@@ -259,3 +264,7 @@ def test_failed_login_diagnostic_runs_only_on_that_failure_and_never_prints_the_
 
 def test_the_runner_image_is_pinned(wf):
     assert wf["jobs"]["deploy"]["runs-on"] == "ubuntu-24.04"
+
+
+def test_a_refused_login_fails_fast(steps):
+    assert steps[_index(steps, "Get a temporary AWS key")]["with"]["retry-max-attempts"] == 3

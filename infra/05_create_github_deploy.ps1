@@ -7,7 +7,8 @@ Run it yourself from the repository root, in PowerShell, after `aws sso login --
 
 What it creates (each piece is skipped if it exists; the two policies are re-applied each time, so running it twice is safe):
   1. the "trust entry" in your AWS account: AWS accepts the signed ID cards (OIDC tokens) that GitHub Actions issues, audience sts.amazonaws.com
-  2. the role `credit-risk-github-deploy`. Its TRUST rule says: only a run of exactly this GitHub repository, on exactly its main branch, may
+  2. the role `credit-risk-github-deploy`. Its TRUST rule says: only a run of exactly this GitHub repository (name AND the permanent numeric ids of
+     the owner and of the repository, which GitHub writes into the ID card of repositories created after 2026-07-15), on exactly its main branch, may
      take the role (no wildcard: with `repo:*` any repository on GitHub could). The temporary key it gets lasts at most 1 hour.
   3. its permissions (infra\github_deploy_policy.template.json): push images to the ONE ECR repository, update and read the ONE Lambda function,
      call that function's locked URL for the smoke test. Nothing else (no S3, no IAM, no billing, no other function, no delete).
@@ -23,6 +24,8 @@ param(
     [string]$FunctionName = "credit-scoring-api",
     [string]$RoleName = "credit-risk-github-deploy",
     [string]$GithubRepo = "Aymannel04/credit-risk-platform",
+    [string]$GithubOwnerId = "207994149",     # numeric ids of the owner and of the repository: GitHub puts them in the ID card of repositories created after 2026-07-15
+    [string]$GithubRepoId = "1410817428",     # (read them with: https://api.github.com/repos/OWNER/REPO, fields owner.id and id)
     [string]$Branch = "main",
     [switch]$DryRun
 )
@@ -31,6 +34,9 @@ Set-Location (Resolve-Path (Join-Path $PSScriptRoot ".."))
 $script:ExitCode = 0
 $ProviderHost = "token.actions.githubusercontent.com"
 if ($GithubRepo -notmatch '^[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+$') { throw "GithubRepo must look like owner/name, with no wildcard." }
+if ($GithubOwnerId -notmatch '^\d+$' -or $GithubRepoId -notmatch '^\d+$') { throw "GithubOwnerId and GithubRepoId must be plain numbers." }
+$GithubOwner, $GithubRepoName = $GithubRepo.Split("/")
+$Subject = "repo:${GithubOwner}@${GithubOwnerId}/${GithubRepoName}@${GithubRepoId}:ref:refs/heads/$Branch"
 if ($Branch -notmatch '^[A-Za-z0-9_./-]+$') { throw "Branch must be one exact branch name, with no wildcard." }
 
 # Windows PowerShell 5.1 turns ANY text a program writes to stderr into an exception when $ErrorActionPreference is "Stop".
@@ -75,7 +81,7 @@ function Write-TempJson([string]$Name, [string]$Text) {
     return $file
 }
 
-Write-Host "Profile: $Profile   Region: $Region   Role: $RoleName   Trusted: repo:${GithubRepo}:ref:refs/heads/$Branch   DryRun: $DryRun"
+Write-Host "Profile: $Profile   Region: $Region   Role: $RoleName   Trusted: $Subject   DryRun: $DryRun"
 $common = "--profile $Profile --region $Region"
 
 $account = Get-Text "aws" @("sts", "get-caller-identity", "--query", "Account", "--output", "text", "--profile", $Profile, "--region", $Region)
@@ -94,7 +100,7 @@ if ($script:ExitCode -eq 0 -and $provider -like "arn:aws:iam::*") {
 }
 
 # 2. the role, with the exact-repository, exact-branch trust rule
-$trustText = (Get-Content "infra\github_oidc_trust_policy.template.json" -Raw).Replace("__ACCOUNT__", $account).Replace("__GITHUB_REPO__", $GithubRepo).Replace("__BRANCH__", $Branch)
+$trustText = (Get-Content "infra\github_oidc_trust_policy.template.json" -Raw).Replace("__ACCOUNT__", $account).Replace("__OWNER__", $GithubOwner).Replace("__OWNER_ID__", $GithubOwnerId).Replace("__REPO__", $GithubRepoName).Replace("__REPO_ID__", $GithubRepoId).Replace("__BRANCH__", $Branch)
 if ($trustText -match "__" -or $trustText -match '\*') { throw "The trust policy still has a placeholder or a wildcard: refusing to continue." }
 $trustFile = Write-TempJson "credit-risk-github-trust.json" $trustText
 try {
