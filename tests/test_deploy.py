@@ -243,3 +243,19 @@ def test_smoke_test_stops_clearly_when_there_are_no_credentials(monkeypatch, tmp
     monkeypatch.setenv("AWS_EC2_METADATA_DISABLED", "true")
     with pytest.raises(SystemExit, match="no AWS credentials found in the environment"):
         _load_smoke().signer_from_profile(None, "eu-north-1")
+
+
+# ---------- the first real run failed at the login: a diagnostic that cannot leak the token, and a pinned runner ----------
+
+def test_failed_login_diagnostic_runs_only_on_that_failure_and_never_prints_the_token(steps):
+    step = steps[_index(steps, "Diagnose a failed OIDC login")]
+    assert step["if"] == "failure() && steps.aws_login.outcome == 'failure'"
+    assert steps[_index(steps, "Get a temporary AWS key")]["id"] == "aws_login"
+    run = step["run"]
+    assert 'echo "$TOKEN"' not in run and "echo $TOKEN" not in run and "print(sys.argv" not in run
+    assert "claims.get(key)" in run and '"sub"' in run
+    assert _index(steps, "Get a temporary AWS key") < _index(steps, "Diagnose a failed OIDC login") < _index(steps, "Push the image to ECR")
+
+
+def test_the_runner_image_is_pinned(wf):
+    assert wf["jobs"]["deploy"]["runs-on"] == "ubuntu-24.04"

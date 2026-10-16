@@ -30,7 +30,7 @@ env:
 jobs:
   deploy:
     if: ${{ vars.AWS_DEPLOY_ROLE_ARN != '' }}
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04   # pinned: 'ubuntu-latest' moves to a new OS version on 2026-10-19 and a deploy must not change under us
     timeout-minutes: 30
     permissions:
       contents: read
@@ -82,11 +82,27 @@ jobs:
 
       # --- only now does the job ask AWS for a temporary key ---
       - name: Get a temporary AWS key (OIDC, no stored password)
+        id: aws_login
         uses: aws-actions/configure-aws-credentials@e1253824e5c10ff9df46874f81ed3ec929e19cfd # v6.3.0
         with:
           role-to-assume: ${{ vars.AWS_DEPLOY_ROLE_ARN }}
           aws-region: ${{ env.AWS_REGION }}
           role-session-name: github-deploy-${{ github.run_id }}
+
+      # Only runs when the login above failed: prints the NON-secret claims on GitHub's ID card (what AWS compares with the role's trust rule).
+      # The token itself is never printed.
+      - name: Diagnose a failed OIDC login (prints only non-secret claims)
+        if: failure() && steps.aws_login.outcome == 'failure'
+        run: |
+          TOKEN=$(curl -sS -H "Authorization: bearer $ACTIONS_ID_TOKEN_REQUEST_TOKEN" "$ACTIONS_ID_TOKEN_REQUEST_URL&audience=sts.amazonaws.com" | python3 -c 'import sys, json; print(json.load(sys.stdin)["value"])')
+          python3 - "$TOKEN" <<'PY'
+          import sys, json, base64
+          payload = sys.argv[1].split(".")[1]
+          payload += "=" * (-len(payload) % 4)
+          claims = json.loads(base64.urlsafe_b64decode(payload))
+          for key in ("iss", "aud", "sub", "repository", "repository_owner", "ref", "event_name", "job_workflow_ref"):
+              print(f"{key}: {claims.get(key)}")
+          PY
 
       - name: Push the image to ECR (tag = git commit; tags are immutable, so an existing tag is reused)
         run: |
