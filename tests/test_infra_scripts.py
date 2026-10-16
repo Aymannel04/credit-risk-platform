@@ -11,7 +11,7 @@ ALL_FILES = [*SCRIPTS, *INFRA.glob("*.json"), *INFRA.glob("*.md")]
 
 
 def test_there_are_scripts_to_check():
-    assert {p.name for p in SCRIPTS} >= {"01_create_ecr.ps1", "02_push_image.ps1", "03_create_lambda.ps1", "04_create_lake.ps1", "99_teardown.ps1"}
+    assert {p.name for p in SCRIPTS} >= {"01_create_ecr.ps1", "02_push_image.ps1", "03_create_lambda.ps1", "04_create_lake.ps1", "05_create_github_deploy.ps1", "99_teardown.ps1"}
 
 
 @pytest.mark.parametrize("path", ALL_FILES, ids=lambda p: p.name)
@@ -20,7 +20,7 @@ def test_no_account_number_key_or_token_is_committed(path):
     assert not re.search(r"(?<!\d)\d{12}(?!\d)", text), "a 12-digit number looks like an AWS account id"
     assert not re.search(r"A(KIA|SIA|ROA)[A-Z0-9]{12,}", text), "an AWS access key id pattern"
     assert "aws_secret_access_key" not in text.lower()
-    assert "arn:aws:iam::" not in text or "<" in text  # real ARNs carry an account id; placeholders must be written with <>
+    assert not re.search(r"arn:aws:[a-z0-9-]*:[a-z0-9-]*:\d", text), "a real ARN carries an account id; write placeholders (__ACCOUNT__, ${account})"
 
 
 @pytest.mark.parametrize("path", SCRIPTS, ids=lambda p: p.name)
@@ -45,7 +45,7 @@ def test_teardown_asks_for_confirmation_before_every_delete_and_deletes_in_a_saf
     helper = text[text.index("function Remove-AfterConfirmation"):text.index("function Test-Exists")]
     assert "Read-Host" in helper and "exit 1" in helper and helper.index("Read-Host") < helper.index("& $Delete")
     deletes = [m.start() for m in re.finditer(r'"(delete-function|delete-function-url-config|delete-log-group|delete-role|delete-repository)"', text)]
-    assert len(deletes) == 5  # the lake deletes are checked in their own tests below
+    assert len(deletes) == 6  # function url, function, log group, lambda role, repository, and the GitHub deploy role; lake deletes have their own tests
     for pos in deletes:
         before = text[:pos]
         assert before.rfind("Remove-AfterConfirmation ") > before.rfind(chr(10) + "}"), "a delete must sit inside a confirmed block"

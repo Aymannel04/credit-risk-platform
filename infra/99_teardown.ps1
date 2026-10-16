@@ -4,7 +4,8 @@ Undo: delete what the infra scripts created. Run it yourself, only when you want
     powershell -ExecutionPolicy Bypass -File infra\99_teardown.ps1
 
 Order (so nothing is left pointing at something deleted): 1. the Lambda function and its URL  2. its log group  3. its role  4. the ECR repository
-5. the Athena workgroup  6. the Glue database (the table descriptions, not the data)  7. the S3 data lake bucket, emptied first (every version of every file).
+5. the Athena workgroup  6. the Glue database (the table descriptions, not the data)  7. the S3 data lake bucket, emptied first (every version of every file)
+8. the GitHub deploy role  9. the trust entry for GitHub (shared by every repository of the account: only delete it if nothing else uses it).
 Each part skips what does not exist, and asks you to TYPE the name before deleting (deleted images, logs and files cannot be recovered).
 The lake can be rebuilt from the local pipeline: scripts\lake_sync.py upload.
 #>
@@ -16,6 +17,7 @@ param(
     [string]$RoleName = "credit-scoring-api-lambda",
     [string]$Database = "credit_lake",
     [string]$Workgroup = "credit-risk",
+    [string]$DeployRoleName = "credit-risk-github-deploy",
     [switch]$DryRun
 )
 $ErrorActionPreference = "Stop"
@@ -162,4 +164,27 @@ if (Test-Exists @("s3api", "head-bucket", "--bucket", $bucket, "--profile", $Pro
     } "aws s3api list-object-versions + delete-objects (all versions), then aws s3api delete-bucket --bucket $bucket"
 } else {
     Write-Host "S3 bucket '$bucket': not found."
+}
+
+# --- 8. the role GitHub Actions uses to deploy (day 2, OIDC) ---
+if (Test-Exists @("iam", "get-role", "--role-name", $DeployRoleName, "--profile", $Profile)) {
+    Remove-AfterConfirmation $DeployRoleName "IAM role '$DeployRoleName' (GitHub can no longer deploy)" {
+        $code = Invoke-Aws @("iam", "delete-role-policy", "--role-name", $DeployRoleName, "--policy-name", "deploy-one-function", "--profile", $Profile) -Quiet
+        $code = Invoke-Aws @("iam", "delete-role", "--role-name", $DeployRoleName, "--profile", $Profile)
+        if ($code -ne 0) { throw "delete-role failed (exit code $code)" }
+    } "aws iam delete-role-policy / delete-role --role-name $DeployRoleName"
+} else {
+    Write-Host "IAM role '$DeployRoleName': not found."
+}
+
+# --- 9. the trust entry for GitHub's ID cards: it belongs to the whole account, so check nothing else uses it ---
+$providerHost = "token.actions.githubusercontent.com"
+$providerArn = "arn:aws:iam::${account}:oidc-provider/$providerHost"
+if (Test-Exists @("iam", "get-open-id-connect-provider", "--open-id-connect-provider-arn", $providerArn, "--profile", $Profile)) {
+    Remove-AfterConfirmation $providerHost "the trust entry for GitHub ($providerHost). Other roles of the account that use it would stop working" {
+        $code = Invoke-Aws @("iam", "delete-open-id-connect-provider", "--open-id-connect-provider-arn", $providerArn, "--profile", $Profile)
+        if ($code -ne 0) { throw "delete-open-id-connect-provider failed (exit code $code)" }
+    } "aws iam delete-open-id-connect-provider --open-id-connect-provider-arn arn:aws:iam::<account>:oidc-provider/$providerHost"
+} else {
+    Write-Host "Trust entry for GitHub: not found."
 }

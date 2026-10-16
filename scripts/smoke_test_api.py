@@ -2,6 +2,7 @@
 
     python scripts/smoke_test_api.py --url http://127.0.0.1:8080 [--wait 60] [--expect-model-id b3069001d62e]
     python scripts/smoke_test_api.py --url https://<id>.lambda-url.eu-north-1.on.aws --aws-profile credit-admin   # a locked (AWS_IAM) Lambda URL
+    python scripts/smoke_test_api.py --url <locked url> --aws-default-credentials   # same, with the credentials found in the environment (CI)
 
 Checks: the service is alive and runs the expected model; the golden loan scores as agreed (553.3 points, 9.17%);
 reasons are returned; bad input is refused cleanly (422, never a server error); the API never decides approve/refuse.
@@ -41,12 +42,15 @@ def make_signer(credentials, region: str, service: str = "lambda"):
     return sign
 
 
-def signer_from_profile(profile: str, region: str):
+def signer_from_profile(profile: str | None, region: str):
+    """Sign with a named profile, or (profile=None) with the default credential chain: in GitHub Actions these are the temporary
+    AWS_ACCESS_KEY_ID / AWS_SECRET_ACCESS_KEY / AWS_SESSION_TOKEN variables set by the OIDC login."""
     import botocore.session
 
     credentials = botocore.session.Session(profile=profile).get_credentials()
     if credentials is None:
-        raise SystemExit(f"no credentials for the profile '{profile}': run  aws sso login --profile {profile}")
+        where = f"the profile '{profile}': run  aws sso login --profile {profile}" if profile else "the environment"
+        raise SystemExit(f"no AWS credentials found in {where}")
     return make_signer(credentials.get_frozen_credentials(), region)
 
 
@@ -141,11 +145,15 @@ def main() -> int:
     ap.add_argument("--wait", type=float, default=0, help="seconds to wait for the service to come alive")
     ap.add_argument("--expect-model-id", default=None)
     ap.add_argument("--aws-profile", default=None, help="sign every request (SigV4) with this AWS profile, for a locked Function URL")
+    ap.add_argument("--aws-default-credentials", action="store_true",
+                    help="sign every request with the default AWS credentials (environment variables), as in the deploy workflow")
     ap.add_argument("--aws-region", default="eu-north-1")
     a = ap.parse_args()
     global SIGNER
     if a.aws_profile:
         SIGNER = signer_from_profile(a.aws_profile, a.aws_region)
+    elif a.aws_default_credentials:
+        SIGNER = signer_from_profile(None, a.aws_region)
     base = a.url.rstrip("/")
     if a.wait and not wait_until_alive(base, a.wait):
         print(f"FAIL: the service at {base} did not answer /health within {a.wait:.0f} s")
