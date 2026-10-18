@@ -1,0 +1,120 @@
+"""The inspector: plain code that checks a memo against the fact sheet. No language model is involved here.
+
+validate_memo() returns a list of problems; an empty list means the memo may be published. Every problem has a short code and a sentence
+that is given back to the writer when it is asked to rewrite.
+
+What it checks, and what it cannot check (honest limits):
+- every number written in the memo must be a fact (rounded to the precision written) or an allowed constant. It cannot tell WHICH fact:
+  a memo that swaps two different facts which are both on the sheet still passes the number check;
+- numbers spelled out in words are caught only through the list `spelled_numbers` of the policy file (one, un and une are allowed);
+- the language is checked through the fixed headings and the fixed disclaimer, not by detecting the language of the sentences.
+"""
+import re
+from dataclasses import dataclass
+from decimal import ROUND_HALF_UP, Decimal
+
+from agent.policy import Policy
+
+NUMBER = re.compile(r"\d+(?:[.,]\d+)?")
+HEADING = re.compile(r"^##\s+(.+?)\s*$", re.MULTILINE)
+RECOMMENDATION_SECTION = 4
+
+
+@dataclass(frozen=True)
+class Problem:
+    code: str
+    message: str
+
+
+def _squash(text: str) -> str:
+    """Single spaces, and no space before a percent sign, so '9,17 %' and '9,17%' are the same."""
+    return re.sub(r"\s+%", "%", re.sub(r"\s+", " ", text)).strip()
+
+
+def _decimals(token: str) -> int:
+    return len(token.replace(",", ".").split(".")[1]) if re.search(r"[.,]", token) else 0
+
+
+def _allowed_values(facts: dict, policy: Policy) -> list[Decimal]:
+    return [Decimal(v) for v in facts["numbers"].values()] + [Decimal(c) for c in policy.allowed_constants]
+
+
+def _is_fact(token: str, allowed: list[Decimal]) -> bool:
+    value, d = Decimal(token.replace(",", ".")), _decimals(token)
+    unit = Decimal(1).scaleb(-d)
+    return any(a.quantize(unit, rounding=ROUND_HALF_UP) == value for a in allowed)
+
+
+def _sections(memo: str, headings: list[str]) -> tuple[dict[str, str] | None, str]:
+    """The memo split by its '## ' headings, or None if the headings are not exactly the expected ones, in order. Second value: text before the first heading."""
+    found = list(HEADING.finditer(memo))
+    before = memo[: found[0].start()] if found else memo
+    if [m.group(1) for m in found] != headings:
+        return None, before
+    bodies = {}
+    for i, m in enumerate(found):
+        end = found[i + 1].start() if i + 1 < len(found) else len(memo)
+        bodies[m.group(1)] = memo[m.end():end].strip()
+    return bodies, before
+
+
+def validate_memo(memo: str, facts: dict, policy: Policy) -> list[Problem]:
+    problems: list[Problem] = []
+    lang = policy.language(facts["language"])
+    if not memo or not memo.strip():
+        return [Problem("EMPTY", "The memo is empty.")]
+    flat = _squash(memo)
+    folded = flat.casefold()
+
+    sections, before = _sections(memo, facts["headings"])
+    if sections is None:
+        problems.append(Problem("SECTIONS", "Use exactly these six headings, in this order, each on its own line starting with '## ': "
+                                + " | ".join(facts["headings"]) + "."))
+    else:
+        if before.strip():
+            problems.append(Problem("TEXT_OUTSIDE_SECTIONS", "Write nothing before the first heading."))
+        for heading, body in sections.items():
+            if not body:
+                problems.append(Problem("EMPTY_SECTION", f"The section '{heading}' is empty."))
+
+    words = len(re.findall(r"\w+", memo))
+    if not policy.min_words <= words <= policy.max_words:
+        problems.append(Problem("LENGTH", f"The memo has {words} words; it must have between {policy.min_words} and {policy.max_words}."))
+
+    allowed = _allowed_values(facts, policy)
+    bad = sorted({t for t in NUMBER.findall(memo) if not _is_fact(t, allowed)})
+    if bad:
+        problems.append(Problem("NUMBER_NOT_IN_FACTS", "These numbers are not on the fact sheet: " + ", ".join(bad)
+                                + ". Copy numbers exactly as written on the fact sheet and never compute a new one."))
+
+    spelled = [w for w in lang.spelled_numbers if re.search(rf"(?<!\w){re.escape(w)}(?!\w)", folded)]
+    if spelled:
+        problems.append(Problem("SPELLED_NUMBER", "Do not write quantities in words (" + ", ".join(spelled) + "): use the digits of the fact sheet."))
+
+    label = facts["recommendation_label"].casefold()
+    decision_text = (sections[facts["headings"][RECOMMENDATION_SECTION]] if sections else memo)
+    if label not in _squash(decision_text).casefold():
+        problems.append(Problem("DECISION_MISSING", f"The recommendation section must state the recommendation exactly as: {facts['recommendation_label']}."))
+    for other in (d for d in lang.labels if d != facts["recommendation"]):
+        patterns = [re.escape(lang.labels[other].casefold()), *[s.casefold() for s in lang.decision_stems[other]]]
+        hits = [m.group() for pattern in patterns if (m := re.search(rf"(?<!\w)(?:{pattern})(?!\w)", folded))]
+        if hits:
+            problems.append(Problem("DECISION_CONFLICT", f"The recommendation is {facts['recommendation_label']}: remove the words that belong to another decision ({', '.join(hits)})."))
+
+    if _squash(facts["disclaimer"]).casefold() not in folded:
+        problems.append(Problem("DISCLAIMER_MISSING", f"Include this sentence exactly: {facts['disclaimer']}"))
+    if _squash(facts["caution"]).casefold() not in folded:
+        problems.append(Problem("CAUTION_MISSING", f"Include this sentence exactly: {facts['caution']}"))
+    if facts["outside_range_text"] and _squash(facts["outside_range_text"]).casefold() not in folded:
+        problems.append(Problem("OUTSIDE_RANGE_MISSING", f"Include this sentence exactly: {facts['outside_range_text']}"))
+    if _squash(facts["display"]["probability_of_default"]).casefold() not in folded:
+        problems.append(Problem("RISK_MISSING", f"State the default probability exactly as written on the fact sheet: {facts['display']['probability_of_default']}."))
+
+    banned = [w for w in lang.forbidden if re.search(rf"(?<!\w){re.escape(w.casefold())}(?!\w)", folded)]
+    if banned:
+        problems.append(Problem("FORBIDDEN_PHRASE", "Remove these forbidden words: " + ", ".join(banned) + ". The memo must never promise or guarantee anything."))
+    return problems
+
+
+def problems_to_text(problems: list[Problem]) -> str:
+    return "\n".join(f"- [{p.code}] {p.message}" for p in problems)

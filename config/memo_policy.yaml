@@ -1,0 +1,58 @@
+# Rules of the memo agent. Everything the agent decides or checks is read from this file, never written in the code.
+#
+# ASSUMPTIONS (not facts from the data): the two decision lines below. They are an ILLUSTRATIVE policy chosen by looking at
+# the distribution of predicted risk on held-out loans (about 70% of loans under 2%, about 10% above 5%); they are not a lending
+# policy. The README already says the money analysis rests on assumptions (config/economics.yaml).
+policy:
+  approve_below: 0.02     # predicted default probability under this line: approve
+  decline_above: 0.05     # above this line: decline; between the two lines: refer to a human
+
+memo:
+  default_language: fr
+  max_rewrites: 2         # how many times the writer may try again after the inspector rejects a memo
+  min_words: 60
+  max_words: 260
+  allowed_constants: ["24"]   # numbers that may appear without being in the fact sheet: the 24-month window of the default definition
+  # Measured in this project (README, results/): in calm years the through-the-cycle probability was 1.4 to 2.6 times the real default
+  # rate. A test checks that the API's own caution text contains the same two numbers.
+  caution_numbers: {low: "1.4", high: "2.6"}
+
+languages:
+  fr:
+    headings: ["Résumé", "Données du dossier", "Analyse du risque", "Raisons principales", "Recommandation", "Limites"]
+    labels: {approve: "APPROUVER", refer: "À EXAMINER", decline: "REFUSER"}
+    # patterns (regular expressions, matched on whole words) of the words that belong to ONE decision: a memo must not contain the words
+    # of a decision other than the computed one
+    decision_stems: {approve: ['approuv\w*', 'approbation'], refer: ['examin\w*', 'examen'], decline: ['refus\w*', 'rejet\w*', 'rejeté']}
+    disclaimer: "Politique illustrative : ce mémo n'est pas une décision de crédit."
+    caution: "Le risque affiché est une moyenne sur le cycle économique : en période calme, il a été de {low} à {high} fois le taux de défaut réellement observé."
+    outside_range: "Valeurs hors de la plage d'entraînement du modèle : {fields}."
+    unknown: "inconnu"
+    forbidden: ["garanti", "garantie", "sans risque", "aucun risque", "certainement", "à coup sûr", "jamais", "assuré de"]
+    spelled_numbers: ["deux", "trois", "quatre", "cinq", "six", "sept", "huit", "neuf", "dix", "onze", "douze", "treize", "quatorze", "quinze",
+                      "seize", "vingt", "trente", "quarante", "cinquante", "soixante", "cent", "mille", "million", "pour cent", "pourcent"]
+    reason_phrases:
+      credit_score: "Le score de crédit est plus bas que celui des emprunteurs les plus sûrs"
+      rate_spread: "Le taux d'intérêt est supérieur à celui de prêts comparables de la même période et durée"
+      dti: "Les dettes mensuelles représentent une part élevée du revenu"
+      channel: "Le canal d'origine du prêt a un taux de défaut observé plus élevé"
+      orig_term: "La durée du prêt diffère du groupe de durée le moins risqué"
+      cltv: "L'emprunt total représente une part élevée de la valeur du bien (ratio cumulé)"
+      ltv: "Le prêt représente une part élevée de la valeur du bien"
+      n_borrowers: "Le nombre d'emprunteurs est associé à un risque plus élevé"
+      state: "La localisation du bien (État) a un taux de défaut observé plus élevé"
+      mi_pct: "Le niveau d'assurance du prêt est associé à un risque plus élevé"
+      purpose: "L'objet du prêt a un taux de défaut observé plus élevé"
+      several_borrowers: "Un seul emprunteur sur le prêt est associé à un taux de défaut plus élevé"
+  en:
+    headings: ["Summary", "Loan data", "Risk analysis", "Main reasons", "Recommendation", "Limits"]
+    labels: {approve: "APPROVE", refer: "REFER", decline: "DECLINE"}
+    decision_stems: {approve: ['approv\w*'], refer: ['refer(?:s|red|ral|ring)?', 'review(?:s|ed|ing)?'], decline: ['declin\w*', 'reject\w*']}
+    disclaimer: "Illustrative policy: this memo is not a credit decision."
+    caution: "The risk shown is a through-the-cycle average: in calm years it has been {low} to {high} times the default rate really observed."
+    outside_range: "Values outside the range the model was trained on: {fields}."
+    unknown: "unknown"
+    forbidden: ["guarantee", "guaranteed", "risk-free", "no risk", "certainly", "definitely", "for sure", "never", "will default", "will not default"]
+    spelled_numbers: ["two", "three", "four", "five", "six", "seven", "eight", "nine", "ten", "eleven", "twelve", "thirteen", "fourteen", "fifteen",
+                      "sixteen", "twenty", "thirty", "forty", "fifty", "sixty", "hundred", "thousand", "million", "percent", "per cent"]
+    reason_phrases: {}   # English: the API's own fixed sentences are used as they are
