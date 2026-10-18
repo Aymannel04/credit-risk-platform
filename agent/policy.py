@@ -12,6 +12,8 @@ ROOT = Path(__file__).resolve().parents[1]
 POLICY_PATH = ROOT / "config" / "memo_policy.yaml"
 DECISIONS = ("approve", "refer", "decline")
 SECTIONS = 6
+DATA_SECTION_INDEX = 1          # the 'Loan data' section: written by code, never by the model
+RECOMMENDATION_SECTION_INDEX = 4
 
 
 class PolicyError(ValueError):
@@ -45,6 +47,7 @@ class Policy:
     caution_low: str
     caution_high: str
     languages: dict[str, Language]
+    writers: dict[str, dict]
 
     def language(self, code: str | None = None) -> Language:
         code = code or self.default_language
@@ -75,7 +78,8 @@ def load_policy(path: Path = POLICY_PATH) -> Policy:
     return Policy(approve_below=approve_below, decline_above=decline_above, default_language=m["default_language"],
                   max_rewrites=int(m["max_rewrites"]), min_words=int(m["min_words"]), max_words=int(m["max_words"]),
                   allowed_constants=tuple(str(x) for x in m["allowed_constants"]),
-                  caution_low=str(m["caution_numbers"]["low"]), caution_high=str(m["caution_numbers"]["high"]), languages=languages)
+                  caution_low=str(m["caution_numbers"]["low"]), caution_high=str(m["caution_numbers"]["high"]), languages=languages,
+                  writers=dict(raw.get("writers") or {}))
 
 
 def decide(probability_of_default: float, policy: Policy) -> str:

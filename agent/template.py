@@ -40,17 +40,22 @@ _TEXT = {
 }
 
 
+def render_data_section(language: str, display: dict, unknown: str) -> str:
+    """The body of the 'Loan data' section. Written by plain code, never by the language model, and checked word for word by the inspector."""
+    shown = lambda name: display.get(name, unknown)  # noqa: E731
+    sep = " :" if language == "fr" else ":"
+    return "\n".join(f"- {label}{sep} {shown(name)}" for name, label in _TEXT[language]["rows"])
+
+
 def render_template_memo(facts: dict) -> str:
     lang = facts["language"]
     t, d = _TEXT[lang], facts["display"]
-    shown = lambda name: d.get(name, facts["unknown"])  # noqa: E731
-    rows = [f"- {label} : {shown(name)}" if lang == "fr" else f"- {label}: {shown(name)}" for name, label in t["rows"]]
     reasons = [f"- {t['lost'].format(phrase=r['phrase'], points=d[r['points_lost']])}" for r in facts["reasons"]] or [f"- {t['no_reasons']}"]
     limits = [facts["disclaimer"], facts["caution"], *([facts["outside_range_text"]] if facts["outside_range_text"] else [])]
     h = facts["headings"]
     parts = [
         f"## {h[0]}", t["summary"].format(pd=d["probability_of_default"], label=facts["recommendation_label"]), "",
-        f"## {h[1]}", *rows, "",
+        f"## {h[1]}", facts["data_section"], "",
         f"## {h[2]}", t["risk"].format(score=d["score"], pd=d["probability_of_default"], line1=d["approve_below"], line2=d["decline_above"]), "",
         f"## {h[3]}", *reasons, "",
         f"## {h[4]}", f"**{facts['recommendation_label']}**. {_SENTENCES[lang][facts['recommendation']]}", "",

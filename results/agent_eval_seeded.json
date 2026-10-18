@@ -1,0 +1,925 @@
+{
+  "generated_utc": "2026-10-18 21:14",
+  "writer": "seeded mistakes (pretend writer)",
+  "language": "fr",
+  "scorer": "in-process API (same code as the Lambda)",
+  "cases": 15,
+  "kinds": [
+    "wrong_number",
+    "invented_number",
+    "wrong_decision",
+    "promise",
+    "number_in_words",
+    "missing_disclaimer",
+    "wrong_heading",
+    "text_before_heading",
+    "missing_risk",
+    "other_language"
+  ],
+  "runs": 150,
+  "rejected": 150,
+  "reached_the_reader": 0,
+  "rejection_rate": 1.0,
+  "rows": [
+    {
+      "case": "01_prime_excellent",
+      "kind": "wrong_number",
+      "status": "backup",
+      "tries": 3
+    },
+    {
+      "case": "01_prime_excellent",
+      "kind": "invented_number",
+      "status": "backup",
+      "tries": 3
+    },
+    {
+      "case": "01_prime_excellent",
+      "kind": "wrong_decision",
+      "status": "backup",
+      "tries": 3
+    },
+    {
+      "case": "01_prime_excellent",
+      "kind": "promise",
+      "status": "backup",
+      "tries": 3
+    },
+    {
+      "case": "01_prime_excellent",
+      "kind": "number_in_words",
+      "status": "backup",
+      "tries": 3
+    },
+    {
+      "case": "01_prime_excellent",
+      "kind": "missing_disclaimer",
+      "status": "backup",
+      "tries": 3
+    },
+    {
+      "case": "01_prime_excellent",
+      "kind": "wrong_heading",
+      "status": "backup",
+      "tries": 3
+    },
+    {
+      "case": "01_prime_excellent",
+      "kind": "text_before_heading",
+      "status": "backup",
+      "tries": 3
+    },
+    {
+      "case": "01_prime_excellent",
+      "kind": "missing_risk",
+      "status": "backup",
+      "tries": 3
+    },
+    {
+      "case": "01_prime_excellent",
+      "kind": "other_language",
+      "status": "backup",
+      "tries": 3
+    },
+    {
+      "case": "02_prime_purchase",
+      "kind": "wrong_number",
+      "status": "backup",
+      "tries": 3
+    },
+    {
+      "case": "02_prime_purchase",
+      "kind": "invented_number",
+      "status": "backup",
+      "tries": 3
+    },
+    {
+      "case": "02_prime_purchase",
+      "kind": "wrong_decision",
+      "status": "backup",
+      "tries": 3
+    },
+    {
+      "case": "02_prime_purchase",
+      "kind": "promise",
+      "status": "backup",
+      "tries": 3
+    },
+    {
+      "case": "02_prime_purchase",
+      "kind": "number_in_words",
+      "status": "backup",
+      "tries": 3
+    },
+    {
+      "case": "02_prime_purchase",
+      "kind": "missing_disclaimer",
+      "status": "backup",
+      "tries": 3
+    },
+    {
+      "case": "02_prime_purchase",
+      "kind": "wrong_heading",
+      "status": "backup",
+      "tries": 3
+    },
+    {
+      "case": "02_prime_purchase",
+      "kind": "text_before_heading",
+      "status": "backup",
+      "tries": 3
+    },
+    {
+      "case": "02_prime_purchase",
+      "kind": "missing_risk",
+      "status": "backup",
+      "tries": 3
+    },
+    {
+      "case": "02_prime_purchase",
+      "kind": "other_language",
+      "status": "backup",
+      "tries": 3
+    },
+    {
+      "case": "03_good_cash_refinance",
+      "kind": "wrong_number",
+      "status": "backup",
+      "tries": 3
+    },
+    {
+      "case": "03_good_cash_refinance",
+      "kind": "invented_number",
+      "status": "backup",
+      "tries": 3
+    },
+    {
+      "case": "03_good_cash_refinance",
+      "kind": "wrong_decision",
+      "status": "backup",
+      "tries": 3
+    },
+    {
+      "case": "03_good_cash_refinance",
+      "kind": "promise",
+      "status": "backup",
+      "tries": 3
+    },
+    {
+      "case": "03_good_cash_refinance",
+      "kind": "number_in_words",
+      "status": "backup",
+      "tries": 3
+    },
+    {
+      "case": "03_good_cash_refinance",
+      "kind": "missing_disclaimer",
+      "status": "backup",
+      "tries": 3
+    },
+    {
+      "case": "03_good_cash_refinance",
+      "kind": "wrong_heading",
+      "status": "backup",
+      "tries": 3
+    },
+    {
+      "case": "03_good_cash_refinance",
+      "kind": "text_before_heading",
+      "status": "backup",
+      "tries": 3
+    },
+    {
+      "case": "03_good_cash_refinance",
+      "kind": "missing_risk",
+      "status": "backup",
+      "tries": 3
+    },
+    {
+      "case": "03_good_cash_refinance",
+      "kind": "other_language",
+      "status": "backup",
+      "tries": 3
+    },
+    {
+      "case": "04_short_term_15_years",
+      "kind": "wrong_number",
+      "status": "backup",
+      "tries": 3
+    },
+    {
+      "case": "04_short_term_15_years",
+      "kind": "invented_number",
+      "status": "backup",
+      "tries": 3
+    },
+    {
+      "case": "04_short_term_15_years",
+      "kind": "wrong_decision",
+      "status": "backup",
+      "tries": 3
+    },
+    {
+      "case": "04_short_term_15_years",
+      "kind": "promise",
+      "status": "backup",
+      "tries": 3
+    },
+    {
+      "case": "04_short_term_15_years",
+      "kind": "number_in_words",
+      "status": "backup",
+      "tries": 3
+    },
+    {
+      "case": "04_short_term_15_years",
+      "kind": "missing_disclaimer",
+      "status": "backup",
+      "tries": 3
+    },
+    {
+      "case": "04_short_term_15_years",
+      "kind": "wrong_heading",
+      "status": "backup",
+      "tries": 3
+    },
+    {
+      "case": "04_short_term_15_years",
+      "kind": "text_before_heading",
+      "status": "backup",
+      "tries": 3
+    },
+    {
+      "case": "04_short_term_15_years",
+      "kind": "missing_risk",
+      "status": "backup",
+      "tries": 3
+    },
+    {
+      "case": "04_short_term_15_years",
+      "kind": "other_language",
+      "status": "backup",
+      "tries": 3
+    },
+    {
+      "case": "05_just_above_first_line",
+      "kind": "wrong_number",
+      "status": "backup",
+      "tries": 3
+    },
+    {
+      "case": "05_just_above_first_line",
+      "kind": "invented_number",
+      "status": "backup",
+      "tries": 3
+    },
+    {
+      "case": "05_just_above_first_line",
+      "kind": "wrong_decision",
+      "status": "backup",
+      "tries": 3
+    },
+    {
+      "case": "05_just_above_first_line",
+      "kind": "promise",
+      "status": "backup",
+      "tries": 3
+    },
+    {
+      "case": "05_just_above_first_line",
+      "kind": "number_in_words",
+      "status": "backup",
+      "tries": 3
+    },
+    {
+      "case": "05_just_above_first_line",
+      "kind": "missing_disclaimer",
+      "status": "backup",
+      "tries": 3
+    },
+    {
+      "case": "05_just_above_first_line",
+      "kind": "wrong_heading",
+      "status": "backup",
+      "tries": 3
+    },
+    {
+      "case": "05_just_above_first_line",
+      "kind": "text_before_heading",
+      "status": "backup",
+      "tries": 3
+    },
+    {
+      "case": "05_just_above_first_line",
+      "kind": "missing_risk",
+      "status": "backup",
+      "tries": 3
+    },
+    {
+      "case": "05_just_above_first_line",
+      "kind": "other_language",
+      "status": "backup",
+      "tries": 3
+    },
+    {
+      "case": "06_middle_of_the_refer_zone",
+      "kind": "wrong_number",
+      "status": "backup",
+      "tries": 3
+    },
+    {
+      "case": "06_middle_of_the_refer_zone",
+      "kind": "invented_number",
+      "status": "backup",
+      "tries": 3
+    },
+    {
+      "case": "06_middle_of_the_refer_zone",
+      "kind": "wrong_decision",
+      "status": "backup",
+      "tries": 3
+    },
+    {
+      "case": "06_middle_of_the_refer_zone",
+      "kind": "promise",
+      "status": "backup",
+      "tries": 3
+    },
+    {
+      "case": "06_middle_of_the_refer_zone",
+      "kind": "number_in_words",
+      "status": "backup",
+      "tries": 3
+    },
+    {
+      "case": "06_middle_of_the_refer_zone",
+      "kind": "missing_disclaimer",
+      "status": "backup",
+      "tries": 3
+    },
+    {
+      "case": "06_middle_of_the_refer_zone",
+      "kind": "wrong_heading",
+      "status": "backup",
+      "tries": 3
+    },
+    {
+      "case": "06_middle_of_the_refer_zone",
+      "kind": "text_before_heading",
+      "status": "backup",
+      "tries": 3
+    },
+    {
+      "case": "06_middle_of_the_refer_zone",
+      "kind": "missing_risk",
+      "status": "backup",
+      "tries": 3
+    },
+    {
+      "case": "06_middle_of_the_refer_zone",
+      "kind": "other_language",
+      "status": "backup",
+      "tries": 3
+    },
+    {
+      "case": "07_just_below_second_line",
+      "kind": "wrong_number",
+      "status": "backup",
+      "tries": 3
+    },
+    {
+      "case": "07_just_below_second_line",
+      "kind": "invented_number",
+      "status": "backup",
+      "tries": 3
+    },
+    {
+      "case": "07_just_below_second_line",
+      "kind": "wrong_decision",
+      "status": "backup",
+      "tries": 3
+    },
+    {
+      "case": "07_just_below_second_line",
+      "kind": "promise",
+      "status": "backup",
+      "tries": 3
+    },
+    {
+      "case": "07_just_below_second_line",
+      "kind": "number_in_words",
+      "status": "backup",
+      "tries": 3
+    },
+    {
+      "case": "07_just_below_second_line",
+      "kind": "missing_disclaimer",
+      "status": "backup",
+      "tries": 3
+    },
+    {
+      "case": "07_just_below_second_line",
+      "kind": "wrong_heading",
+      "status": "backup",
+      "tries": 3
+    },
+    {
+      "case": "07_just_below_second_line",
+      "kind": "text_before_heading",
+      "status": "backup",
+      "tries": 3
+    },
+    {
+      "case": "07_just_below_second_line",
+      "kind": "missing_risk",
+      "status": "backup",
+      "tries": 3
+    },
+    {
+      "case": "07_just_below_second_line",
+      "kind": "other_language",
+      "status": "backup",
+      "tries": 3
+    },
+    {
+      "case": "08_just_above_second_line",
+      "kind": "wrong_number",
+      "status": "backup",
+      "tries": 3
+    },
+    {
+      "case": "08_just_above_second_line",
+      "kind": "invented_number",
+      "status": "backup",
+      "tries": 3
+    },
+    {
+      "case": "08_just_above_second_line",
+      "kind": "wrong_decision",
+      "status": "backup",
+      "tries": 3
+    },
+    {
+      "case": "08_just_above_second_line",
+      "kind": "promise",
+      "status": "backup",
+      "tries": 3
+    },
+    {
+      "case": "08_just_above_second_line",
+      "kind": "number_in_words",
+      "status": "backup",
+      "tries": 3
+    },
+    {
+      "case": "08_just_above_second_line",
+      "kind": "missing_disclaimer",
+      "status": "backup",
+      "tries": 3
+    },
+    {
+      "case": "08_just_above_second_line",
+      "kind": "wrong_heading",
+      "status": "backup",
+      "tries": 3
+    },
+    {
+      "case": "08_just_above_second_line",
+      "kind": "text_before_heading",
+      "status": "backup",
+      "tries": 3
+    },
+    {
+      "case": "08_just_above_second_line",
+      "kind": "missing_risk",
+      "status": "backup",
+      "tries": 3
+    },
+    {
+      "case": "08_just_above_second_line",
+      "kind": "other_language",
+      "status": "backup",
+      "tries": 3
+    },
+    {
+      "case": "09_golden_loan",
+      "kind": "wrong_number",
+      "status": "backup",
+      "tries": 3
+    },
+    {
+      "case": "09_golden_loan",
+      "kind": "invented_number",
+      "status": "backup",
+      "tries": 3
+    },
+    {
+      "case": "09_golden_loan",
+      "kind": "wrong_decision",
+      "status": "backup",
+      "tries": 3
+    },
+    {
+      "case": "09_golden_loan",
+      "kind": "promise",
+      "status": "backup",
+      "tries": 3
+    },
+    {
+      "case": "09_golden_loan",
+      "kind": "number_in_words",
+      "status": "backup",
+      "tries": 3
+    },
+    {
+      "case": "09_golden_loan",
+      "kind": "missing_disclaimer",
+      "status": "backup",
+      "tries": 3
+    },
+    {
+      "case": "09_golden_loan",
+      "kind": "wrong_heading",
+      "status": "backup",
+      "tries": 3
+    },
+    {
+      "case": "09_golden_loan",
+      "kind": "text_before_heading",
+      "status": "backup",
+      "tries": 3
+    },
+    {
+      "case": "09_golden_loan",
+      "kind": "missing_risk",
+      "status": "backup",
+      "tries": 3
+    },
+    {
+      "case": "09_golden_loan",
+      "kind": "other_language",
+      "status": "backup",
+      "tries": 3
+    },
+    {
+      "case": "10_weak_credit",
+      "kind": "wrong_number",
+      "status": "backup",
+      "tries": 3
+    },
+    {
+      "case": "10_weak_credit",
+      "kind": "invented_number",
+      "status": "backup",
+      "tries": 3
+    },
+    {
+      "case": "10_weak_credit",
+      "kind": "wrong_decision",
+      "status": "backup",
+      "tries": 3
+    },
+    {
+      "case": "10_weak_credit",
+      "kind": "promise",
+      "status": "backup",
+      "tries": 3
+    },
+    {
+      "case": "10_weak_credit",
+      "kind": "number_in_words",
+      "status": "backup",
+      "tries": 3
+    },
+    {
+      "case": "10_weak_credit",
+      "kind": "missing_disclaimer",
+      "status": "backup",
+      "tries": 3
+    },
+    {
+      "case": "10_weak_credit",
+      "kind": "wrong_heading",
+      "status": "backup",
+      "tries": 3
+    },
+    {
+      "case": "10_weak_credit",
+      "kind": "text_before_heading",
+      "status": "backup",
+      "tries": 3
+    },
+    {
+      "case": "10_weak_credit",
+      "kind": "missing_risk",
+      "status": "backup",
+      "tries": 3
+    },
+    {
+      "case": "10_weak_credit",
+      "kind": "other_language",
+      "status": "backup",
+      "tries": 3
+    },
+    {
+      "case": "11_very_weak_credit",
+      "kind": "wrong_number",
+      "status": "backup",
+      "tries": 3
+    },
+    {
+      "case": "11_very_weak_credit",
+      "kind": "invented_number",
+      "status": "backup",
+      "tries": 3
+    },
+    {
+      "case": "11_very_weak_credit",
+      "kind": "wrong_decision",
+      "status": "backup",
+      "tries": 3
+    },
+    {
+      "case": "11_very_weak_credit",
+      "kind": "promise",
+      "status": "backup",
+      "tries": 3
+    },
+    {
+      "case": "11_very_weak_credit",
+      "kind": "number_in_words",
+      "status": "backup",
+      "tries": 3
+    },
+    {
+      "case": "11_very_weak_credit",
+      "kind": "missing_disclaimer",
+      "status": "backup",
+      "tries": 3
+    },
+    {
+      "case": "11_very_weak_credit",
+      "kind": "wrong_heading",
+      "status": "backup",
+      "tries": 3
+    },
+    {
+      "case": "11_very_weak_credit",
+      "kind": "text_before_heading",
+      "status": "backup",
+      "tries": 3
+    },
+    {
+      "case": "11_very_weak_credit",
+      "kind": "missing_risk",
+      "status": "backup",
+      "tries": 3
+    },
+    {
+      "case": "11_very_weak_credit",
+      "kind": "other_language",
+      "status": "backup",
+      "tries": 3
+    },
+    {
+      "case": "12_outside_training_range",
+      "kind": "wrong_number",
+      "status": "backup",
+      "tries": 3
+    },
+    {
+      "case": "12_outside_training_range",
+      "kind": "invented_number",
+      "status": "backup",
+      "tries": 3
+    },
+    {
+      "case": "12_outside_training_range",
+      "kind": "wrong_decision",
+      "status": "backup",
+      "tries": 3
+    },
+    {
+      "case": "12_outside_training_range",
+      "kind": "promise",
+      "status": "backup",
+      "tries": 3
+    },
+    {
+      "case": "12_outside_training_range",
+      "kind": "number_in_words",
+      "status": "backup",
+      "tries": 3
+    },
+    {
+      "case": "12_outside_training_range",
+      "kind": "missing_disclaimer",
+      "status": "backup",
+      "tries": 3
+    },
+    {
+      "case": "12_outside_training_range",
+      "kind": "wrong_heading",
+      "status": "backup",
+      "tries": 3
+    },
+    {
+      "case": "12_outside_training_range",
+      "kind": "text_before_heading",
+      "status": "backup",
+      "tries": 3
+    },
+    {
+      "case": "12_outside_training_range",
+      "kind": "missing_risk",
+      "status": "backup",
+      "tries": 3
+    },
+    {
+      "case": "12_outside_training_range",
+      "kind": "other_language",
+      "status": "backup",
+      "tries": 3
+    },
+    {
+      "case": "13_some_values_unknown",
+      "kind": "wrong_number",
+      "status": "backup",
+      "tries": 3
+    },
+    {
+      "case": "13_some_values_unknown",
+      "kind": "invented_number",
+      "status": "backup",
+      "tries": 3
+    },
+    {
+      "case": "13_some_values_unknown",
+      "kind": "wrong_decision",
+      "status": "backup",
+      "tries": 3
+    },
+    {
+      "case": "13_some_values_unknown",
+      "kind": "promise",
+      "status": "backup",
+      "tries": 3
+    },
+    {
+      "case": "13_some_values_unknown",
+      "kind": "number_in_words",
+      "status": "backup",
+      "tries": 3
+    },
+    {
+      "case": "13_some_values_unknown",
+      "kind": "missing_disclaimer",
+      "status": "backup",
+      "tries": 3
+    },
+    {
+      "case": "13_some_values_unknown",
+      "kind": "wrong_heading",
+      "status": "backup",
+      "tries": 3
+    },
+    {
+      "case": "13_some_values_unknown",
+      "kind": "text_before_heading",
+      "status": "backup",
+      "tries": 3
+    },
+    {
+      "case": "13_some_values_unknown",
+      "kind": "missing_risk",
+      "status": "backup",
+      "tries": 3
+    },
+    {
+      "case": "13_some_values_unknown",
+      "kind": "other_language",
+      "status": "backup",
+      "tries": 3
+    },
+    {
+      "case": "14_everything_unknown",
+      "kind": "wrong_number",
+      "status": "backup",
+      "tries": 3
+    },
+    {
+      "case": "14_everything_unknown",
+      "kind": "invented_number",
+      "status": "backup",
+      "tries": 3
+    },
+    {
+      "case": "14_everything_unknown",
+      "kind": "wrong_decision",
+      "status": "backup",
+      "tries": 3
+    },
+    {
+      "case": "14_everything_unknown",
+      "kind": "promise",
+      "status": "backup",
+      "tries": 3
+    },
+    {
+      "case": "14_everything_unknown",
+      "kind": "number_in_words",
+      "status": "backup",
+      "tries": 3
+    },
+    {
+      "case": "14_everything_unknown",
+      "kind": "missing_disclaimer",
+      "status": "backup",
+      "tries": 3
+    },
+    {
+      "case": "14_everything_unknown",
+      "kind": "wrong_heading",
+      "status": "backup",
+      "tries": 3
+    },
+    {
+      "case": "14_everything_unknown",
+      "kind": "text_before_heading",
+      "status": "backup",
+      "tries": 3
+    },
+    {
+      "case": "14_everything_unknown",
+      "kind": "missing_risk",
+      "status": "backup",
+      "tries": 3
+    },
+    {
+      "case": "14_everything_unknown",
+      "kind": "other_language",
+      "status": "backup",
+      "tries": 3
+    },
+    {
+      "case": "15_long_term_40_years",
+      "kind": "wrong_number",
+      "status": "backup",
+      "tries": 3
+    },
+    {
+      "case": "15_long_term_40_years",
+      "kind": "invented_number",
+      "status": "backup",
+      "tries": 3
+    },
+    {
+      "case": "15_long_term_40_years",
+      "kind": "wrong_decision",
+      "status": "backup",
+      "tries": 3
+    },
+    {
+      "case": "15_long_term_40_years",
+      "kind": "promise",
+      "status": "backup",
+      "tries": 3
+    },
+    {
+      "case": "15_long_term_40_years",
+      "kind": "number_in_words",
+      "status": "backup",
+      "tries": 3
+    },
+    {
+      "case": "15_long_term_40_years",
+      "kind": "missing_disclaimer",
+      "status": "backup",
+      "tries": 3
+    },
+    {
+      "case": "15_long_term_40_years",
+      "kind": "wrong_heading",
+      "status": "backup",
+      "tries": 3
+    },
+    {
+      "case": "15_long_term_40_years",
+      "kind": "text_before_heading",
+      "status": "backup",
+      "tries": 3
+    },
+    {
+      "case": "15_long_term_40_years",
+      "kind": "missing_risk",
+      "status": "backup",
+      "tries": 3
+    },
+    {
+      "case": "15_long_term_40_years",
+      "kind": "other_language",
+      "status": "backup",
+      "tries": 3
+    }
+  ]
+}

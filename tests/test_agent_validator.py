@@ -184,11 +184,22 @@ def test_garbage_never_crashes_the_inspector_and_is_never_accepted(sheets, junk)
     assert isinstance(result, list) and result, "garbage must be rejected"
 
 
-def test_known_limit_swapping_two_facts_is_not_caught(sheets):
-    """Documented limit: the inspector checks that a number is ON the sheet, not WHICH fact it belongs to. Swapping the credit score
-    (700) with the loan-to-value (85) gives two numbers that are both facts, so it passes. A position-aware check is future work."""
+def test_the_data_section_cannot_be_changed_even_by_swapping_two_facts(sheets):
+    """The 'Loan data' section is written by code and compared word for word: swapping the credit score (700) with the loan-to-value (85)
+    there is caught, although both numbers are on the sheet."""
     facts = sheets[("golden_decline", "en")]
     memo = render_template_memo(facts)
     swapped = memo.replace("- Credit score: 700", "- Credit score: 85").replace("- Loan to value: 85%", "- Loan to value: 700%")
+    assert swapped != memo
+    assert "DATA_SECTION_ALTERED" in codes(swapped, facts)
+    assert "NUMBER_NOT_IN_FACTS" not in codes(swapped, facts), "each swapped number IS on the sheet: only the word-for-word comparison catches it"
+
+
+def test_known_limit_swapping_two_facts_in_the_free_text_is_not_caught(sheets):
+    """Documented limit: outside the protected data section the inspector checks that a number is ON the sheet, not WHICH fact it belongs
+    to. Swapping the two policy lines (2 and 5) in the risk analysis gives two numbers that are both facts, so it passes."""
+    facts = sheets[("golden_decline", "en")]
+    memo = render_template_memo(facts)
+    swapped = memo.replace("policy: 2% and 5%", "policy: 5% and 2%")
     assert swapped != memo
     assert validate_memo(swapped, facts, POLICY) == []

@@ -56,3 +56,9 @@ languages:
     spelled_numbers: ["two", "three", "four", "five", "six", "seven", "eight", "nine", "ten", "eleven", "twelve", "thirteen", "fourteen", "fifteen",
                       "sixteen", "twenty", "thirty", "forty", "fifty", "sixty", "hundred", "thousand", "million", "percent", "per cent"]
     reason_phrases: {}   # English: the API's own fixed sentences are used as they are
+
+writers:
+  # Services that speak the OpenAI "chat completions" format. NEVER put a key here: it lives in an environment variable on your computer.
+  nvidia:
+    base_url: "https://integrate.api.nvidia.com/v1"   # NVIDIA Build, free hosted models; address read in NVIDIA's API catalog docs (2026-10-18)
+    api_key_env: NVIDIA_API_KEY                        # the model name is chosen from the list the service gives you, never guessed

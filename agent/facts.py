@@ -7,6 +7,7 @@ for checking) and `display` (how it must be written in the memo: with a decimal 
 from decimal import ROUND_HALF_UP, Decimal
 
 from agent.policy import Policy, decide
+from agent.template import render_data_section
 
 LOAN_FIELDS = ("credit_score", "dti", "ltv", "cltv", "interest_rate", "reference_rate", "number_of_borrowers", "mi_pct", "term_months")
 PERCENT_FIELDS = ("dti", "ltv", "cltv", "interest_rate", "reference_rate", "mi_pct")
@@ -74,4 +75,5 @@ def build_facts(loan: dict, answer: dict, policy: Policy, language: str | None =
         "caution": lang.caution.format(low=display["caution_low"], high=display["caution_high"]),
         "outside_range_text": lang.outside_range.format(fields=", ".join(answer["outside_training_range"])) if answer.get("outside_training_range") else "",
         "unknown": lang.unknown,
+        "data_section": render_data_section(lang.code, display, lang.unknown),
     }

@@ -13,11 +13,10 @@ import re
 from dataclasses import dataclass
 from decimal import ROUND_HALF_UP, Decimal
 
-from agent.policy import Policy
+from agent.policy import DATA_SECTION_INDEX, RECOMMENDATION_SECTION_INDEX, Policy
 
 NUMBER = re.compile(r"\d+(?:[.,]\d+)?")
 HEADING = re.compile(r"^##\s+(.+?)\s*$", re.MULTILINE)
-RECOMMENDATION_SECTION = 4
 
 
 @dataclass(frozen=True)
@@ -76,6 +75,9 @@ def validate_memo(memo: str, facts: dict, policy: Policy) -> list[Problem]:
         for heading, body in sections.items():
             if not body:
                 problems.append(Problem("EMPTY_SECTION", f"The section '{heading}' is empty."))
+        data_heading = facts["headings"][DATA_SECTION_INDEX]
+        if "data_section" in facts and _squash(sections[data_heading]) != _squash(facts["data_section"]):
+            problems.append(Problem("DATA_SECTION_ALTERED", f"The section '{data_heading}' is written by the system: do not change it."))
 
     words = len(re.findall(r"\w+", memo))
     if not policy.min_words <= words <= policy.max_words:
@@ -92,7 +94,7 @@ def validate_memo(memo: str, facts: dict, policy: Policy) -> list[Problem]:
         problems.append(Problem("SPELLED_NUMBER", "Do not write quantities in words (" + ", ".join(spelled) + "): use the digits of the fact sheet."))
 
     label = facts["recommendation_label"].casefold()
-    decision_text = (sections[facts["headings"][RECOMMENDATION_SECTION]] if sections else memo)
+    decision_text = (sections[facts["headings"][RECOMMENDATION_SECTION_INDEX]] if sections else memo)
     if label not in _squash(decision_text).casefold():
         problems.append(Problem("DECISION_MISSING", f"The recommendation section must state the recommendation exactly as: {facts['recommendation_label']}."))
     for other in (d for d in lang.labels if d != facts["recommendation"]):
