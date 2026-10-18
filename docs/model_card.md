@@ -68,5 +68,5 @@ No sex, race or age in the data: protected characteristics **cannot** be tested.
 - Only five 50,000-loan samples; margin is illustrative; 2019 and 2022 losses are incomplete; PD is for a *flagged* delinquency, not a loss.
 - The default definition and every number above depend on assumptions listed in `docs/decision-log.md`.
 
-## 11. Monitoring (planned, Phase 3)
-Predicted vs observed by period and by group, PSI of the score and main features, refusal-rate ratios by group, and a recalibration or macro-overlay trigger. Promotion of any new model is manual.
+## 11. Monitoring (built, batch; Phase 3)
+Built as a batch report run by the pipeline (`credit/monitoring/`, `results/monitoring_report.md`): predicted vs observed level per vintage, PSI and CSI of the score and main features, simulated-shift drills (7 of 7 expected alerts raised, 2 subtle shifts missed, reported). A per-period recalibration was tested and rejected by the pre-registered rule (`docs/monitoring_preregistration.md`). Not built: live monitoring on the API, refusal-rate ratios by group in the monitor, an automatic macro-overlay trigger. Promotion of any new model is manual.

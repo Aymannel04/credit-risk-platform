@@ -42,10 +42,10 @@ and `docs/model_card.md` (one-page summary of the model and its limits).
 
 ```
 Phase 0  Audit and preparation       DONE
-Phase 1  Data platform               ~70%  (data, checks and CI done; pipeline tool and cloud copy still to do)
+Phase 1  Data platform               DONE  (data, checks, CI, Dagster pipeline, S3 + Athena lake with a parity test)
 Phase 2  Modeling                    DONE  (models, exam, money, explanations, fairness, model card, model v2)
-Phase 3  Serving and monitoring      to do (API, drift alarms, pipeline, deployment on AWS)
-Phase 4  Credit-memo agent           to do
+Phase 3  Serving and monitoring      DONE  (API, drift monitors, container, Lambda, automatic deployment with OIDC)
+Phase 4  Credit-memo agent           in progress (design agreed, not built yet)
 Phase 5  Final README, demo, interview preparation
 ```
 

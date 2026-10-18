@@ -33,7 +33,7 @@ powershell -ExecutionPolicy Bypass -File infra\01_create_ecr.ps1
 | `99_teardown.ps1` | any | Deletes what the scripts above created, in a safe order (the S3 bucket is emptied of every version first), asking you to type each name |
 
 After `04_create_lake.ps1`, the data goes up with `python scripts/lake_sync.py upload`, then `tables`, then `parity` (see the header of that script).
-More scripts are added here as steps are approved (the deploy workflow with OIDC).
+The deploy workflow itself lives in `.github/workflows/deploy.yml` (see the section below). More scripts are added here as steps are approved.
 
 Before `02_push_image.ps1`: Docker Desktop must be running and every change must be committed (the image tag is the git commit).
 

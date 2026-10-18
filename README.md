@@ -108,6 +108,7 @@ docker run --rm -p 8080:8080 scoring-api:local
 
 | If you want | Read |
 |---|---|
+| The whole project one part at a time: where it fits, why, how, how it works (with pictures) | [`docs/walkthrough/`](docs/walkthrough/README.md) |
 | A plain-language tour from zero (no finance background needed) | [`docs/guide/`](docs/guide/README.md) |
 | Every decision with its evidence, including bugs found and wrong turns | [`docs/decision-log.md`](docs/decision-log.md) |
 | The model in one page, with its limits | [`docs/model_card.md`](docs/model_card.md) |
