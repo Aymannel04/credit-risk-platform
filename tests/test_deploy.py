@@ -266,6 +266,11 @@ def test_the_runner_image_is_pinned(wf):
     assert wf["jobs"]["deploy"]["runs-on"] == "ubuntu-24.04"
 
 
+def test_ci_uses_the_same_pinned_runner_as_the_deploy():
+    ci = (WORKFLOWS / "ci.yml").read_text(encoding="utf-8")
+    assert "runs-on: ubuntu-24.04" in ci and "ubuntu-latest" not in ci.replace("'ubuntu-latest'", "")
+
+
 def test_a_refused_login_fails_fast(steps):
     assert steps[_index(steps, "Get a temporary AWS key")]["with"]["retry-max-attempts"] == 3
 

@@ -12,7 +12,7 @@ Every number below comes from a result file in this repository (see the README t
 **Data / AI engineering**
 1. Built a reproducible **Dagster** pipeline (raw → staging → features → model → monitoring) on Freddie Mac loan-level data (450k loans, 9 vintages) with blocking data-quality checks and hash-based splits; a full rebuild reproduces the same data and model (row fingerprint, model id).
 2. Served the model through a strict **FastAPI** service (typed validation, no decision logic, no data stored) packaged as a 51 MB **Docker** image on **AWS Lambda** behind a signature-protected Function URL, with a least-privilege IAM role and scripted infrastructure (dry-run, idempotent, teardown).
-3. **CI** with 496 automated tests that also builds the container, checks its exact contents and smoke-tests it; immutable, commit-tagged images.
+3. **CI** with 497 automated tests that also builds the container, checks its exact contents and smoke-tests it; immutable, commit-tagged images.
 4. Drift monitoring (**PSI/CSI**, level ratio) validated with simulated-shift drills: 7/7 expected alerts caught, 2 blind spots documented. Measured on the live Lambda: **2.7 ms** median warm request (p95 3.0 ms), **about 1.2 s** cold start, **78 MB** of 512 MB used.
 
 **ML / data science**
