@@ -15,7 +15,9 @@ from decimal import ROUND_HALF_UP, Decimal
 
 from agent.policy import DATA_SECTION_INDEX, RECOMMENDATION_SECTION_INDEX, Policy
 
-NUMBER = re.compile(r"\d+(?:[.,]\d+)?")
+# A number: digits, maybe a decimal part, and a minus sign when it is a real sign (not preceded by a letter or digit, so "36-40" is two numbers).
+# Both the hyphen and the typographic minus are read as a sign: a negative fact (an interest rate below its reference) must be copied with it.
+NUMBER = re.compile(r"(?:(?<!\w)[-−])?\d+(?:[.,]\d+)?")
 HEADING = re.compile(r"^##\s+(.+?)\s*$", re.MULTILINE)
 
 
@@ -25,13 +27,23 @@ class Problem:
     message: str
 
 
+def count_words(text: str) -> int:
+    """The one way words are counted, here and in the instructions given to the writer."""
+    return len(re.findall(r"\w+", text))
+
+
 def _squash(text: str) -> str:
     """Single spaces, and no space before a percent sign, so '9,17 %' and '9,17%' are the same."""
     return re.sub(r"\s+%", "%", re.sub(r"\s+", " ", text)).strip()
 
 
+def _plain(token: str) -> str:
+    """The token as text Decimal can read: decimal point, ordinary minus."""
+    return token.replace("−", "-").replace(",", ".")
+
+
 def _decimals(token: str) -> int:
-    return len(token.replace(",", ".").split(".")[1]) if re.search(r"[.,]", token) else 0
+    return len(_plain(token).split(".")[1]) if "." in _plain(token) else 0
 
 
 def _allowed_values(facts: dict, policy: Policy) -> list[Decimal]:
@@ -39,7 +51,7 @@ def _allowed_values(facts: dict, policy: Policy) -> list[Decimal]:
 
 
 def _is_fact(token: str, allowed: list[Decimal]) -> bool:
-    value, d = Decimal(token.replace(",", ".")), _decimals(token)
+    value, d = Decimal(_plain(token)), _decimals(token)
     unit = Decimal(1).scaleb(-d)
     return any(a.quantize(unit, rounding=ROUND_HALF_UP) == value for a in allowed)
 
@@ -67,8 +79,14 @@ def validate_memo(memo: str, facts: dict, policy: Policy) -> list[Problem]:
 
     sections, before = _sections(memo, facts["headings"])
     if sections is None:
-        problems.append(Problem("SECTIONS", "Use exactly these six headings, in this order, each on its own line starting with '## ': "
-                                + " | ".join(facts["headings"]) + "."))
+        data_title = facts["headings"][DATA_SECTION_INDEX]  # inserted by the system, so it is not the writer's to get right or wrong
+        written = [m.group(1) for m in HEADING.finditer(memo) if m.group(1) != data_title]
+        wanted = [h for h in facts["headings"] if h != data_title]
+        missing = [h for h in wanted if h not in written]
+        extra = [h for h in written if h not in facts["headings"]]
+        details = (f" Missing: {', '.join(missing)}." if missing else "") + (f" Not allowed: {', '.join(extra)}." if extra else "")
+        problems.append(Problem("SECTIONS", "Use exactly these five headings, in this order, each on its own line starting with '## ': "
+                                + " | ".join(wanted) + f". You wrote: {' | '.join(written) or 'no heading'}." + details))
     else:
         if before.strip():
             problems.append(Problem("TEXT_OUTSIDE_SECTIONS", "Write nothing before the first heading."))
@@ -79,9 +97,13 @@ def validate_memo(memo: str, facts: dict, policy: Policy) -> list[Problem]:
         if "data_section" in facts and _squash(sections[data_heading]) != _squash(facts["data_section"]):
             problems.append(Problem("DATA_SECTION_ALTERED", f"The section '{data_heading}' is written by the system: do not change it."))
 
-    words = len(re.findall(r"\w+", memo))
-    if not policy.min_words <= words <= policy.max_words:
-        problems.append(Problem("LENGTH", f"The memo has {words} words; it must have between {policy.min_words} and {policy.max_words}."))
+    words = count_words(memo)
+    if words > policy.max_words:
+        cut = words - policy.max_words + 20
+        problems.append(Problem("LENGTH", f"The memo has {words} words and the limit is {policy.max_words}: remove at least {cut} words of your own text "
+                                          "(the system's 'Loan data' section and the fixed sentences cannot be shortened)."))
+    elif words < policy.min_words:
+        problems.append(Problem("LENGTH", f"The memo has {words} words; it needs at least {policy.min_words}."))
 
     allowed = _allowed_values(facts, policy)
     bad = sorted({t for t in NUMBER.findall(memo) if not _is_fact(t, allowed)})

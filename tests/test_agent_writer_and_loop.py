@@ -367,3 +367,51 @@ def test_the_attempts_view_shows_what_the_model_wrote_and_what_the_inspector_sai
     assert "more characters]" in show_attempts(long, limit=100)
     broken = generate_memo(facts, ScriptedWriter([]), POLICY)
     assert "the writer failed: the scripted writer has no reply left" in show_attempts(broken)
+
+
+# ---------- the writer is told the REAL length budget, and the complaints say exactly what to fix ----------
+
+def _skeleton(facts, filler_words):
+    """A memo made only of what the budget accounts for (titles, the system's section, the sentences to copy, the decision word, the risk)
+    plus `filler_words` words of the writer's own."""
+    h = facts["headings"]
+    limits = " ".join([facts["disclaimer"], facts["caution"], *([facts["outside_range_text"]] if facts["outside_range_text"] else [])])
+    own = "mot " * filler_words
+    return "\n".join([f"## {h[0]}", facts["display"]["probability_of_default"] + " " + own, f"## {h[1]}", facts["data_section"], f"## {h[2]}", "x",
+                      f"## {h[3]}", "- x", f"## {h[4]}", facts["recommendation_label"], f"## {h[5]}", limits]) + "\n"
+
+
+def test_the_word_budget_in_the_instructions_agrees_with_the_inspector(sheets):
+    from agent.prompt import word_budget
+    from agent.validator import count_words
+
+    for key, facts in sheets.items():
+        budget = word_budget(facts, POLICY)
+        system = build_system(facts, POLICY)
+        assert 20 <= budget < POLICY.max_words and f"at most {budget} words of your own" in system and f"under {POLICY.max_words} words" in system, key
+        full = _skeleton(facts, budget)
+        assert count_words(full) <= POLICY.max_words, (key, count_words(full))   # the whole budget used: still inside the limit
+        assert "LENGTH" not in {p.code for p in validate_memo(full, facts, POLICY)}, key
+        beyond = _skeleton(facts, budget + 15 + 2)                                # beyond the budget AND the safety margin: over the limit
+        assert count_words(beyond) > POLICY.max_words and "LENGTH" in {p.code for p in validate_memo(beyond, facts, POLICY)}, key
+
+
+def test_the_length_complaint_says_how_much_to_cut(sheets):
+    facts = sheets[("golden_decline", "fr")]
+    from agent.validator import count_words
+
+    memo = render_template_memo(facts)
+    long = memo + "\n" + "mot " * (POLICY.max_words - count_words(memo) + 4)
+    (problem,) = [p for p in validate_memo(long, facts, POLICY) if p.code == "LENGTH"]
+    assert f"limit is {POLICY.max_words}" in problem.message and "remove at least 24 words" in problem.message
+    short = "".join(f"## {h}\nx\n" for h in facts["headings"])
+    assert any("needs at least" in p.message for p in validate_memo(short, facts, POLICY) if p.code == "LENGTH")
+
+
+def test_the_headings_complaint_lists_what_was_written_and_what_is_missing(sheets):
+    facts = sheets[("golden_decline", "fr")]
+    memo = assemble(good_reply(facts).replace("## Limites", "## Notes"), facts)
+    (problem,) = [p for p in validate_memo(memo, facts, POLICY) if p.code == "SECTIONS"]
+    assert "You wrote: Résumé | Analyse du risque | Raisons principales | Recommandation | Notes" in problem.message
+    assert "Missing: Limites" in problem.message and "Not allowed: Notes" in problem.message
+    assert "Données du dossier" not in problem.message.split("You wrote:")[1], "the system's own section is never blamed on the writer"

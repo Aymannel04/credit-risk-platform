@@ -1,0 +1,322 @@
+[
+ {
+  "id": "h01",
+  "description": "random loan (fixed seed)",
+  "loan": {
+   "credit_score": 670,
+   "dti": 30.0,
+   "ltv": 97.0,
+   "cltv": 100.0,
+   "interest_rate": 3.4,
+   "reference_rate": 3.7,
+   "number_of_borrowers": 2,
+   "mi_pct": 12.0,
+   "term_months": 120,
+   "purpose": "C"
+  }
+ },
+ {
+  "id": "h02",
+  "description": "random loan (fixed seed)",
+  "loan": {
+   "credit_score": 600,
+   "dti": 20.0,
+   "ltv": 80.0,
+   "cltv": 80.0,
+   "interest_rate": 6.5,
+   "reference_rate": 4.0,
+   "number_of_borrowers": 1,
+   "mi_pct": 18.0,
+   "term_months": 360,
+   "purpose": "P"
+  }
+ },
+ {
+  "id": "h03",
+  "description": "random loan (fixed seed)",
+  "loan": {
+   "credit_score": 590,
+   "dti": 14.0,
+   "ltv": 80.0,
+   "cltv": 80.0,
+   "interest_rate": 3.9,
+   "reference_rate": 4.0,
+   "number_of_borrowers": 1,
+   "mi_pct": 0.0,
+   "term_months": 240,
+   "purpose": "P"
+  }
+ },
+ {
+  "id": "h04",
+  "description": "random loan (fixed seed)",
+  "loan": {
+   "credit_score": 815,
+   "dti": 48.0,
+   "ltv": 75.0,
+   "cltv": 75.0,
+   "interest_rate": 7.0,
+   "reference_rate": 4.5,
+   "number_of_borrowers": 2,
+   "mi_pct": 18.0,
+   "term_months": 360,
+   "purpose": "R"
+  }
+ },
+ {
+  "id": "h05",
+  "description": "random loan (fixed seed)",
+  "loan": {
+   "credit_score": 645,
+   "dti": 34.0,
+   "ltv": 80.0,
+   "cltv": 80.0,
+   "interest_rate": 4.5,
+   "reference_rate": 4.6,
+   "number_of_borrowers": 1,
+   "mi_pct": 0.0,
+   "term_months": 120,
+   "purpose": "P"
+  }
+ },
+ {
+  "id": "h06",
+  "description": "random loan (fixed seed)",
+  "loan": {
+   "credit_score": 715,
+   "dti": 40.0,
+   "ltv": 90.0,
+   "cltv": 100.0,
+   "interest_rate": 4.4,
+   "reference_rate": 4.0,
+   "number_of_borrowers": 1,
+   "mi_pct": 30.0,
+   "term_months": 360,
+   "purpose": "N"
+  }
+ },
+ {
+  "id": "h07",
+  "description": "random loan (fixed seed)",
+  "loan": {
+   "credit_score": 565,
+   "dti": 52.0,
+   "ltv": 80.0,
+   "cltv": 80.0,
+   "interest_rate": 3.9,
+   "reference_rate": 4.2,
+   "number_of_borrowers": 2,
+   "mi_pct": 18.0,
+   "term_months": 360,
+   "purpose": "P"
+  }
+ },
+ {
+  "id": "h08",
+  "description": "random loan (fixed seed)",
+  "loan": {
+   "credit_score": 665,
+   "dti": 26.0,
+   "ltv": 95.0,
+   "cltv": 100.0,
+   "interest_rate": 4.1,
+   "reference_rate": 3.3,
+   "number_of_borrowers": 2,
+   "mi_pct": 0.0,
+   "term_months": 240,
+   "purpose": "N"
+  }
+ },
+ {
+  "id": "h09",
+  "description": "random loan (fixed seed)",
+  "loan": {
+   "credit_score": 730,
+   "dti": 28.0,
+   "ltv": 80.0,
+   "cltv": 85.0,
+   "interest_rate": 5.1,
+   "reference_rate": 4.3,
+   "number_of_borrowers": 1,
+   "mi_pct": 0.0,
+   "term_months": 300,
+   "purpose": "R"
+  }
+ },
+ {
+  "id": "h10",
+  "description": "random loan (fixed seed)",
+  "loan": {
+   "credit_score": 645,
+   "dti": 20.0,
+   "ltv": 70.0,
+   "cltv": 80.0,
+   "interest_rate": 5.7,
+   "reference_rate": 4.2,
+   "number_of_borrowers": 1,
+   "mi_pct": 0.0,
+   "term_months": 120,
+   "purpose": "P"
+  }
+ },
+ {
+  "id": "h11",
+  "description": "random loan (fixed seed)",
+  "loan": {
+   "credit_score": 775,
+   "dti": 34.0,
+   "ltv": 70.0,
+   "cltv": 75.0,
+   "interest_rate": 3.8,
+   "reference_rate": 3.7,
+   "number_of_borrowers": 1,
+   "mi_pct": 0.0,
+   "term_months": 120,
+   "purpose": "N"
+  }
+ },
+ {
+  "id": "h12",
+  "description": "random loan (fixed seed)",
+  "loan": {
+   "credit_score": 685,
+   "dti": null,
+   "ltv": 95.0,
+   "cltv": 95.0,
+   "interest_rate": 4.2,
+   "reference_rate": 4.1,
+   "number_of_borrowers": 1,
+   "mi_pct": 0.0,
+   "term_months": 120,
+   "purpose": "R"
+  }
+ },
+ {
+  "id": "h13",
+  "description": "random loan (fixed seed)",
+  "loan": {
+   "credit_score": 780,
+   "dti": 32.0,
+   "ltv": 97.0,
+   "cltv": 97.0,
+   "interest_rate": 5.7,
+   "reference_rate": 3.2,
+   "number_of_borrowers": 3,
+   "mi_pct": 18.0,
+   "term_months": 360,
+   "purpose": "R"
+  }
+ },
+ {
+  "id": "h14",
+  "description": "random loan (fixed seed)",
+  "loan": {
+   "credit_score": 820,
+   "dti": 24.0,
+   "ltv": 60.0,
+   "cltv": 70.0,
+   "interest_rate": 5.9,
+   "reference_rate": 4.4,
+   "number_of_borrowers": 1,
+   "mi_pct": 12.0,
+   "term_months": 300,
+   "purpose": "P"
+  }
+ },
+ {
+  "id": "h15",
+  "description": "random loan (fixed seed)",
+  "loan": {
+   "credit_score": 600,
+   "dti": 26.0,
+   "ltv": 95.0,
+   "cltv": 100.0,
+   "interest_rate": 3.1,
+   "reference_rate": 3.2,
+   "number_of_borrowers": 1,
+   "mi_pct": 12.0,
+   "term_months": 180,
+   "purpose": "P"
+  }
+ },
+ {
+  "id": "h16",
+  "description": "random loan (fixed seed)",
+  "loan": {
+   "credit_score": 820,
+   "dti": 12.0,
+   "ltv": 85.0,
+   "cltv": 90.0,
+   "interest_rate": 5.6,
+   "reference_rate": 4.8,
+   "number_of_borrowers": 3,
+   "mi_pct": 30.0,
+   "term_months": 240,
+   "purpose": "P"
+  }
+ },
+ {
+  "id": "h17",
+  "description": "random loan (fixed seed)",
+  "loan": {
+   "credit_score": 795,
+   "dti": 26.0,
+   "ltv": 85.0,
+   "cltv": 95.0,
+   "interest_rate": 4.2,
+   "reference_rate": 4.1,
+   "number_of_borrowers": 2,
+   "mi_pct": 0.0,
+   "term_months": 120,
+   "purpose": "C"
+  }
+ },
+ {
+  "id": "h18",
+  "description": "random loan (fixed seed)",
+  "loan": {
+   "credit_score": 775,
+   "dti": 40.0,
+   "ltv": 40.0,
+   "cltv": 50.0,
+   "interest_rate": 5.1,
+   "reference_rate": 4.3,
+   "number_of_borrowers": 1,
+   "mi_pct": 0.0,
+   "term_months": 360,
+   "purpose": "P"
+  }
+ },
+ {
+  "id": "h19",
+  "description": "random loan (fixed seed)",
+  "loan": {
+   "credit_score": 655,
+   "dti": null,
+   "ltv": 85.0,
+   "cltv": 85.0,
+   "interest_rate": 4.9,
+   "reference_rate": 3.4,
+   "number_of_borrowers": 1,
+   "mi_pct": 0.0,
+   "term_months": 300,
+   "purpose": "N"
+  }
+ },
+ {
+  "id": "h20",
+  "description": "random loan (fixed seed)",
+  "loan": {
+   "credit_score": 730,
+   "dti": 56.0,
+   "ltv": 60.0,
+   "cltv": 65.0,
+   "interest_rate": 4.2,
+   "reference_rate": 4.1,
+   "number_of_borrowers": 2,
+   "mi_pct": 0.0,
+   "term_months": 120,
+   "purpose": "P"
+  }
+ }
+]

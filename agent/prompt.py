@@ -6,7 +6,7 @@ already taken, and the sentences it must copy. It never receives the raw API ans
 import json
 
 from agent.policy import DATA_SECTION_INDEX, Policy
-from agent.validator import Problem, problems_to_text
+from agent.validator import Problem, count_words, problems_to_text
 
 LANGUAGE_NAMES = {"fr": "French", "en": "English"}
 
@@ -22,7 +22,17 @@ Hard rules. A program checks every one of them and throws away any memo that bre
 5. In the first section, state the default probability exactly as written: {risk}.
 6. In the last section ("{limits_title}"), copy these sentences word for word, each one complete: {fixed_sentences}
 7. In the section "{reasons_title}", explain the reasons in your own words, one bullet each, and copy the points lost exactly.
-8. Keep your five sections between 90 and 160 words in total. Be factual and neutral."""
+8. Length. The finished memo, with the section the system adds, must stay under {max_words} words, and the program counts every word. It is already counted for you: apart from the titles, the sentences you must copy and the system's section, you may write at most {budget} words of your own. Be brief and factual: one short sentence per bullet, one or two short sentences in each other section."""
+
+
+def word_budget(facts: dict, policy: Policy, safety: int = 15) -> int:
+    """How many words of its own the writer may use: the limit, minus what the system adds (its section and its title), the titles of the
+    five sections, the sentences to copy, and a safety margin. Counted with the inspector's own function, so the two can never disagree."""
+    headings = facts["headings"]
+    fixed = [facts["disclaimer"], facts["caution"], *([facts["outside_range_text"]] if facts["outside_range_text"] else [])]
+    used = (count_words(facts["data_section"]) + sum(count_words(h) for h in headings) + sum(count_words(s) for s in fixed)
+            + count_words(facts["recommendation_label"]) + count_words(facts["display"]["probability_of_default"]))
+    return max(policy.max_words - used - safety, 20)
 
 
 def build_system(facts: dict, policy: Policy) -> str:
@@ -34,7 +44,7 @@ def build_system(facts: dict, policy: Policy) -> str:
         language=LANGUAGE_NAMES[facts["language"]], titles=" | ".join(writer_titles), data_title=headings[DATA_SECTION_INDEX],
         label=facts["recommendation_label"], recommendation_title=headings[4], forbidden=", ".join(lang.forbidden),
         risk=facts["display"]["probability_of_default"], limits_title=headings[5], reasons_title=headings[3],
-        fixed_sentences=" ".join(f'"{s}"' for s in fixed))
+        fixed_sentences=" ".join(f'"{s}"' for s in fixed), max_words=policy.max_words, budget=word_budget(facts, policy))
 
 
 def writer_view(facts: dict) -> dict:

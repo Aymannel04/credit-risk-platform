@@ -203,3 +203,35 @@ def test_known_limit_swapping_two_facts_in_the_free_text_is_not_caught(sheets):
     swapped = memo.replace("policy: 2% and 5%", "policy: 5% and 2%")
     assert swapped != memo
     assert validate_memo(swapped, facts, POLICY) == []
+
+
+# ---------- negative numbers (found by the held-out loans: an interest rate below its reference gives a negative gap) ----------
+
+def _negative_gap_facts():
+    from tests.agent_cases import BASE
+
+    loan = dict(BASE, interest_rate=3.4, reference_rate=3.7)
+    answer = explain_all()["golden_decline"]
+    return build_facts(loan, answer, POLICY, "fr")
+
+
+def test_a_negative_fact_is_copied_with_its_sign_and_the_backup_memo_passes():
+    facts = _negative_gap_facts()
+    assert facts["numbers"]["rate_spread"] == "-0.3" and facts["display"]["rate_spread"] == "-0,3 %"
+    memo = render_template_memo(facts)
+    assert "-0,3 %" in memo and validate_memo(memo, facts, POLICY) == []
+
+
+def test_a_lost_or_flipped_sign_is_caught_and_the_typographic_minus_is_accepted():
+    facts = _negative_gap_facts()
+    memo = render_template_memo(facts)
+    assert "NUMBER_NOT_IN_FACTS" in codes(memo + "\nL'écart de taux est de 0,3 %.", facts), "0,3 is not -0,3"
+    assert "NUMBER_NOT_IN_FACTS" not in codes(memo + "\nL'écart de taux est de -0,3 %.", facts)
+    assert "NUMBER_NOT_IN_FACTS" not in codes(memo + "\nL'écart de taux est de " + chr(0x2212) + "0,3 %.", facts)
+    assert "NUMBER_NOT_IN_FACTS" in codes(memo + "\nUn écart de +0,3 % ou -3,4 %.", facts)
+
+
+def test_a_hyphen_between_numbers_is_not_a_minus_sign():
+    from agent.validator import NUMBER
+
+    assert NUMBER.findall("ratio 36-40 et x-0,3 puis -5 et (-0,3)") == ["36", "40", "0,3", "-5", "-0,3"]

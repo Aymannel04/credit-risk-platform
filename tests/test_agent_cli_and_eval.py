@@ -340,3 +340,53 @@ def test_temperature_zero_is_the_default_for_real_writers_and_is_recorded(monkey
     monkeypatch.setattr(evaluate, "make_writer", lambda *a, **k: ScriptedWriter([], name="x"))
     evaluate.main(["--writer", "nvidia", "--model", "m", "--cases", "01_prime_excellent", "--temperature", "0.3", "--max-tokens", "123"])
     assert saved["result"]["settings"] == {"temperature": 0.3, "max_tokens": 123, "timeout_s": 150.0}
+
+
+# ---------- the held-out loans ----------
+
+HOLDOUT_PATH = ROOT / "agent" / "cases" / "holdout_cases.json"
+
+
+def test_the_held_out_loans_are_reproducible_distinct_and_valid(scorer):
+    import importlib.util
+
+    spec = importlib.util.spec_from_file_location("make_agent_holdout", ROOT / "scripts" / "make_agent_holdout.py")
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    holdout = evaluate.load_cases(HOLDOUT_PATH)
+    assert holdout == module.make_loans(), "the file must be exactly what the seeded script produces"
+    assert len(holdout) == 20 and {c["id"] for c in holdout}.isdisjoint({c["id"] for c in CASES})
+    tuning_loans = {json.dumps(c["loan"], sort_keys=True) for c in CASES}
+    assert not any(json.dumps(c["loan"], sort_keys=True) in tuning_loans for c in holdout), "no held-out loan may equal a tuning loan"
+    decisions = set()
+    for case in holdout:
+        answer = scorer.explain(case["loan"])
+        decisions.add("approve" if answer["probability_of_default"] < POLICY.approve_below else "decline" if answer["probability_of_default"] > POLICY.decline_above else "refer")
+    assert decisions == {"approve", "refer", "decline"}
+
+
+def test_the_command_runs_a_chosen_file_of_loans(monkeypatch, tmp_path):
+    saved = {}
+    monkeypatch.setattr(evaluate, "save", lambda result, label, policy, out_dir=None: (saved.update(result=result), (tmp_path / "a", tmp_path / "b"))[1])
+    assert evaluate.main(["--writer", "pretend", "--cases-file", str(HOLDOUT_PATH), "--label", "holdout_pretend"]) == 0
+    assert saved["result"]["cases"] == 20 and saved["result"]["accepted_first_try"] == 20
+
+
+def test_the_backup_memo_passes_the_inspector_for_every_held_out_loan_in_both_languages(scorer):
+    """The 20 random loans found a real bug (negative rate gaps) that the hand-picked loans did not: this keeps it fixed."""
+    from agent.facts import build_facts
+    from agent.template import render_template_memo
+    from agent.validator import validate_memo
+
+    for case in evaluate.load_cases(HOLDOUT_PATH):
+        answer = scorer.explain(case["loan"])
+        for lang in ("fr", "en"):
+            facts = build_facts(case["loan"], answer, POLICY, lang)
+            assert validate_memo(render_template_memo(facts), facts, POLICY) == [], (case["id"], lang)
+            assert validate_memo(evaluate_memo_of_pretend(facts), facts, POLICY) == [], (case["id"], lang)
+
+
+def evaluate_memo_of_pretend(facts):
+    from agent.memo import assemble
+
+    return assemble(good_reply(facts), facts)

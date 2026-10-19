@@ -128,14 +128,16 @@ def main(argv: list[str] | None = None) -> int:
     ap.add_argument("--max-tokens", type=int, default=2500, help="room for the model's answer (reasoning models also think inside it)")
     ap.add_argument("--timeout", type=float, default=150.0, help="seconds to wait for the model")
     ap.add_argument("--temperature", type=float, default=0.0, help="0 = as repeatable as the service allows")
-    ap.add_argument("--cases", default=None, help="only these case ids, separated by commas (default: all 15)")
+    ap.add_argument("--cases", default=None, help="only these case ids, separated by commas (default: all of the file)")
+    ap.add_argument("--cases-file", default=str(CASES_PATH), help="the file of loans: agent/cases/eval_cases.json (15, used while tuning) "
+                                                                  "or agent/cases/holdout_cases.json (20, never looked at while tuning)")
     ap.add_argument("--lang", choices=("fr", "en"), default="fr")
     ap.add_argument("--live-url", default=os.environ.get("CREDIT_API_URL"))
     ap.add_argument("--profile", default="credit-admin")
     ap.add_argument("--label", default=None, help="name of the result files (default: the writer)")
     a = ap.parse_args(argv)
     try:
-        policy, cases = load_policy(), load_cases()
+        policy, cases = load_policy(), load_cases(Path(a.cases_file))
         if a.cases:
             wanted = [c.strip() for c in a.cases.split(",") if c.strip()]
             unknown = sorted(set(wanted) - {c["id"] for c in cases})
