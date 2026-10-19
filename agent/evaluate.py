@@ -10,10 +10,10 @@ import argparse
 import json
 import os
 import sys
-import time
 from collections import Counter
 from datetime import datetime, timezone
 from pathlib import Path
+from time import monotonic
 
 from agent.api_client import ApiError, LiveScorer, OfflineScorer
 from agent.doubles import SEEDED_KINDS, good_reply, seeded_reply
@@ -41,9 +41,9 @@ def evaluate_cases(cases: list[dict], scorer, writer_for, policy: Policy, langua
     rows = []
     for index, case in enumerate(cases, start=1):
         facts = build_facts(case["loan"], scorer.explain(case["loan"]), policy, language)
-        started = time.monotonic()
+        started = monotonic()
         result = generate_memo(facts, writer_for(facts), policy)
-        seconds = round(time.monotonic() - started, 1)
+        seconds = round(monotonic() - started, 1)
         rows.append({
             "case": case["id"], "decision": facts["recommendation"], "status": result.status, "tries": len(result.attempts),
             "first_try": result.first_try, "seconds": seconds, "problems_by_try": [sorted({p.code for p in a.problems}) for a in result.attempts],

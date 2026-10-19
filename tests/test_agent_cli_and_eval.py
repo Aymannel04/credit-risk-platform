@@ -394,7 +394,7 @@ def evaluate_memo_of_pretend(facts):
 
 def test_the_exam_measures_the_seconds_each_loan_takes(scorer, monkeypatch):
     clock = iter([0.0, 12.34, 100.0, 104.0, 200.0, 220.06])  # start and end of three loans: 12.3 s, 4.0 s, 20.1 s
-    monkeypatch.setattr(evaluate.time, "monotonic", lambda: next(clock))
+    monkeypatch.setattr(evaluate, "monotonic", lambda: next(clock))
     seen = []
     result = evaluate.evaluate_cases(CASES[:3], scorer, lambda f: ScriptedWriter([good_reply(f)]), POLICY, "fr", "slow",
                                      progress=lambda i, n, row: seen.append(row["seconds"]))
