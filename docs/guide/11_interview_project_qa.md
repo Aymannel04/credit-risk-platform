@@ -120,7 +120,7 @@ Both are true and they measure different things. The 3 ms is the function's own 
 No, and the README says so. Missing: an automatic rollback (deployment is automatic, but if the live check fails the previous image is put back by hand), alerting, a public endpoint, a scheduler, partitions, model governance, real-time features.
 
 **35. What would you do with one more month?**
-(1) An automatic rollback when the live check fails, and a deploy that skips documentation-only pushes. (2) The lake read by the monitoring, not only tested for parity. (3) The Vasicek climate dial or a house-price variable for the level. (4) A read-only memo agent whose numbers are all checked by a validator.
+(1) An automatic rollback when the live check fails, and a deploy that skips documentation-only pushes. (2) The lake read by the monitoring, not only tested for parity. (3) The Vasicek climate dial or a house-price variable for the level. (4) A position-aware inspector, so that two swapped facts are caught in the free text too, and the memo agent deployed behind the API with its own evaluation run on a schedule.
 
 **36. What did you not do that you would normally do?**
 Hyper-parameter tuning (the question was validation, not squeezing a score), a macro model for the level, a public demo, Evidently.
@@ -144,3 +144,35 @@ The trust rule used the subject format from the documentation example (`repo:own
 
 **41. Why is the image built and tested before AWS is touched?**
 So that an AWS key never exists while untested code runs: the job has no AWS access until lint, tests, the image build, the check of the image's exact file list and the container smoke test have passed. After the update, the job checks that the function runs exactly the digest that was pushed, then calls the live locked URL with signed requests.
+
+## F. The memo agent (added once it was built and measured)
+
+**42. What does the memo agent do, and what can it never do?**
+It writes a short credit memo (French or English) for one loan. Plain code does everything that matters: it asks the scoring API (the agent's only tool, read-only, a POST to `/explain`), computes the recommendation (approve, refer to a human, decline) from two lines in a settings file, and builds a fact sheet. The language model only WRITES the sentences. A checker (the inspector, also plain code) compares the memo with the fact sheet. The agent cannot change the model, the data or anything on AWS: a test scans the package and finds no way to delete a file, start a program or import an AWS library, and the only file it writes is the results file or the memo file you ask for.
+
+**43. Why not let the language model decide?**
+A language model writes fluent text and can change a number without any sign that it did. In credit a wrong number or a flipped decision is the worst possible failure. So the decision is a few lines of code that can be read, tested and reproduced, and the model is only given the finished decision to word.
+
+**44. How do you stop the model from changing a number?**
+Every number is on the fact sheet in two forms: the plain form for checking and the display form to copy (`9,17 %` in French). The inspector reads every number in the memo, with its sign, and accepts it only if it equals a fact rounded to the precision written; spelled-out numbers ("deux", "pour cent") are refused through a word list; the decision word, the six headings, a disclaimer, a caution sentence and the default probability must be present; promises ("garanti", "sans risque") are refused. The 'Loan data' section is written by code and compared word for word. A rejected memo goes back to the model with a list of complaints (at most 2 rewrites); if it still fails, the memo written by code is used and flagged "LLM memo rejected".
+
+**45. What can the inspector NOT catch?**
+It checks that a number is ON the sheet, not WHICH fact it belongs to: in the free text, swapping two facts (the two policy lines, 2 and 5) passes. That is why the section with the loan's own numbers is written by code and compared exactly. Number words are caught only through a list per language; the language is checked through the fixed headings and the fixed disclaimer, not by detecting the language of the sentences. These limits are written in the code and each has a test that documents it.
+
+**46. How did you evaluate it, and what could have gone wrong with the evaluation?**
+Three kinds of test. (1) Offline, with pretend writers: 10 kinds of deliberate mistake (wrong number, invented number, wrong decision word, promise, number in words, missing disclaimer, wrong heading, text before the first heading, missing risk, other language) on 15 loans, forced on every try: 150 of 150 rejected, none reached the reader. That proves the checking, not a real model. (2) A real small model (Llama 3.2 11B, free service, temperature 0) on 15 loans I had been looking at while writing the instructions: 14 of 15 accepted on the first try. (3) The same model on 20 NEW random loans from a fixed seed: 12 of 20 on the first try, 3 after a rewrite, 5 backup memos. The difference is overfitting: I had tuned the instructions on the first 15. So the tuning score is not the result; I generated a second fresh set, never looked at, for the number I report. It is the same discipline as the frozen exam of the credit model.
+
+**47. Tell me about a bug your tests found in your own code.**
+Three. (a) The English decision word REFER matched the word "Reference" (as in "Reference rate"), so a correct memo was refused: decision words are now whole-word patterns. (b) The inspector ignored the minus sign, so for a loan whose rate is BELOW its reference (a negative gap, `-0,3 %`) even the memo written by code was rejected: none of my six hand-picked loans had a negative gap, 20 random loans found it at once. (c) My own backup sentence contained "deux" ("entre les deux lignes") and the inspector refused it: the checker is stricter than its author, which is the point.
+
+**48. Why a small model, and what did you learn about the models?**
+The task has nothing to figure out: the answer is on the fact sheet. A reasoning model (which writes private notes before answering) adds cost and risk: one model returned only its thinking even with 6,000 words of room, and the empty answer looked like a dead model until I read the reason the service gives (`finish_reason: length`). A list of models is also not a list of models you can call: of 81 names on the free service, a probe found that only a handful really answer. I also made a mistake worth telling: a big model seemed to fail three times, but the cause was my own too-small answer budget (900 words), not the model.
+
+**49. How do you keep the API key safe?**
+It exists only in an environment variable on my computer, created through the Windows settings window (typing it in a command would save it in the command history). The code knows only the name of the variable and sends the key only in the request header. Error messages hide the key and any long identifier (NVIDIA's own error text contains the account id). A test scans every text file of the repository for key-shaped values, and the results files are checked for keys, addresses and account numbers.
+
+**50. What happens when the model or the service fails?**
+Nothing bad: a network error, a wrong key, a busy service, an empty answer or nonsense all end in the memo written by code, with the reason recorded. A test forces each of these failures. The returned memo always passes the inspector, and if the backup memo ever failed it (a bug), the agent raises an error instead of publishing it.
+
+**51. Is it production-ready?**
+No, and I would say why: it runs from a command line, it is not deployed on AWS, it uses a free service with rate limits, the decision lines are an illustrative assumption (not a lending policy), and the numbers above are on made-up loans. What it demonstrates is the design: the code decides, the model words, a checker proves every number, and every failure ends in a safe memo.
