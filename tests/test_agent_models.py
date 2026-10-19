@@ -173,3 +173,10 @@ def test_each_probe_result_is_reported_before_the_next_model_is_asked(monkeypatc
     models.probe_models("https://x.test/v1", "FAKE_LLM_KEY", ["m1", "m2", "m3"], urlopen=urlopen, sleep=lambda s: None,
                         on_result=lambda r: events.append(("shown", r[0])))
     assert events == [("asked", "m1"), ("shown", "m1"), ("asked", "m2"), ("shown", "m2"), ("asked", "m3"), ("shown", "m3")]
+
+
+def test_service_detail_also_hides_opaque_account_ids_that_are_not_hexadecimal():
+    body = {"detail": "Function 'a1b2c3d4-e5f6-7890-abcd-ef1234567890': Not found for account 'AbCdEfGhIjKlMnOp_qRsT-uVwXyZ0123'"}
+    text = service_detail(err(404, body), KEY)
+    assert text == "Function '<id>': Not found for account '<id>'"
+    assert "AbCdEf" not in text

@@ -31,7 +31,7 @@ def service_detail(error: urllib.error.HTTPError, key: str, limit: int = 140) ->
     text = next((c for c in candidates if isinstance(c, str) and c.strip()), "")
     if key:
         text = text.replace(key, "***")
-    text = re.sub(r"[0-9a-fA-F][0-9a-fA-F-]{15,}", "<id>", text)          # uuids, account ids, hashes
+    text = re.sub(r"[A-Za-z0-9][A-Za-z0-9_\-]{19,}", "<id>", text)        # uuids, account ids, hashes, any long opaque identifier
     text = re.sub(r"nvapi-[A-Za-z0-9_\-]+", "***", text)
     text = re.sub(r"\s+", " ", re.sub(r"[\x00-\x1f]", " ", text)).strip()
     return text[:limit]
