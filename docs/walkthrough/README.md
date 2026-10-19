@@ -23,7 +23,7 @@ Read the files in order. Each file has the same six headings:
 | 09 | `09_container_and_lambda.md` | The lunchbox, the sleeping worker, the locked door |
 | 10 | `10_ci_and_automatic_deploy_oidc.md` | The robot, the guest list, the refused login |
 | 11 | `11_data_lake_s3_athena.md` | The warehouse, the librarian, the 200 MB cap |
-| 12 | `12_llm_memo_agent_PLANNED.md` | PLANNED, NOT BUILT: a memo writer checked by code |
+| 12 | `12_llm_memo_agent.md` | The chef, the writer and the inspector: a memo writer checked by code |
 | 13 | `13_mistakes_and_lessons.md` | Every real mistake and what it taught |
 
 Deeper reading (the older learning guide): `docs/guide/README.md`. Every decision with its evidence: `docs/decision-log.md`.
@@ -67,7 +67,7 @@ flowchart TB
     R --> LK["Warehouse<br/>S3 lake"]
     F --> LK
     LK --> A["Librarian<br/>Athena"]
-    AG["Memo agent<br/>PLANNED"] -.-> D
+    AG["Memo agent<br/>built"] -.-> D
 ```
 
 The dotted arrow is not built. The API does not read from the lake. Monitoring runs on request, not live.

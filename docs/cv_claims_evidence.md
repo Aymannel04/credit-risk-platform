@@ -19,7 +19,7 @@ The final CV (`AymanElBaida_CV_FINAL_FR.pdf`, English twin `AymanElBaida_Resume_
 | An unverified memo is never published | `agent/memo.py`: the result is either an accepted memo or the memo written by code; the backup is itself inspected (`MemoError` if it ever failed); `test_no_seeded_mistake_ever_reaches_the_reader` | built, tested |
 
 ## What the CV deliberately does NOT say
-- No pass rate of a language model. The real-model exams exist (`results/agent_eval_*llama*`) and are honest, but they are still being finished; the tuning loans scored better than the held-out loans, and a number must be quoted from the final held-out exam only.
+- No pass rate of a language model except the fresh held-out one: 18 of 20 memos accepted on the first try, 19 of 20 model-written, 0 of 23 tries rejected for safety (`results/agent_eval_llama11b_v3_fresh_fr.md`; one small free model, French, made-up loans, 95% interval 70% to 97% for the first-try figure). The tuning score (14 of 15) must never be quoted.
 - No "production", no automatic rollback, no public demo, no claim that the API reads from the lake or that monitoring runs live.
 - Tools tied only to the removed PipeDoctor project (Databricks, PySpark, Delta Lake, Unity Catalog, Terraform) are not listed.
 

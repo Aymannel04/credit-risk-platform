@@ -22,7 +22,8 @@ An end-to-end credit-risk project on real, public mortgage data (Freddie Mac): a
 | Monitoring | PSI/CSI and level monitors; fire drills with simulated shifts: **7 of 7** expected alerts caught, 2 subtle shifts missed and reported (`results/monitoring_report.md`) |
 | Pre-registered predictions | 11 of 13 hit for the monitoring study; the misses are published |
 | Live API on AWS Lambda (measured) | Warm request **2.7 ms** median (p95 3.0 ms); cold start about **1.2 to 1.3 s**; **78 MB** used of 512 MB; 71 invocations observed (`results/lambda_latency.md`) |
-| Engineering | 307 automated tests; CI also builds the container and smoke-tests it; a full rebuild from the raw files reproduces the same data and the same model (checked by a fingerprint of every row and the model id) |
+| Memo agent (read-only) | An inspector rejected **150 of 150** deliberately damaged memos (pretend writers, 10 kinds of mistake). A small free language model (Llama 3.2 11B), on **20 loans never looked at while tuning**: **18 memos accepted on the first try, 1 after a rewrite, 1 backup memo written by code, 0 of 23 tries rejected for a wrong number, a wrong decision or a promise** (`results/agent_eval_llama11b_v3_fresh_fr.md`, with its limits) |
+| Engineering | 496 automated tests; CI also builds the container and smoke-tests it; a full rebuild from the raw files reproduces the same data and the same model (checked by a fingerprint of every row and the model id) |
 
 ![Monitoring: level per vintage and the recalibration experiment](docs/monitoring.png)
 
@@ -46,7 +47,7 @@ flowchart TB
       M
       MON
     end
-    CI["GitHub Actions<br/>lint, 307 tests, build + smoke-test the image"] -.-> IMG
+    CI["GitHub Actions<br/>lint, 496 tests, build + smoke-test the image"] -.-> IMG
 ```
 
 | Part | What it does | Where |
@@ -60,6 +61,7 @@ flowchart TB
 | Pipeline | one command, up-to-date steps skipped, blocking checks | `pipeline/` (Dagster) |
 | Monitoring | PSI/CSI, observed/predicted level, simulated-shift drills | `credit/monitoring/` |
 | Cloud | container, ECR, Lambda, least-privilege role, locked URL; private S3 data lake read by Athena; scripts with dry-run and teardown | `Dockerfile`, `infra/`, `credit/cloud/` |
+| Memo agent | code asks the API and decides approve / refer / decline; a language model only writes; an inspector checks every number; a memo written by code is the fallback | `agent/` |
 
 ## What runs on AWS
 
@@ -73,6 +75,19 @@ The scoring API runs as a container image on **AWS Lambda** (eu-north-1) behind 
 
 There is no public demo URL on purpose (it would need a spending guard); a recorded demo is planned. The old Streamlit demo of v1 is still at https://creditscoringproject.streamlit.app/.
 
+## The memo agent
+
+A read-only agent drafts a short credit memo (French or English) for one loan. **Code does everything that matters**: it asks the scoring API (its only tool, a POST to `/explain`), computes the recommendation (approve, refer to a human, decline) from two lines in `config/memo_policy.yaml` (an illustrative assumption, not a lending policy), and builds a fact sheet. **The language model only words the memo.** An **inspector** (plain code, ten checks) reads every number with its sign, the decision word, the six headings, the fixed warnings and the forbidden promises; a rejected memo goes back to the model with a list of complaints (at most 2 rewrites), and if it still fails the memo **written by code** is used, flagged "LLM memo rejected". The section with the loan's own numbers is always written by code. The writer is any service that speaks the OpenAI chat format; the key lives in an environment variable and is never written anywhere.
+
+| Real-model run (Llama 3.2 11B, free NVIDIA Build service, French) | Loans | First try | After a rewrite | Backup memo |
+|---|---|---|---|---|
+| Instructions v1, the 15 loans used while building | 15 | 11 | 2 | 2 |
+| Instructions v2, the same 15 loans (a tuning score, not a result) | 15 | 14 | 1 | 0 |
+| Instructions v2, 20 random loans (held-out) | 20 | 12 | 3 | 5 |
+| **Instructions v3, 20 other random loans (fresh): the reported result** | 20 | **18** | 1 | 1 |
+
+The drop from 14 of 15 to 12 of 20 is overfitting to the loans I had looked at, which is why a second, never-seen set exists. On that set, **0 of 23 tries were rejected for safety** (all 4 complaints were a memo 1 to 5 words over the 260-word limit); the typical memo took 19 s (median; mean 44 s, slowest 177 s: the free service is shared). With 20 loans the 95% interval for "accepted on the first try" is 70% to 97%, and the improvement from v2 to v3 is suggested, not proven (different loans). The evidence for every failed loan, the bugs the held-out loans found in my own code (negative numbers, a decision word matching "Reference") and the whole story are in `docs/decision-log.md`.
+
 ## Honest limitations
 
 - **The level is wrong in calm years** (1.4 to 2.6 times too high), because the model is through-the-cycle and the data holds only about 9 distinct economies. A Vasicek-style "climate dial" or a house-price variable are the planned fixes, not done.
@@ -81,6 +96,7 @@ There is no public demo URL on purpose (it would need a spending guard); a recor
 - The money analysis rests on **assumed** margin and loss rates (`config/economics.yaml`); the cut-off barely beats "approve everyone" on prime mortgages. No sex, race or age exists in the data, so fairness toward protected groups could not be tested.
 - Deployment is **automatic but has no automatic rollback**: a push to `main` deploys (see above). If the final live check fails, the run turns red and the previous image (the last 3 are kept) must be put back by hand with two commands. The infrastructure itself (ECR, Lambda, the lake) is still created by scripts run by hand.
 - Monitors use my own PSI/CSI code (not Evidently), and two subtle shifts are invisible to them (reported).
+- **The memo agent** was measured with one small free model, in French, on made-up loans, 20 per set (wide intervals). In the free text the inspector checks that a number is on the sheet, not which fact it belongs to (the loan-data section is written by code to cover this). The rewrite barely helps a model this small (it tends to copy its memo back). It runs from a command line and is not deployed on AWS.
 - The AWS account is on the Free plan, which ends in about six months; the live API will then disappear.
 
 ## Run it
@@ -92,7 +108,7 @@ python -m venv .venv
 .venv/Scripts/python -m pip install -r requirements-dev.txt      # Linux/macOS: .venv/bin/python
 
 .venv/Scripts/python -m pipeline.run            # data, features, model file, monitoring report (steps already up to date are skipped)
-.venv/Scripts/python -m pytest -q               # 307 tests
+.venv/Scripts/python -m pytest -q               # 496 tests
 .venv/Scripts/python -m ruff check .
 
 # the API
@@ -118,8 +134,8 @@ docker run --rm -p 8080:8080 scoring-api:local
 
 ## Stack
 
-Python 3.13 · pandas · DuckDB · Parquet · scikit-learn · XGBoost · SHAP · Dagster · FastAPI · Pydantic · Docker · AWS (Lambda, ECR, IAM, CloudWatch, S3, Glue, Athena) · GitHub Actions · pytest · ruff
+Python 3.13 · pandas · DuckDB · Parquet · scikit-learn · XGBoost · SHAP · Dagster · FastAPI · Pydantic · Docker · AWS (Lambda, ECR, IAM, CloudWatch, S3, Glue, Athena) · OpenAI-compatible LLM API (NVIDIA Build, Llama 3.2 11B) · GitHub Actions · pytest · ruff
 
 ## Status
 
-A working first version: data to model to a live, locked API with automatic deployment from GitHub (no stored keys), a private S3 + Athena data lake, and tested monitors. Next: a small read-only LLM memo agent. See the roadmap in [`docs/technical-sheet.md`](docs/technical-sheet.md).
+A working first version: data to model to a live, locked API with automatic deployment from GitHub (no stored keys), a private S3 + Athena data lake, and tested monitors, plus a read-only memo agent whose memos are checked number by number. Next steps (a position-aware inspector, the agent behind the API, an automatic rollback) are in the decision log; the original roadmap is in [`docs/technical-sheet.md`](docs/technical-sheet.md).

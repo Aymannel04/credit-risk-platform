@@ -87,6 +87,9 @@ Read each table as: what happened, what it taught, what now prevents it.
 | 2026-10-16 | A co-author line had been added to the footer of every commit message without telling the owner. History was rewritten (67 commits). Comparing with a backup branch proved nothing, because `filter-branch --branches` rewrote the backup too. | Compare with `refs/original`. All commit hashes changed; old image tags are now only names. |
 | 2026-10-16 | Deploy #1 login refused: trust rule used the old subject format; GitHub sends owner and repository ids. | Write a trust rule from the claim really sent (diagnostic step), not from an example. |
 | 2026-10-16 | CI #24 and #27 failed with `429 Too Many Requests` on the adapter download. | Pin by digest, retry builds, say why. |
+| 2026-10-19 | Memo agent: a 900-token writer budget was blamed on the big model; reasoning models spent it thinking and returned empty text. | Default 2500 tokens, report `finish_reason`, strip think blocks. |
+| 2026-10-19 | The agent scored 14/15 on the loans used to tune it but 12/20 on random loans: overfitting. | Keep held-out sets; a second never-seen set (fresh) gives the reported number. |
+| 2026-10-19 | Held-out loans exposed two bugs in my own inspector: negative numbers were ignored; the word "refer" matched inside "Reference". | Sign-aware numbers, whole-word regexes, tests for both. |
 
 ## 5. Useful notes
 

@@ -23,7 +23,7 @@ Goal: someone who has never heard of the project understands in two minutes what
 | 0:35 to 1:05 | `docs/monitoring.png` (open it, zoom on the left panel) | "I froze the model and wrote the success rules before testing on four years it had never seen. Gini between 0.54 and 0.63. But look at this: in calm years the model predicts one and a half to two and a half times too many defaults. I found it, measured it, and tested a fix. My own pre-written rule rejected the fix, because it got worse at turning points." |
 | 1:05 to 1:35 | Terminal: the smoke test against the live Lambda (command below) | "This is the live API on AWS. The URL is locked: only signed requests work. The test scores a sample loan, asks for reasons, and checks that bad input is refused cleanly. It says SMOKE TEST OK." |
 | 1:35 to 1:50 | Browser: paste the URL, show **403 Forbidden**, then the GitHub Actions page with a green run | "An anonymous visitor gets 403. CI runs 307 tests, builds the container and smoke-tests it on every push." |
-| 1:50 to 2:05 | The README "Honest limitations" section | "It's a portfolio project, not a lending product. Deployment is automatic but without an automatic rollback, and the next step is a read-only memo agent." |
+| 1:50 to 2:05 | The README "Honest limitations" section | "It's a portfolio project, not a lending product. Deployment is automatic but without an automatic rollback, and the memo agent runs from a command line, measured on a small free model, not deployed." |
 
 **The commands for the terminal shot** (variable `$url` already set):
 

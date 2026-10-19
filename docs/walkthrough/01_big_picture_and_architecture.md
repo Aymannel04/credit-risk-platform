@@ -1,6 +1,6 @@
 # The Big Picture and Architecture
 
-**Status:** built and measured (data to model to live locked API, automatic deploy, data lake). The memo agent is planned, not built.
+**Status:** built and measured (data to model to live locked API, automatic deploy, data lake). The read-only memo agent is built (command line, file 12).
 
 ## 1. Where it fits (workflow and architecture)
 
@@ -79,7 +79,7 @@ credit score 700, debt-to-income 44, loan-to-value 85, one borrower, purchase, 3
 ## 5. Useful notes
 
 - **Honest limits** (`README.md`, "Honest limitations"): in calm years the model predicts 1.4 to 2.6 times more defaults than happen. The target is a serious late payment, not a loss. Prime US fixed-rate mortgages only.
-- **Not built:** the LLM memo agent, automatic rollback, the API reading from the lake, live monitoring, a public demo URL.
+- **Not built:** the memo agent behind the API or on AWS, automatic rollback, the API reading from the lake, live monitoring, a public demo URL.
 - **Not a lending product.** It is a portfolio project on public data.
 - **Measured live numbers** (`results/lambda_latency.md`): warm request 2.7 ms median, cold start about 1.2 to 1.3 s, 78 MB used of 512 MB.
 - **Deploy** (`docs/decision-log.md`, 2026-10-16): Deploy #3 took 162 s in total.

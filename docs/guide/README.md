@@ -45,7 +45,7 @@ Phase 0  Audit and preparation       DONE
 Phase 1  Data platform               DONE  (data, checks, CI, Dagster pipeline, S3 + Athena lake with a parity test)
 Phase 2  Modeling                    DONE  (models, exam, money, explanations, fairness, model card, model v2)
 Phase 3  Serving and monitoring      DONE  (API, drift monitors, container, Lambda, automatic deployment with OIDC)
-Phase 4  Credit-memo agent           in progress (design agreed, not built yet)
+Phase 4  Credit-memo agent           DONE  (read-only agent, inspector, exams on a small free model)
 Phase 5  Final README, demo, interview preparation
 ```
 
@@ -56,4 +56,4 @@ Phase 5  Final README, demo, interview preparation
    a macro adjustment and monitoring are the next step (see file 9).
 2. **CI: DONE.** A robot on GitHub runs the style check and all tests on every push (green tick on the repository).
 3. **Pipeline, API, monitoring, deployment on AWS.**
-4. **The memo agent**, then the final README, a short demo video and the interview-preparation session.
+4. **The memo agent: DONE** (read-only, inspector, exams on a small free model). Left: the demo video and the interview-preparation session.
