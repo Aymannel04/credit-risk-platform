@@ -26,7 +26,7 @@ def run_one(loan: dict, language: str | None, writer, scorer, policy: Policy) ->
 
 
 def make_writer(kind: str, policy: Policy, model: str | None, base_url: str | None = None, key_env: str | None = None,
-                max_tokens: int = 2500, timeout: float = 150.0):
+                max_tokens: int = 2500, timeout: float = 150.0, temperature: float = 0.0):
     """`max_tokens` is the room for the whole answer: 'reasoning' models spend part of it thinking, so it is generous."""
     if kind == "backup":
         return None
@@ -35,11 +35,11 @@ def make_writer(kind: str, policy: Policy, model: str | None, base_url: str | No
     if kind == "custom":
         if not (base_url and key_env):
             raise WriterError("--writer custom needs --base-url and --key-env")
-        return OpenAICompatibleWriter(base_url, model, key_env, max_tokens=max_tokens, timeout=timeout)
+        return OpenAICompatibleWriter(base_url, model, key_env, max_tokens=max_tokens, timeout=timeout, temperature=temperature)
     if kind not in policy.writers:
         raise WriterError(f"unknown writer '{kind}' (known: backup, custom, {', '.join(sorted(policy.writers))})")
     preset = policy.writers[kind]
-    return OpenAICompatibleWriter(preset["base_url"], model, preset["api_key_env"], max_tokens=max_tokens, timeout=timeout)
+    return OpenAICompatibleWriter(preset["base_url"], model, preset["api_key_env"], max_tokens=max_tokens, timeout=timeout, temperature=temperature)
 
 
 def describe(result: MemoResult) -> str:
@@ -74,6 +74,7 @@ def main(argv: list[str] | None = None) -> int:
     ap.add_argument("--key-env", default=None, help="name of the environment variable that holds the key")
     ap.add_argument("--max-tokens", type=int, default=2500, help="room for the model's answer (reasoning models also think inside it)")
     ap.add_argument("--timeout", type=float, default=150.0, help="seconds to wait for the model")
+    ap.add_argument("--temperature", type=float, default=0.0, help="0 = as repeatable as the service allows")
     ap.add_argument("--live-url", default=os.environ.get("CREDIT_API_URL"), help="use the real Lambda API (or set CREDIT_API_URL)")
     ap.add_argument("--profile", default="credit-admin")
     ap.add_argument("--out", default=None, help="also write the memo to this file")
@@ -83,7 +84,7 @@ def main(argv: list[str] | None = None) -> int:
     try:
         policy = load_policy()
         loan = json.loads(Path(a.loan).read_text(encoding="utf-8"))
-        writer = make_writer(a.writer, policy, a.model, a.base_url, a.key_env, a.max_tokens, a.timeout)
+        writer = make_writer(a.writer, policy, a.model, a.base_url, a.key_env, a.max_tokens, a.timeout, a.temperature)
         with (LiveScorer(a.live_url, profile=a.profile) if a.live_url else OfflineScorer()) as scorer:
             if writer is None:
                 facts = build_facts(loan, scorer.explain(loan), policy, a.lang)

@@ -282,3 +282,61 @@ def test_the_exam_reports_progress_after_each_loan(scorer):
                             progress=lambda i, n, row: seen.append((i, n, row["case"], row["status"])))
     assert seen == [(1, 4, CASES[0]["id"], "accepted"), (2, 4, CASES[1]["id"], "accepted"), (3, 4, CASES[2]["id"], "accepted"),
                     (4, 4, CASES[3]["id"], "accepted")]
+
+
+# ---------- the exam keeps its evidence ----------
+
+def _forgetful_writer_for(facts):
+    from agent.doubles import seeded_reply
+
+    return ScriptedWriter([seeded_reply(facts, "promise"), good_reply(facts)])
+
+
+def test_loans_that_needed_a_rewrite_keep_the_evidence_and_the_others_do_not(scorer):
+    from agent.doubles import seeded_reply
+
+    def writer_for(facts):
+        if facts["numbers"].get("credit_score") == "720":  # the middle loan: always wrong
+            return ScriptedWriter([seeded_reply(facts, "wrong_number")] * 3)
+        if facts["numbers"].get("credit_score") == "780":  # the second loan: wrong once, then good
+            return _forgetful_writer_for(facts)
+        return ScriptedWriter([good_reply(facts)])
+
+    result = evaluate.evaluate_cases(CASES, scorer, writer_for, POLICY, "fr", "mixed")
+    by_case = {r["case"]: r for r in result["rows"]}
+    assert "evidence" not in by_case["01_prime_excellent"]
+    rewritten = by_case["02_prime_purchase"]["evidence"]
+    assert [e["try"] for e in rewritten] == [1, 2] and "FORBIDDEN_PHRASE" in rewritten[0]["complaints"][0] and rewritten[1]["complaints"] == []
+    assert "garanti" in rewritten[0]["what_the_model_wrote"]
+    fallen = by_case["06_middle_of_the_refer_zone"]
+    assert fallen["status"] == "backup" and len(fallen["evidence"]) == 3
+    assert all(len(e["what_the_model_wrote"]) <= evaluate.EVIDENCE_CHARS for e in fallen["evidence"])
+    report = evaluate.render_report({"generated_utc": "x", "settings": {"temperature": 0.0}, **result}, POLICY)
+    assert "## Evidence for the loans that did not pass at once" in report and "### `06_middle_of_the_refer_zone`" in report
+    assert "Writer settings: {'temperature': 0.0}" in report
+
+
+def test_the_command_can_run_only_some_loans_and_refuses_unknown_ones(monkeypatch, tmp_path, capsys):
+    saved = {}
+
+    def fake_save(result, label, policy, out_dir=None):
+        saved["result"], saved["label"] = result, label
+        return tmp_path / "a.json", tmp_path / "a.md"
+
+    monkeypatch.setattr(evaluate, "save", fake_save)
+    assert evaluate.main(["--writer", "pretend", "--cases", "01_prime_excellent, 09_golden_loan", "--label", "partial"]) == 0
+    assert [r["case"] for r in saved["result"]["rows"]] == ["01_prime_excellent", "09_golden_loan"] and saved["label"] == "partial"
+    assert evaluate.main(["--writer", "pretend", "--cases", "01_prime_excellent,nope"]) == 1
+    assert "nope" in capsys.readouterr().err
+
+
+def test_temperature_zero_is_the_default_for_real_writers_and_is_recorded(monkeypatch, tmp_path):
+    from agent import run
+
+    assert run.make_writer("nvidia", POLICY, "m").temperature == 0.0
+    assert run.make_writer("nvidia", POLICY, "m", temperature=0.7).temperature == 0.7
+    saved = {}
+    monkeypatch.setattr(evaluate, "save", lambda result, label, policy, out_dir=None: (saved.update(result=result), (tmp_path / "a", tmp_path / "b"))[1])
+    monkeypatch.setattr(evaluate, "make_writer", lambda *a, **k: ScriptedWriter([], name="x"))
+    evaluate.main(["--writer", "nvidia", "--model", "m", "--cases", "01_prime_excellent", "--temperature", "0.3", "--max-tokens", "123"])
+    assert saved["result"]["settings"] == {"temperature": 0.3, "max_tokens": 123, "timeout_s": 150.0}
