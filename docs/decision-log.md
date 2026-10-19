@@ -742,3 +742,13 @@ The owner installed AWS CLI 2.37.12 (current-user MSI from awscli.amazonaws.com)
 **What it does NOT show.** (1) Improvement from version 2 to version 3 is suggested, not proven: the first held-out set gave 12 of 20 on the first try (60%, 39% to 78%), the intervals overlap (70% to 78%), and the loans are different. A fair test would run version 3 on the same 20 loans as before. (2) One model, one language, one run per set, temperature 0; no repeat. (3) Made-up loans, a free service, no production load.
 
 **Weaknesses seen in the evidence, kept honest.** The rewrite barely works with this small model: for loan g11 the second and third tries are the same 264-word text (the model copies its memo back and ignores the request to cut 24 words), even at temperature 0.4; only 1 loan of 20 was rescued by a rewrite. The instruction "do not repeat the reasons in other sections" was not followed (the reasons appear in two sections), which keeps the memo at the edge of the limit. Possible next steps, not done: a larger word margin in the budget, a shorter limit-independent template, or a model that edits better; each must be judged on a third fresh set.
+
+## 2026-10-19: CI kept failing on a download limit; the adapter now comes from our own GitHub registry
+
+**Finding.** CI runs #30, #32 and #33 failed at "Build the API container image" after all 4 attempts (about 7 minutes), while Deploy, which builds the same image, passed. The log (read by the owner) shows `429 Too Many Requests ... toomanyrequests: Data limit exceeded` from `public.ecr.aws` when fetching the Lambda Web Adapter. Public AWS registry limits anonymous downloads per address, and the GitHub machines share addresses. Pinning by digest and retrying (2026-10-16) reduced the failures but could not remove them.
+
+**A wrong guess, recorded.** I first blamed the move of `ubuntu-latest` to a new Ubuntu version and pinned CI to `ubuntu-24.04`. The failure was still there on the pinned run; the log showed the real cause. The pin stays (it matches the deploy) but was not the fix.
+
+**Decision.** A manual workflow (`.github/workflows/mirror-adapter.yml`, permissions `contents: read`, `packages: write`, temporary token, no stored secret) copies the adapter once to `ghcr.io/aymannel04/aws-lambda-adapter:1.1.0` and checks that the copy has the same sha256 as the original (`sha256:17cfd08e...`). The package was made public (the adapter is open source). The `Dockerfile` now pulls from there with the same digest, so the image content does not change. A test keeps the workflow manual, least-privilege and tied to the Dockerfile's digest.
+
+**Limit.** The copy depends on ghcr.io staying public and on the package not being deleted; if it disappears, rerun the mirror workflow.

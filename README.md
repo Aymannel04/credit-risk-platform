@@ -23,7 +23,7 @@ An end-to-end credit-risk project on real, public mortgage data (Freddie Mac): a
 | Pre-registered predictions | 11 of 13 hit for the monitoring study; the misses are published |
 | Live API on AWS Lambda (measured) | Warm request **2.7 ms** median (p95 3.0 ms); cold start about **1.2 to 1.3 s**; **78 MB** used of 512 MB; 71 invocations observed (`results/lambda_latency.md`) |
 | Memo agent (read-only) | An inspector rejected **150 of 150** deliberately damaged memos (pretend writers, 10 kinds of mistake). A small free language model (Llama 3.2 11B), on **20 loans never looked at while tuning**: **18 memos accepted on the first try, 1 after a rewrite, 1 backup memo written by code, 0 of 23 tries rejected for a wrong number, a wrong decision or a promise** (`results/agent_eval_llama11b_v3_fresh_fr.md`, with its limits) |
-| Engineering | 497 automated tests; CI also builds the container and smoke-tests it; a full rebuild from the raw files reproduces the same data and the same model (checked by a fingerprint of every row and the model id) |
+| Engineering | 498 automated tests; CI also builds the container and smoke-tests it; a full rebuild from the raw files reproduces the same data and the same model (checked by a fingerprint of every row and the model id) |
 
 ![Monitoring: level per vintage and the recalibration experiment](docs/monitoring.png)
 
@@ -47,7 +47,7 @@ flowchart TB
       M
       MON
     end
-    CI["GitHub Actions<br/>lint, 497 tests, build + smoke-test the image"] -.-> IMG
+    CI["GitHub Actions<br/>lint, 498 tests, build + smoke-test the image"] -.-> IMG
 ```
 
 | Part | What it does | Where |
@@ -108,7 +108,7 @@ python -m venv .venv
 .venv/Scripts/python -m pip install -r requirements-dev.txt      # Linux/macOS: .venv/bin/python
 
 .venv/Scripts/python -m pipeline.run            # data, features, model file, monitoring report (steps already up to date are skipped)
-.venv/Scripts/python -m pytest -q               # 497 tests
+.venv/Scripts/python -m pytest -q               # 498 tests
 .venv/Scripts/python -m ruff check .
 
 # the API
