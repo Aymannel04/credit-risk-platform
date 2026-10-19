@@ -1,0 +1,40 @@
+name: Mirror the Lambda adapter
+
+# Run by hand (Actions tab, "Run workflow"), once. It copies the Lambda Web Adapter image from AWS's public registry to this
+# repository owner's GitHub registry (ghcr.io), keeping the exact same content (same sha256). Why: public.ecr.aws answers
+# `429 Too Many Requests: Data limit exceeded` to the shared GitHub machines, so CI builds failed at random. ghcr.io has no such limit
+# for GitHub's own machines. After the copy, the package must be made public once (see docs/decision-log.md).
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  packages: write
+
+jobs:
+  mirror:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    env:
+      SOURCE: public.ecr.aws/awsguru/aws-lambda-adapter:1.1.0@sha256:17cfd08eff1dfea3f6a9a1e9c65fdac80aa4919b6085e746615530f43f57d2f1
+      TARGET: ghcr.io/aymannel04/aws-lambda-adapter:1.1.0
+      EXPECTED_DIGEST: sha256:17cfd08eff1dfea3f6a9a1e9c65fdac80aa4919b6085e746615530f43f57d2f1
+    steps:
+      - name: Log in to ghcr.io with the temporary token of this run (no stored secret)
+        run: echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u "${{ github.actor }}" --password-stdin
+
+      - name: Copy the image (same content), retrying if the source is busy
+        run: |
+          for attempt in 1 2 3 4 5; do
+            if docker buildx imagetools create --tag "$TARGET" "$SOURCE"; then exit 0; fi
+            echo "Copy failed (attempt $attempt of 5): the source registry is busy, waiting, then trying again."
+            sleep $((attempt * 60))
+          done
+          exit 1
+
+      - name: Check the copy has exactly the same content as the original
+        run: |
+          got=$(docker buildx imagetools inspect "$TARGET" --format '{{.Manifest.Digest}}')
+          echo "copy:     $got"
+          echo "expected: $EXPECTED_DIGEST"
+          test "$got" = "$EXPECTED_DIGEST"

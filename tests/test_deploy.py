@@ -281,3 +281,15 @@ def test_both_image_builds_retry_when_a_public_registry_answers_429():
         text = (WORKFLOWS / name).read_text(encoding="utf-8")
         build = text[text.index("for attempt in 1 2 3 4"):]
         assert "docker build" in build.split("done")[0] and "sleep $((attempt * 30))" in build and "exit 1" in build, name
+
+
+def test_the_adapter_mirror_is_manual_least_privilege_and_keeps_the_same_content():
+    """The mirror copies the adapter to ghcr.io (public.ecr.aws rate-limits shared GitHub machines). The copy must be byte-identical."""
+    text = (WORKFLOWS / "mirror-adapter.yml").read_text(encoding="utf-8")
+    flow = yaml.safe_load(text)
+    assert list(flow[True]) == ["workflow_dispatch"]  # YAML reads the key `on` as True; run by hand only
+    assert flow["permissions"] == {"contents": "read", "packages": "write"}
+    digest = re.search(r"aws-lambda-adapter:\d+\.\d+\.\d+@(sha256:[0-9a-f]{64})", (ROOT / "Dockerfile").read_text(encoding="utf-8")).group(1)
+    env = flow["jobs"]["mirror"]["env"]
+    assert env["EXPECTED_DIGEST"] == digest and env["SOURCE"].endswith("@" + digest)
+    assert "secrets.GITHUB_TOKEN" in text and "AWS_" not in text
