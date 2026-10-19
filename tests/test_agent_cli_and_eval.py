@@ -390,3 +390,19 @@ def evaluate_memo_of_pretend(facts):
     from agent.memo import assemble
 
     return assemble(good_reply(facts), facts)
+
+
+def test_the_exam_measures_the_seconds_each_loan_takes(scorer, monkeypatch):
+    clock = iter([0.0, 12.34, 100.0, 104.0, 200.0, 220.06])  # start and end of three loans: 12.3 s, 4.0 s, 20.1 s
+    monkeypatch.setattr(evaluate.time, "monotonic", lambda: next(clock))
+    seen = []
+    result = evaluate.evaluate_cases(CASES[:3], scorer, lambda f: ScriptedWriter([good_reply(f)]), POLICY, "fr", "slow",
+                                     progress=lambda i, n, row: seen.append(row["seconds"]))
+    assert [r["seconds"] for r in result["rows"]] == [12.3, 4.0, 20.1] == seen
+    assert result["mean_seconds_per_loan"] == 12.1 and result["slowest_loan_seconds"] == 20.1
+    report = evaluate.render_report({"generated_utc": "x", **result}, POLICY)
+    assert "| Seconds per loan (mean, slowest) | 12.1, 20.1 |" in report and "| Seconds |" in report and "| 12.3 |" in report
+    old = {k: v for k, v in result.items() if k not in ("mean_seconds_per_loan", "slowest_loan_seconds")}
+    for row in old["rows"]:
+        row.pop("seconds")
+    assert "not recorded" in evaluate.render_report({"generated_utc": "x", **old}, POLICY), "results saved before the timing existed still render"

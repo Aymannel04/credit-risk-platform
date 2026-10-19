@@ -10,6 +10,7 @@ import argparse
 import json
 import os
 import sys
+import time
 from collections import Counter
 from datetime import datetime, timezone
 from pathlib import Path
@@ -40,10 +41,12 @@ def evaluate_cases(cases: list[dict], scorer, writer_for, policy: Policy, langua
     rows = []
     for index, case in enumerate(cases, start=1):
         facts = build_facts(case["loan"], scorer.explain(case["loan"]), policy, language)
+        started = time.monotonic()
         result = generate_memo(facts, writer_for(facts), policy)
+        seconds = round(time.monotonic() - started, 1)
         rows.append({
             "case": case["id"], "decision": facts["recommendation"], "status": result.status, "tries": len(result.attempts),
-            "first_try": result.first_try, "problems_by_try": [sorted({p.code for p in a.problems}) for a in result.attempts],
+            "first_try": result.first_try, "seconds": seconds, "problems_by_try": [sorted({p.code for p in a.problems}) for a in result.attempts],
             "writer_errors": [a.error for a in result.attempts if a.error], "memo": result.memo})
         if result.status == "backup" or len(result.attempts) > 1:  # the evidence for the loans that did not pass at once
             rows[-1]["evidence"] = [{"try": a.number, "complaints": [f"[{p.code}] {p.message[:200]}" for p in a.problems],
@@ -59,6 +62,8 @@ def evaluate_cases(cases: list[dict], scorer, writer_for, policy: Policy, langua
         "backup_memo": sum(r["status"] == "backup" for r in rows),
         "writer_errors": sum(bool(r["writer_errors"]) for r in rows),
         "mean_tries": round(sum(r["tries"] for r in rows) / n, 2) if n else 0,
+        "mean_seconds_per_loan": round(sum(r["seconds"] for r in rows) / n, 1) if n else 0,
+        "slowest_loan_seconds": max((r["seconds"] for r in rows), default=0),
         "decisions": dict(Counter(r["decision"] for r in rows)),
         "problem_codes": dict(sorted(codes.items())), "rows": rows}
 
@@ -92,10 +97,11 @@ def render_report(result: dict, policy: Policy) -> str:
              f"| Accepted on the first try | {result['accepted_first_try']} |", f"| Accepted after a rewrite | {result['accepted_after_rewrite']} |",
              f"| Backup memo (written by code) | {result['backup_memo']} |", f"| Loans where the writer itself failed | {result['writer_errors']} |",
              f"| Mean number of tries | {result['mean_tries']} |", f"| Decisions | {result['decisions']} |",
+             f"| Seconds per loan (mean, slowest) | {result.get('mean_seconds_per_loan', 'not recorded')}, {result.get('slowest_loan_seconds', 'not recorded')} |",
              f"| Complaints raised by the inspector | {result['problem_codes'] or 'none'} |", "",
-             "| Case | Decision | Result | Tries | Complaints per try |", "|---|---|---|---|---|"]
+             "| Case | Decision | Result | Tries | Seconds | Complaints per try |", "|---|---|---|---|---|---|"]
     for r in result["rows"]:
-        head.append(f"| `{r['case']}` | {r['decision']} | {r['status']} | {r['tries']} | {r['problems_by_try'] or ''} |")
+        head.append(f"| `{r['case']}` | {r['decision']} | {r['status']} | {r['tries']} | {r.get('seconds', '')} | {r['problems_by_try'] or ''} |")
     evidence = [r for r in result["rows"] if r.get("evidence")]
     if evidence:
         head += ["", "## Evidence for the loans that did not pass at once", "",
@@ -154,7 +160,7 @@ def main(argv: list[str] | None = None) -> int:
                 writer = make_writer(a.writer, policy, a.model, a.base_url, a.key_env, a.max_tokens, a.timeout, a.temperature)
                 def show(i, n, row):
                     note = row["writer_errors"][0][:90] if row["writer_errors"] else ", ".join(c for t in row["problems_by_try"] for c in t)
-                    print(f"[{i}/{n}] {row['case']}: {row['decision']}, {row['status']} after {row['tries']} try(ies)" + (f" ({note})" if note else ""), flush=True)
+                    print(f"[{i}/{n}] {row['case']}: {row['decision']}, {row['status']} after {row['tries']} try(ies), {row['seconds']} s" + (f" ({note})" if note else ""), flush=True)
 
                 print(f"Running {len(cases)} loans with {a.model}. Each line appears when a loan is finished (a few seconds each).", flush=True)
                 result = evaluate_cases(cases, scorer, lambda f: writer, policy, a.lang, f"{a.writer}: {a.model}", progress=show)
