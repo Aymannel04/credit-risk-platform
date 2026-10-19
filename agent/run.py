@@ -49,6 +49,18 @@ def describe(result: MemoResult) -> str:
     return f"status: BACKUP memo written by code ({result.flag}). {reasons}" if reasons else f"status: backup memo written by code ({result.flag})"
 
 
+def show_attempts(result: MemoResult, limit: int = 3500) -> str:
+    """What the model wrote on each try (cut after `limit` characters) and what the inspector said about it."""
+    lines = []
+    for a in result.attempts:
+        lines.append(f"=== try {a.number} " + ("(the writer failed: " + a.error + ")" if a.error else "(written by the model)"))
+        if a.reply:
+            lines.append(a.reply if len(a.reply) <= limit else a.reply[:limit] + f"\n[... {len(a.reply) - limit} more characters]")
+        for p in a.problems:
+            lines.append(f"  inspector: [{p.code}] {p.message[:160]}")
+    return "\n".join(lines)
+
+
 def main(argv: list[str] | None = None) -> int:
     for stream in (sys.stdout, sys.stderr):
         if hasattr(stream, "reconfigure"):
@@ -65,7 +77,9 @@ def main(argv: list[str] | None = None) -> int:
     ap.add_argument("--live-url", default=os.environ.get("CREDIT_API_URL"), help="use the real Lambda API (or set CREDIT_API_URL)")
     ap.add_argument("--profile", default="credit-admin")
     ap.add_argument("--out", default=None, help="also write the memo to this file")
+    ap.add_argument("--show-attempts", action="store_true", help="print what the model wrote on each try, with the inspector's complaints")
     a = ap.parse_args(argv)
+    result = None
     try:
         policy = load_policy()
         loan = json.loads(Path(a.loan).read_text(encoding="utf-8"))
@@ -82,6 +96,8 @@ def main(argv: list[str] | None = None) -> int:
         return 1
     print(memo)
     print(status)
+    if a.show_attempts and result is not None:
+        print(show_attempts(result))
     if a.out:
         Path(a.out).write_text(memo, encoding="utf-8")
     return 0

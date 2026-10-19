@@ -341,3 +341,29 @@ def test_the_real_writer_is_built_with_generous_room_and_time_by_default():
     assert writer.max_tokens == 2500 and writer.timeout == 150.0
     writer = run.make_writer("custom", POLICY, "m", "https://x.test/v1", "K", max_tokens=100, timeout=5)
     assert writer.max_tokens == 100 and writer.timeout == 5
+
+
+def test_an_empty_answer_says_why(with_key):
+    thinking_only = {"choices": [{"finish_reason": "length", "message": {"content": None, "reasoning_content": "I am thinking about the memo..."}}]}
+    net = FakeNetwork([thinking_only])
+    with pytest.raises(WriterError) as info:
+        make_writer(net).write([])
+    assert "finish_reason: length" in str(info.value) and "only produced thinking" in str(info.value) and "--max-tokens" in str(info.value)
+    blank = {"choices": [{"finish_reason": "stop", "message": {"content": "  "}}]}
+    with pytest.raises(WriterError) as info:
+        make_writer(FakeNetwork([blank])).write([])
+    assert "empty text (finish_reason: stop)" in str(info.value) and "thinking" not in str(info.value)
+
+
+def test_the_attempts_view_shows_what_the_model_wrote_and_what_the_inspector_said(sheets):
+    from agent.run import show_attempts
+
+    facts = sheets[("golden_decline", "en")]
+    result = generate_memo(facts, ScriptedWriter([seeded_reply(facts, "invented_number"), good_reply(facts)]), POLICY)
+    view = show_attempts(result)
+    assert "=== try 1 (written by the model)" in view and "=== try 2" in view and "About 777 comparable files." in view
+    assert "inspector: [NUMBER_NOT_IN_FACTS]" in view
+    long = generate_memo(facts, ScriptedWriter(["x" * 5000] * 3), POLICY)
+    assert "more characters]" in show_attempts(long, limit=100)
+    broken = generate_memo(facts, ScriptedWriter([]), POLICY)
+    assert "the writer failed: the scripted writer has no reply left" in show_attempts(broken)

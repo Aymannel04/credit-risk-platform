@@ -94,9 +94,16 @@ class OpenAICompatibleWriter:
     @staticmethod
     def _text(payload: dict) -> str:
         try:
-            text = payload["choices"][0]["message"]["content"]
+            choice = payload["choices"][0]
+            message = choice["message"]
+            text = message["content"] if "content" in message else None
         except (KeyError, IndexError, TypeError):
             raise WriterError("the answer does not have the expected shape (choices[0].message.content)") from None
         if not isinstance(text, str) or not text.strip():
-            raise WriterError("the service returned an empty text")
+            notes = []
+            if choice.get("finish_reason"):
+                notes.append(f"finish_reason: {choice['finish_reason']}")
+            if any(isinstance(message.get(k), str) and message.get(k).strip() for k in ("reasoning_content", "reasoning")):
+                notes.append("it only produced thinking: give it more room with --max-tokens")
+            raise WriterError("the service returned an empty text" + (f" ({'; '.join(notes)})" if notes else ""))
         return text
