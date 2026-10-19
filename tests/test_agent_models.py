@@ -149,8 +149,27 @@ def test_the_probe_reports_which_models_answer_and_pauses_between_calls(monkeypa
 
 def test_the_probe_command_prints_a_clear_table(monkeypatch, capsys):
     monkeypatch.setattr(models, "list_models", lambda base, env: ["a/instruct", "b/instruct", "c/other"])
-    monkeypatch.setattr(models, "probe_models", lambda base, env, names: [(n, n.startswith("a"), "OK" if n.startswith("a") else "HTTP 404: gone") for n in names])
+    def fake_probe(base, env, names, on_result=None):
+        results = [(n, n.startswith("a"), "OK" if n.startswith("a") else "HTTP 404: gone") for n in names]
+        for r in results:
+            on_result(r)
+        return results
+
+    monkeypatch.setattr(models, "probe_models", fake_probe)
     assert models.main(["--writer", "nvidia", "--contains", "instruct", "--probe"]) == 0
     out = capsys.readouterr().out
     assert "ANSWERS  a/instruct" in out and "no       b/instruct  -> HTTP 404: gone" in out and "1 of 2 models answered." in out
     assert "c/other" not in out
+
+
+def test_each_probe_result_is_reported_before_the_next_model_is_asked(monkeypatch):
+    monkeypatch.setenv("FAKE_LLM_KEY", KEY)
+    events = []
+
+    def urlopen(request, timeout):
+        events.append(("asked", json.loads(request.data)["model"]))
+        return Response({"choices": [{"message": {"content": "OK"}}]})
+
+    models.probe_models("https://x.test/v1", "FAKE_LLM_KEY", ["m1", "m2", "m3"], urlopen=urlopen, sleep=lambda s: None,
+                        on_result=lambda r: events.append(("shown", r[0])))
+    assert events == [("asked", "m1"), ("shown", "m1"), ("asked", "m2"), ("shown", "m2"), ("asked", "m3"), ("shown", "m3")]

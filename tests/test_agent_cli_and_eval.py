@@ -274,3 +274,11 @@ def test_the_only_http_verb_to_the_scoring_api_is_post_to_explain():
     text = (ROOT / "agent" / "api_client.py").read_text(encoding="utf-8")
     assert re.findall(r'"/explain"|/explain"|/explain', text) and not re.search(r"method=\"(PUT|DELETE|PATCH)\"", text)
     assert "/score" not in text and "model-info" not in text
+
+
+def test_the_exam_reports_progress_after_each_loan(scorer):
+    seen = []
+    evaluate.evaluate_cases(CASES[:4], scorer, lambda f: ScriptedWriter([good_reply(f)]), POLICY, "fr", "pretend",
+                            progress=lambda i, n, row: seen.append((i, n, row["case"], row["status"])))
+    assert seen == [(1, 4, CASES[0]["id"], "accepted"), (2, 4, CASES[1]["id"], "accepted"), (3, 4, CASES[2]["id"], "accepted"),
+                    (4, 4, CASES[3]["id"], "accepted")]

@@ -40,8 +40,9 @@ def list_models(base_url: str, api_key_env: str, urlopen: Callable = urllib.requ
 
 
 def probe_models(base_url: str, api_key_env: str, names: list[str], urlopen: Callable = urllib.request.urlopen,
-                 sleep: Callable = time.sleep, pause: float = 1.6) -> list[tuple[str, bool, str]]:
-    """Ask every model one tiny question and report (name, answered, short note). The pause keeps us under the free rate limit."""
+                 sleep: Callable = time.sleep, pause: float = 1.6, on_result: Callable | None = None) -> list[tuple[str, bool, str]]:
+    """Ask every model one tiny question and report (name, answered, short note). The pause keeps us under the free rate limit.
+    `on_result` is called with each result as soon as it is known, so a person can watch the progress."""
     results = []
     for i, name in enumerate(names):
         if i:
@@ -52,6 +53,8 @@ def probe_models(base_url: str, api_key_env: str, names: list[str], urlopen: Cal
             results.append((name, True, " ".join(reply.split())[:30]))
         except WriterError as e:
             results.append((name, False, str(e)[:160]))
+        if on_result:
+            on_result(results[-1])
     return results
 
 
@@ -85,10 +88,13 @@ def main(argv: list[str] | None = None) -> int:
         print("\n".join(shown))
         print(f"{len(shown)} model(s) shown, {len(names)} offered in total.")
         return 0
-    print(f"Asking {len(shown)} model(s) one tiny question each (about {len(shown) * 2} seconds)...")
-    outcomes = probe_models(base_url, key_env, shown)
-    for name, answered, note in outcomes:
-        print(f"{'ANSWERS' if answered else 'no     '}  {name}  {'' if answered else '-> '}{note if not answered else ''}")
+    print(f"Asking {len(shown)} model(s) one tiny question each. Each result appears as soon as it is known (a slow model can take up to 45 s).", flush=True)
+
+    def show(result):
+        name, answered, note = result
+        print(f"{'ANSWERS' if answered else 'no     '}  {name}  {'' if answered else '-> ' + note}", flush=True)
+
+    outcomes = probe_models(base_url, key_env, shown, on_result=show)
     print(f"{sum(o[1] for o in outcomes)} of {len(outcomes)} models answered.")
     return 0
 

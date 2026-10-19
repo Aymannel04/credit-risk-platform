@@ -34,16 +34,18 @@ def load_cases(path: Path = CASES_PATH) -> list[dict]:
     return cases
 
 
-def evaluate_cases(cases: list[dict], scorer, writer_for, policy: Policy, language: str, writer_name: str) -> dict:
+def evaluate_cases(cases: list[dict], scorer, writer_for, policy: Policy, language: str, writer_name: str, progress=None) -> dict:
     """`writer_for(facts)` gives the writer to use for one case (a shared real model, or a pretend one built from the facts)."""
     rows = []
-    for case in cases:
+    for index, case in enumerate(cases, start=1):
         facts = build_facts(case["loan"], scorer.explain(case["loan"]), policy, language)
         result = generate_memo(facts, writer_for(facts), policy)
         rows.append({
             "case": case["id"], "decision": facts["recommendation"], "status": result.status, "tries": len(result.attempts),
             "first_try": result.first_try, "problems_by_try": [sorted({p.code for p in a.problems}) for a in result.attempts],
             "writer_errors": [a.error for a in result.attempts if a.error], "memo": result.memo})
+        if progress:
+            progress(index, len(cases), rows[-1])
     codes = Counter(c for r in rows for tries in r["problems_by_try"] for c in tries)
     n = len(rows)
     return {
@@ -124,7 +126,12 @@ def main(argv: list[str] | None = None) -> int:
                                         "pretend careful writer (not a language model)")
             else:
                 writer = make_writer(a.writer, policy, a.model, a.base_url, a.key_env)
-                result = evaluate_cases(cases, scorer, lambda f: writer, policy, a.lang, f"{a.writer}: {a.model}")
+                def show(i, n, row):
+                    note = row["writer_errors"][0][:90] if row["writer_errors"] else ", ".join(c for t in row["problems_by_try"] for c in t)
+                    print(f"[{i}/{n}] {row['case']}: {row['decision']}, {row['status']} after {row['tries']} try(ies)" + (f" ({note})" if note else ""), flush=True)
+
+                print(f"Running {len(cases)} loans with {a.model}. Each line appears when a loan is finished (a few seconds each).", flush=True)
+                result = evaluate_cases(cases, scorer, lambda f: writer, policy, a.lang, f"{a.writer}: {a.model}", progress=show)
     except (ApiError, WriterError, PolicyError, OSError, ValueError) as e:
         print(f"error: {e}", file=sys.stderr)
         return 1
