@@ -9,12 +9,13 @@ import argparse
 import json
 import os
 import sys
+import time
 import urllib.error
 import urllib.request
 from collections.abc import Callable
 
 from agent.policy import PolicyError, load_policy
-from agent.writer import WriterError
+from agent.writer import OpenAICompatibleWriter, WriterError
 
 
 def list_models(base_url: str, api_key_env: str, urlopen: Callable = urllib.request.urlopen, timeout: float = 30.0) -> list[str]:
@@ -38,6 +39,22 @@ def list_models(base_url: str, api_key_env: str, urlopen: Callable = urllib.requ
         raise WriterError("the service answered something that is not a list of models") from None
 
 
+def probe_models(base_url: str, api_key_env: str, names: list[str], urlopen: Callable = urllib.request.urlopen,
+                 sleep: Callable = time.sleep, pause: float = 1.6) -> list[tuple[str, bool, str]]:
+    """Ask every model one tiny question and report (name, answered, short note). The pause keeps us under the free rate limit."""
+    results = []
+    for i, name in enumerate(names):
+        if i:
+            sleep(pause)
+        writer = OpenAICompatibleWriter(base_url, name, api_key_env, max_tokens=8, retries=0, timeout=45.0, urlopen=urlopen, sleep=sleep)
+        try:
+            reply = writer.write([{"role": "user", "content": "Reply with the single word OK."}])
+            results.append((name, True, " ".join(reply.split())[:30]))
+        except WriterError as e:
+            results.append((name, False, str(e)[:160]))
+    return results
+
+
 def main(argv: list[str] | None = None) -> int:
     for stream in (sys.stdout, sys.stderr):
         if hasattr(stream, "reconfigure"):
@@ -47,6 +64,7 @@ def main(argv: list[str] | None = None) -> int:
     ap.add_argument("--base-url", default=None)
     ap.add_argument("--key-env", default=None)
     ap.add_argument("--contains", default=None, help="only names containing this text (not case sensitive)")
+    ap.add_argument("--probe", action="store_true", help="send each shown model one tiny question and report which ones really answer")
     a = ap.parse_args(argv)
     try:
         policy = load_policy()
@@ -63,8 +81,15 @@ def main(argv: list[str] | None = None) -> int:
         print(f"error: {e}", file=sys.stderr)
         return 1
     shown = [n for n in names if not a.contains or a.contains.casefold() in n.casefold()]
-    print("\n".join(shown))
-    print(f"{len(shown)} model(s) shown, {len(names)} offered in total.")
+    if not a.probe:
+        print("\n".join(shown))
+        print(f"{len(shown)} model(s) shown, {len(names)} offered in total.")
+        return 0
+    print(f"Asking {len(shown)} model(s) one tiny question each (about {len(shown) * 2} seconds)...")
+    outcomes = probe_models(base_url, key_env, shown)
+    for name, answered, note in outcomes:
+        print(f"{'ANSWERS' if answered else 'no     '}  {name}  {'' if answered else '-> '}{note if not answered else ''}")
+    print(f"{sum(o[1] for o in outcomes)} of {len(outcomes)} models answered.")
     return 0
 
 

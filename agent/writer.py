@@ -8,6 +8,7 @@ A writer takes chat messages (system, user, ...) and returns text. Two kinds:
 """
 import json
 import os
+import re
 import time
 import urllib.error
 import urllib.request
@@ -16,6 +17,24 @@ from collections.abc import Callable
 
 class WriterError(RuntimeError):
     """The writer could not produce text (network, key, quota, malformed answer). Never contains the API key."""
+
+
+def service_detail(error: urllib.error.HTTPError, key: str, limit: int = 140) -> str:
+    """The explanation the service gives with an error, made safe to show and to save: the key removed, long identifiers hidden, one line,
+    shortened. Returns '' when there is nothing readable."""
+    try:
+        payload = json.loads(error.read().decode("utf-8", errors="replace"))
+    except Exception:
+        return ""
+    candidates = [payload.get("detail"), payload.get("message"), payload.get("title"), (payload.get("error") or {}).get("message")
+                  if isinstance(payload.get("error"), dict) else payload.get("error")] if isinstance(payload, dict) else []
+    text = next((c for c in candidates if isinstance(c, str) and c.strip()), "")
+    if key:
+        text = text.replace(key, "***")
+    text = re.sub(r"[0-9a-fA-F][0-9a-fA-F-]{15,}", "<id>", text)          # uuids, account ids, hashes
+    text = re.sub(r"nvapi-[A-Za-z0-9_\-]+", "***", text)
+    text = re.sub(r"\s+", " ", re.sub(r"[\x00-\x1f]", " ", text)).strip()
+    return text[:limit]
 
 
 class ScriptedWriter:
@@ -61,7 +80,8 @@ class OpenAICompatibleWriter:
                     continue
                 reason = {401: "the API key was refused", 403: "the API key is not allowed to do this", 404: "model or address not found",
                           429: "rate limit reached"}.get(e.code, "the service returned an error")
-                raise WriterError(f"HTTP {e.code}: {reason}") from None
+                detail = service_detail(e, key)
+                raise WriterError(f"HTTP {e.code}: {reason}" + (f" (service says: {detail})" if detail else "")) from None
             except (urllib.error.URLError, TimeoutError, ConnectionError, OSError):
                 if attempt < self.retries:
                     self._sleep(2 ** attempt * 2)
