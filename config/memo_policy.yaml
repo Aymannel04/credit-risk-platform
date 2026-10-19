@@ -10,6 +10,8 @@ policy:
 memo:
   default_language: fr
   max_rewrites: 2         # how many times the writer may try again after the inspector rejects a memo
+  retry_temperature: 0.4  # first try at the exam's temperature (0 = repeatable); a rewrite asks for a bit of variety, because the same question
+                          # at temperature 0 gave the very same memo again (seen on the first held-out loans)
   min_words: 60
   max_words: 260
   allowed_constants: ["24"]   # numbers that may appear without being in the fact sheet: the 24-month window of the default definition

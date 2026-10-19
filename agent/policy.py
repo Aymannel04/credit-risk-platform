@@ -41,6 +41,7 @@ class Policy:
     decline_above: float
     default_language: str
     max_rewrites: int
+    retry_temperature: float
     min_words: int
     max_words: int
     allowed_constants: tuple[str, ...]
@@ -76,7 +77,7 @@ def load_policy(path: Path = POLICY_PATH) -> Policy:
     if m["min_words"] >= m["max_words"]:
         raise PolicyError("min_words must be below max_words")
     return Policy(approve_below=approve_below, decline_above=decline_above, default_language=m["default_language"],
-                  max_rewrites=int(m["max_rewrites"]), min_words=int(m["min_words"]), max_words=int(m["max_words"]),
+                  max_rewrites=int(m["max_rewrites"]), retry_temperature=float(m.get("retry_temperature", 0.4)), min_words=int(m["min_words"]), max_words=int(m["max_words"]),
                   allowed_constants=tuple(str(x) for x in m["allowed_constants"]),
                   caution_low=str(m["caution_numbers"]["low"]), caution_high=str(m["caution_numbers"]["high"]), languages=languages,
                   writers=dict(raw.get("writers") or {}))

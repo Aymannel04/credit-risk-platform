@@ -415,3 +415,82 @@ def test_the_headings_complaint_lists_what_was_written_and_what_is_missing(sheet
     assert "You wrote: Résumé | Analyse du risque | Raisons principales | Recommandation | Notes" in problem.message
     assert "Missing: Limites" in problem.message and "Not allowed: Notes" in problem.message
     assert "Données du dossier" not in problem.message.split("You wrote:")[1], "the system's own section is never blamed on the writer"
+
+
+# ---------- the lessons of the first held-out loans: layout repair, sign hints, rewrites that differ, safety versus form ----------
+
+def test_a_memo_squeezed_onto_one_line_is_put_back_in_shape_without_changing_a_word(sheets):
+    facts = sheets[("golden_decline", "fr")]
+    good = good_reply(facts)
+    one_line = " ".join(good.split())          # the whole memo as one paragraph, as the small model did after a complaint
+    assert "\n" not in one_line and validate_memo(assemble(one_line, facts), facts, POLICY) == []
+    same_line = good.replace("## Résumé\n", "## Résumé ").replace("## Raisons principales\n", "## Raisons principales ")
+    assert validate_memo(assemble(same_line, facts), facts, POLICY) == []
+    from agent.validator import count_words
+
+    assert count_words(assemble(one_line, facts)) == count_words(assemble(good, facts)), "only line breaks changed"
+
+
+def test_layout_repair_leaves_good_memos_alone_and_never_hides_extra_text(sheets):
+    facts = sheets[("golden_decline", "en")]
+    good = good_reply(facts)
+    assert assemble(good, facts) == assemble(assemble(good, facts), facts), "assembling twice gives the same memo"
+    with_preamble = "Sure! Here is the memo: " + " ".join(good.split())
+    problems = {p.code for p in validate_memo(assemble(with_preamble, facts), facts, POLICY)}
+    assert "TEXT_OUTSIDE_SECTIONS" in problems, "text before the first title is still refused"
+    unknown_title = good.replace("## Limits", "## Notes")
+    assert "SECTIONS" in {p.code for p in validate_memo(assemble(unknown_title, facts), facts, POLICY)}, "a title that is not one of ours is refused"
+    longer_title = good.replace("## Limits", "## Limits and more notes")
+    assert validate_memo(assemble(longer_title, facts), facts, POLICY) == [], "a known title followed by words becomes the title plus a sentence"
+
+
+def test_the_sign_complaint_says_exactly_what_to_write(sheets):
+    facts = sheets[("golden_decline", "fr")]
+    bad = good_reply(facts).replace("(35,6 points perdus)", "(-35,6 points perdus)") if "(35,6 points perdus)" in good_reply(facts) else None
+    first_loss = facts["display"]["points_lost_1"]
+    bad = good_reply(facts).replace(f"{first_loss} points perdus", f"-{first_loss} points perdus")
+    assert bad != good_reply(facts)
+    (problem,) = [p for p in validate_memo(assemble(bad, facts), facts, POLICY) if p.code == "NUMBER_NOT_IN_FACTS"]
+    assert f"-{first_loss}" in problem.message and f"write {first_loss}, not -{first_loss}" in problem.message
+
+
+def test_every_complaint_code_is_classified_as_safety_or_form():
+    import re as _re
+    from pathlib import Path
+
+    from agent.validator import FORM_CODES, SAFETY_CODES
+
+    source = (Path(__file__).resolve().parents[1] / "agent" / "validator.py").read_text(encoding="utf-8")
+    emitted = set(_re.findall(r'Problem\("([A-Z_]+)"', source))
+    assert emitted == SAFETY_CODES | FORM_CODES and not SAFETY_CODES & FORM_CODES, emitted ^ (SAFETY_CODES | FORM_CODES)
+
+
+def test_a_rewrite_asks_for_a_different_temperature_but_the_first_try_does_not(sheets):
+    facts = sheets[("prime_approve", "en")]
+    writer = ScriptedWriter([seeded_reply(facts, "promise"), seeded_reply(facts, "promise"), good_reply(facts)])
+    generate_memo(facts, writer, POLICY)
+    assert writer.temperatures == [None, POLICY.retry_temperature, POLICY.retry_temperature] and POLICY.retry_temperature == 0.4
+
+
+def test_the_real_writer_uses_the_temperature_it_is_given(with_key):
+    net = FakeNetwork([ok("one"), ok("two")])
+    writer = make_writer(net, temperature=0.0)
+    writer.write([])
+    writer.write([], temperature=0.4)
+    assert [json.loads(r.data)["temperature"] for r, _ in net.requests] == [0.0, 0.4]
+
+
+def test_a_writer_that_cannot_take_a_temperature_still_works(sheets):
+    facts = sheets[("prime_approve", "en")]
+
+    class Plain:
+        name = "plain"
+
+        def __init__(self, replies):
+            self.replies = list(replies)
+
+        def write(self, messages):
+            return self.replies.pop(0)
+
+    result = generate_memo(facts, Plain([seeded_reply(facts, "promise"), good_reply(facts)]), POLICY)
+    assert result.status == "accepted" and len(result.attempts) == 2

@@ -43,9 +43,11 @@ class ScriptedWriter:
         self.name = name
         self._replies = list(replies)
         self.calls: list[list[dict]] = []
+        self.temperatures: list[float | None] = []
 
-    def write(self, messages: list[dict]) -> str:
+    def write(self, messages: list[dict], temperature: float | None = None) -> str:
         self.calls.append(messages)
+        self.temperatures.append(temperature)
         if not self._replies:
             raise WriterError("the scripted writer has no reply left")
         reply = self._replies.pop(0)
@@ -62,11 +64,12 @@ class OpenAICompatibleWriter:
         self.temperature, self.max_tokens, self.timeout, self.retries = temperature, max_tokens, timeout, retries
         self._urlopen, self._sleep = urlopen, sleep
 
-    def write(self, messages: list[dict]) -> str:
+    def write(self, messages: list[dict], temperature: float | None = None) -> str:
         key = os.environ.get(self.api_key_env, "")
         if not key:
             raise WriterError(f"the environment variable {self.api_key_env} is not set")
-        body = json.dumps({"model": self.model, "messages": messages, "temperature": self.temperature, "max_tokens": self.max_tokens}).encode("utf-8")
+        used = self.temperature if temperature is None else temperature
+        body = json.dumps({"model": self.model, "messages": messages, "temperature": used, "max_tokens": self.max_tokens}).encode("utf-8")
         for attempt in range(self.retries + 1):
             request = urllib.request.Request(f"{self.base_url}/chat/completions", data=body, method="POST", headers={
                 "Content-Type": "application/json", "Accept": "application/json", "Authorization": f"Bearer {key}"})

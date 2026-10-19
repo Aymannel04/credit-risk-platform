@@ -56,6 +56,25 @@ def _is_fact(token: str, allowed: list[Decimal]) -> bool:
     return any(a.quantize(unit, rounding=ROUND_HALF_UP) == value for a in allowed)
 
 
+def _sign_hints(bad: list[str], allowed: list[Decimal]) -> str:
+    """When a rejected number is a fact with the opposite sign (a loss written as -52,1 instead of 52,1), say exactly that."""
+    hints = []
+    for token in bad:
+        plain = _plain(token)
+        if plain.startswith("-") and _is_fact(token[1:], allowed):
+            hints.append(f"{token[1:]} is on the sheet WITHOUT a minus sign: write {token[1:]}, not {token}")
+        elif not plain.startswith("-") and _is_fact("-" + token, allowed):
+            hints.append(f"the sheet has -{token} WITH a minus sign: write -{token}, not {token}")
+    return (" Sign problems: " + "; ".join(hints) + ".") if hints else ""
+
+
+# Which complaints are about the SAFETY of the memo (a wrong or invented number, a wrong or conflicting decision, a missing warning,
+# a promise) and which are about its FORM (headings, length). The exam reports both: a memo rejected only for its form is not a wrong memo.
+SAFETY_CODES = frozenset({"NUMBER_NOT_IN_FACTS", "SPELLED_NUMBER", "DECISION_MISSING", "DECISION_CONFLICT", "DISCLAIMER_MISSING", "CAUTION_MISSING",
+                          "OUTSIDE_RANGE_MISSING", "RISK_MISSING", "FORBIDDEN_PHRASE", "DATA_SECTION_ALTERED"})
+FORM_CODES = frozenset({"EMPTY", "SECTIONS", "TEXT_OUTSIDE_SECTIONS", "EMPTY_SECTION", "LENGTH"})
+
+
 def _sections(memo: str, headings: list[str]) -> tuple[dict[str, str] | None, str]:
     """The memo split by its '## ' headings, or None if the headings are not exactly the expected ones, in order. Second value: text before the first heading."""
     found = list(HEADING.finditer(memo))
@@ -109,7 +128,7 @@ def validate_memo(memo: str, facts: dict, policy: Policy) -> list[Problem]:
     bad = sorted({t for t in NUMBER.findall(memo) if not _is_fact(t, allowed)})
     if bad:
         problems.append(Problem("NUMBER_NOT_IN_FACTS", "These numbers are not on the fact sheet: " + ", ".join(bad)
-                                + ". Copy numbers exactly as written on the fact sheet and never compute a new one."))
+                                + ". Copy numbers exactly as written on the fact sheet and never compute a new one." + _sign_hints(bad, allowed)))
 
     spelled = [w for w in lang.spelled_numbers if re.search(rf"(?<!\w){re.escape(w)}(?!\w)", folded)]
     if spelled:

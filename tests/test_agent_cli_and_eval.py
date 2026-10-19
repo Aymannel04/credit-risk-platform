@@ -406,3 +406,40 @@ def test_the_exam_measures_the_seconds_each_loan_takes(scorer, monkeypatch):
     for row in old["rows"]:
         row.pop("seconds")
     assert "not recorded" in evaluate.render_report({"generated_utc": "x", **old}, POLICY), "results saved before the timing existed still render"
+
+
+def test_the_exam_separates_safety_rejections_from_form_rejections(scorer):
+    from agent.doubles import seeded_reply
+
+    def writer_for(facts):
+        if facts["numbers"].get("credit_score") == "720" and facts["numbers"].get("dti") == "36":   # the middle loan: a problem of form only
+            return ScriptedWriter([seeded_reply(facts, "wrong_heading")] * 3)
+        if facts["numbers"].get("credit_score") == "780":     # always a wrong number: a problem of safety
+            return ScriptedWriter([seeded_reply(facts, "wrong_number")] * 3)
+        return ScriptedWriter([good_reply(facts)])
+
+    result = evaluate.evaluate_cases(CASES, scorer, writer_for, POLICY, "fr", "mixed")
+    rows = {r["case"]: r for r in result["rows"]}
+    assert rows["06_middle_of_the_refer_zone"]["backup_but_only_form"] and rows["06_middle_of_the_refer_zone"]["tries_rejected_for_safety"] == 0
+    assert not rows["02_prime_purchase"]["backup_but_only_form"] and rows["02_prime_purchase"]["tries_rejected_for_safety"] == 3
+    assert result["backup_but_last_memo_only_form"] == 1 and result["tries_rejected_for_safety"] == 3 and result["total_tries"] == 13 + 6
+    report = evaluate.render_report({"generated_utc": "x", **result}, POLICY)
+    assert "FORM only (headings, length) | 1 |" in report and "SAFETY reason" in report and "| 3 of 19 |" in report
+
+
+HOLDOUT2_PATH = ROOT / "agent" / "cases" / "holdout2_cases.json"
+
+
+def test_the_second_held_out_set_is_reproducible_fresh_and_valid(scorer):
+    import importlib.util
+
+    spec = importlib.util.spec_from_file_location("make_agent_holdout", ROOT / "scripts" / "make_agent_holdout.py")
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    second = evaluate.load_cases(HOLDOUT2_PATH)
+    assert second == module.make_loans(module.SEED_2, 20, "g") and len(second) == 20
+    seen = {json.dumps(c["loan"], sort_keys=True) for c in CASES + evaluate.load_cases(HOLDOUT_PATH)}
+    assert not any(json.dumps(c["loan"], sort_keys=True) in seen for c in second), "the fresh set shares no loan with the sets already used"
+    assert {c["id"] for c in second}.isdisjoint({c["id"] for c in CASES + evaluate.load_cases(HOLDOUT_PATH)})
+    for case in second:
+        scorer.explain(case["loan"])

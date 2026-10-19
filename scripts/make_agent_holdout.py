@@ -15,7 +15,11 @@ COUNT = 20
 OUT = Path(__file__).resolve().parents[1] / "agent" / "cases" / "holdout_cases.json"
 
 
-def make_loans(seed: int = SEED, count: int = COUNT) -> list[dict]:
+SEED_2 = 31415926
+OUT_2 = OUT.with_name("holdout2_cases.json")
+
+
+def make_loans(seed: int = SEED, count: int = COUNT, prefix: str = "h") -> list[dict]:
     rng = random.Random(seed)
     cases = []
     for i in range(1, count + 1):
@@ -33,10 +37,11 @@ def make_loans(seed: int = SEED, count: int = COUNT) -> list[dict]:
             "term_months": rng.choice([120, 180, 240, 300, 360, 360, 360, 480]),
             "purpose": rng.choice(["P", "P", "C", "N", "R"]),
         }
-        cases.append({"id": f"h{i:02d}", "description": "random loan (fixed seed)", "loan": loan})
+        cases.append({"id": f"{prefix}{i:02d}", "description": "random loan (fixed seed)", "loan": loan})
     return cases
 
 
 if __name__ == "__main__":
     OUT.write_text(json.dumps(make_loans(), indent=1, ensure_ascii=False) + "\n", encoding="utf-8")
-    print(f"wrote {OUT} ({COUNT} loans, seed {SEED})")
+    OUT_2.write_text(json.dumps(make_loans(SEED_2, COUNT, "g"), indent=1, ensure_ascii=False) + "\n", encoding="utf-8")
+    print(f"wrote {OUT.name} (seed {SEED}, ids h01..h20, already used for error analysis) and {OUT_2.name} (seed {SEED_2}, ids g01..g20, fresh)")

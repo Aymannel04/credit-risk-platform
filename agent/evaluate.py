@@ -21,6 +21,7 @@ from agent.facts import build_facts
 from agent.memo import generate_memo
 from agent.policy import ROOT, Policy, PolicyError, load_policy
 from agent.run import make_writer
+from agent.validator import FORM_CODES, SAFETY_CODES
 from agent.writer import ScriptedWriter, WriterError
 
 CASES_PATH = ROOT / "agent" / "cases" / "eval_cases.json"
@@ -47,7 +48,10 @@ def evaluate_cases(cases: list[dict], scorer, writer_for, policy: Policy, langua
         rows.append({
             "case": case["id"], "decision": facts["recommendation"], "status": result.status, "tries": len(result.attempts),
             "first_try": result.first_try, "seconds": seconds, "problems_by_try": [sorted({p.code for p in a.problems}) for a in result.attempts],
-            "writer_errors": [a.error for a in result.attempts if a.error], "memo": result.memo})
+            "writer_errors": [a.error for a in result.attempts if a.error], "memo": result.memo,
+            "tries_rejected_for_safety": sum(1 for a in result.attempts if any(p.code in SAFETY_CODES for p in a.problems)),
+            "backup_but_only_form": result.status == "backup" and bool(result.attempts[-1].problems)
+            and all(p.code in FORM_CODES for p in result.attempts[-1].problems)})
         if result.status == "backup" or len(result.attempts) > 1:  # the evidence for the loans that did not pass at once
             rows[-1]["evidence"] = [{"try": a.number, "complaints": [f"[{p.code}] {p.message[:200]}" for p in a.problems],
                                      "what_the_model_wrote": a.reply[:EVIDENCE_CHARS]} for a in result.attempts]
@@ -60,6 +64,8 @@ def evaluate_cases(cases: list[dict], scorer, writer_for, policy: Policy, langua
         "accepted_first_try": sum(r["first_try"] for r in rows),
         "accepted_after_rewrite": sum(r["status"] == "accepted" and not r["first_try"] for r in rows),
         "backup_memo": sum(r["status"] == "backup" for r in rows),
+        "backup_but_last_memo_only_form": sum(r["backup_but_only_form"] for r in rows),
+        "tries_rejected_for_safety": sum(r["tries_rejected_for_safety"] for r in rows), "total_tries": sum(r["tries"] for r in rows),
         "writer_errors": sum(bool(r["writer_errors"]) for r in rows),
         "mean_tries": round(sum(r["tries"] for r in rows) / n, 2) if n else 0,
         "mean_seconds_per_loan": round(sum(r["seconds"] for r in rows) / n, 1) if n else 0,
@@ -95,7 +101,11 @@ def render_report(result: dict, policy: Policy) -> str:
         return "\n".join(head) + "\n"
     head += ["| Measure | Value |", "|---|---|", f"| Loans | {result['cases']} |",
              f"| Accepted on the first try | {result['accepted_first_try']} |", f"| Accepted after a rewrite | {result['accepted_after_rewrite']} |",
-             f"| Backup memo (written by code) | {result['backup_memo']} |", f"| Loans where the writer itself failed | {result['writer_errors']} |",
+             f"| Backup memo (written by code) | {result['backup_memo']} |",
+             f"| of which the model's last memo had a problem of FORM only (headings, length) | {result.get('backup_but_last_memo_only_form', 'not recorded')} |",
+             f"| Tries rejected for a SAFETY reason (number, decision, warning, promise), of all tries | "
+             f"{result.get('tries_rejected_for_safety', 'not recorded')} of {result.get('total_tries', 'not recorded')} |",
+             f"| Loans where the writer itself failed | {result['writer_errors']} |",
              f"| Mean number of tries | {result['mean_tries']} |", f"| Decisions | {result['decisions']} |",
              f"| Seconds per loan (mean, slowest) | {result.get('mean_seconds_per_loan', 'not recorded')}, {result.get('slowest_loan_seconds', 'not recorded')} |",
              f"| Complaints raised by the inspector | {result['problem_codes'] or 'none'} |", "",

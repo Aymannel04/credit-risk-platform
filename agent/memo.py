@@ -5,6 +5,7 @@ Guarantees (each one has a test):
 - a writer that fails (network, key, quota, nonsense) never makes the function raise: the result is the backup memo, with the reason recorded;
 - the 'Loan data' section is always the one written by code, whatever the writer produced.
 """
+import inspect
 import re
 from dataclasses import dataclass, field
 
@@ -51,11 +52,21 @@ def _strip_fence(reply: str) -> str:
     return m.group(1) if m else reply
 
 
+def _relayout(reply: str, titles: list[str]) -> str:
+    """After a complaint a small model sometimes squeezes the whole memo onto one line ("## Résumé text ## Analyse ...") or puts a title and its
+    text on the same line. Putting each KNOWN title back on its own line changes no word and no number, only the line breaks."""
+    alt = "|".join(re.escape(t) for t in sorted(titles, key=len, reverse=True))
+    inline = re.search(rf"\S[ \t]+##[ \t]+(?:{alt})\b", reply) or re.search(rf"(?m)^##[ \t]+(?:{alt})[ \t]+\S", reply)
+    if not inline:
+        return reply
+    return re.sub(rf"[ \t]*##[ \t]+({alt})(?=[ \t\n]|$)[ \t]*", lambda m: f"\n\n## {m.group(1)}\n", reply).lstrip("\n")
+
+
 def assemble(reply: str, facts: dict) -> str:
     """The writer's text with the 'Loan data' section replaced by (or inserted as) the one written by code. Anything else the writer
     wrote (extra text, extra or missing titles) is left alone so that the inspector sees it."""
     heading = facts["headings"][DATA_SECTION_INDEX]
-    reply = _strip_fence(reply)
+    reply = _relayout(_strip_fence(reply), facts["headings"])
     found = list(re.finditer(r"(?m)^##\s+(.+?)\s*$", reply))
     code_section = f"## {heading}\n{facts['data_section']}\n\n"
     if not found:
@@ -78,6 +89,14 @@ def assemble(reply: str, facts: dict) -> str:
     return (preamble + "".join(out)).rstrip() + "\n"
 
 
+def _write(writer, messages: list[dict], temperature: float | None) -> str:
+    """Ask the writer; after a rejection a different temperature is requested (the same question at temperature 0 gave the same memo again).
+    Writers whose `write` does not take a temperature are simply called without it."""
+    if temperature is not None and "temperature" in inspect.signature(writer.write).parameters:
+        return writer.write(messages, temperature=temperature)
+    return writer.write(messages)
+
+
 def generate_memo(facts: dict, writer, policy: Policy) -> MemoResult:
     attempts: list[Attempt] = []
     previous_reply, previous_problems = None, None
@@ -85,7 +104,8 @@ def generate_memo(facts: dict, writer, policy: Policy) -> MemoResult:
         attempt = Attempt(number=n)
         attempts.append(attempt)
         try:
-            attempt.reply = writer.write(build_messages(facts, policy, previous_reply, previous_problems))
+            attempt.reply = _write(writer, build_messages(facts, policy, previous_reply, previous_problems),
+                                   policy.retry_temperature if n > 1 else None)
         except WriterError as e:
             attempt.error = str(e)
             break

@@ -22,7 +22,8 @@ Hard rules. A program checks every one of them and throws away any memo that bre
 5. In the first section, state the default probability exactly as written: {risk}.
 6. In the last section ("{limits_title}"), copy these sentences word for word, each one complete: {fixed_sentences}
 7. In the section "{reasons_title}", explain the reasons in your own words, one bullet each, and copy the points lost exactly.
-8. Length. The finished memo, with the section the system adds, must stay under {max_words} words, and the program counts every word. It is already counted for you: apart from the titles, the sentences you must copy and the system's section, you may write at most {budget} words of your own. Be brief and factual: one short sentence per bullet, one or two short sentences in each other section."""
+8. Length. The finished memo, with the section the system adds, must stay under {max_words} words, and the program counts every word. It is already counted for you: apart from the titles, the sentences you must copy and the system's section, you may write at most {budget} words of your own. Be brief and factual: one short sentence per bullet, one or two short sentences in each other section.
+9. Layout and repetition. Write each title on its own line and its text on the lines below it; one bullet per line; never put the whole memo on one line. Give each reason once, in the section "{reasons_title}" only: the other sections must not list or repeat the reasons. Write the points lost as plain positive numbers exactly as in the fact sheet (never with a minus sign)."""
 
 
 def word_budget(facts: dict, policy: Policy, safety: int = 15) -> int:
