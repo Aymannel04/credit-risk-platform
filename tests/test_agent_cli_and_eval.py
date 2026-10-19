@@ -443,3 +443,16 @@ def test_the_second_held_out_set_is_reproducible_fresh_and_valid(scorer):
     assert {c["id"] for c in second}.isdisjoint({c["id"] for c in CASES + evaluate.load_cases(HOLDOUT_PATH)})
     for case in second:
         scorer.explain(case["loan"])
+
+
+def test_the_wilson_interval_matches_known_values_and_the_report_shows_it():
+    low, high = evaluate.wilson_interval(18, 20)
+    assert (round(low, 3), round(high, 3)) == (0.699, 0.972)
+    low, high = evaluate.wilson_interval(20, 20)
+    assert round(high, 3) == 1.0 and round(low, 3) == 0.839
+    assert evaluate.wilson_interval(0, 20)[0] == 0.0 and evaluate.wilson_interval(0, 0) == (0.0, 0.0)
+    assert 0.0 <= evaluate.wilson_interval(1, 3)[0] < evaluate.wilson_interval(1, 3)[1] <= 1.0
+    result = {"generated_utc": "x", "writer": "w", "language": "fr", "scorer": "s", "cases": 20, "accepted_first_try": 18, "accepted_after_rewrite": 1,
+              "backup_memo": 1, "writer_errors": 0, "mean_tries": 1.15, "decisions": {}, "problem_codes": {}, "rows": []}
+    report = evaluate.render_report(result, POLICY)
+    assert "18 of 20 = 90% (between 70% and 97%)" in report and "19 of 20 = 95% (between 76% and 99%)" in report

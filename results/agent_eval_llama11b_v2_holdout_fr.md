@@ -5,36 +5,41 @@ Language: fr. Scoring: in-process API (same code as the Lambda). Decision lines:
 | Measure | Value |
 |---|---|
 | Loans | 20 |
+| Accepted on the first try, with a 95% interval (the sample is small) | 12 of 20 = 60% (between 39% and 78%) |
+| Memo written by the model and accepted (first try or rewrite), 95% interval | 15 of 20 = 75% (between 53% and 89%) |
 | Accepted on the first try | 12 |
 | Accepted after a rewrite | 3 |
 | Backup memo (written by code) | 5 |
+| of which the model's last memo had a problem of FORM only (headings, length) | not recorded |
+| Tries rejected for a SAFETY reason (number, decision, warning, promise), of all tries | not recorded of not recorded |
 | Loans where the writer itself failed | 0 |
 | Mean number of tries | 1.8 |
 | Decisions | {'approve': 12, 'decline': 5, 'refer': 3} |
+| Seconds per loan (mean, slowest) | not recorded, not recorded |
 | Complaints raised by the inspector | {'LENGTH': 15, 'NUMBER_NOT_IN_FACTS': 2, 'SECTIONS': 9} |
 
-| Case | Decision | Result | Tries | Complaints per try |
-|---|---|---|---|---|
-| `h01` | approve | backup | 3 | [['LENGTH'], ['LENGTH', 'SECTIONS'], ['LENGTH']] |
-| `h02` | decline | backup | 3 | [['LENGTH'], ['LENGTH', 'SECTIONS'], ['LENGTH']] |
-| `h03` | approve | accepted | 1 | [[]] |
-| `h04` | approve | accepted | 1 | [[]] |
-| `h05` | refer | backup | 3 | [['LENGTH'], ['LENGTH', 'SECTIONS'], ['LENGTH']] |
-| `h06` | decline | accepted | 1 | [[]] |
-| `h07` | decline | accepted | 3 | [['LENGTH'], ['SECTIONS'], []] |
-| `h08` | approve | accepted | 1 | [[]] |
-| `h09` | approve | accepted | 1 | [[]] |
-| `h10` | refer | accepted | 3 | [['LENGTH'], ['SECTIONS'], []] |
-| `h11` | approve | accepted | 1 | [[]] |
-| `h12` | decline | accepted | 3 | [['LENGTH'], ['SECTIONS'], []] |
-| `h13` | approve | accepted | 1 | [[]] |
-| `h14` | approve | accepted | 1 | [[]] |
-| `h15` | refer | backup | 3 | [['LENGTH'], ['LENGTH', 'SECTIONS'], ['LENGTH']] |
-| `h16` | approve | accepted | 1 | [[]] |
-| `h17` | approve | accepted | 1 | [[]] |
-| `h18` | approve | accepted | 1 | [[]] |
-| `h19` | decline | accepted | 1 | [[]] |
-| `h20` | approve | backup | 3 | [['NUMBER_NOT_IN_FACTS'], ['NUMBER_NOT_IN_FACTS', 'SECTIONS'], ['SECTIONS']] |
+| Case | Decision | Result | Tries | Seconds | Complaints per try |
+|---|---|---|---|---|---|
+| `h01` | approve | backup | 3 |  | [['LENGTH'], ['LENGTH', 'SECTIONS'], ['LENGTH']] |
+| `h02` | decline | backup | 3 |  | [['LENGTH'], ['LENGTH', 'SECTIONS'], ['LENGTH']] |
+| `h03` | approve | accepted | 1 |  | [[]] |
+| `h04` | approve | accepted | 1 |  | [[]] |
+| `h05` | refer | backup | 3 |  | [['LENGTH'], ['LENGTH', 'SECTIONS'], ['LENGTH']] |
+| `h06` | decline | accepted | 1 |  | [[]] |
+| `h07` | decline | accepted | 3 |  | [['LENGTH'], ['SECTIONS'], []] |
+| `h08` | approve | accepted | 1 |  | [[]] |
+| `h09` | approve | accepted | 1 |  | [[]] |
+| `h10` | refer | accepted | 3 |  | [['LENGTH'], ['SECTIONS'], []] |
+| `h11` | approve | accepted | 1 |  | [[]] |
+| `h12` | decline | accepted | 3 |  | [['LENGTH'], ['SECTIONS'], []] |
+| `h13` | approve | accepted | 1 |  | [[]] |
+| `h14` | approve | accepted | 1 |  | [[]] |
+| `h15` | refer | backup | 3 |  | [['LENGTH'], ['LENGTH', 'SECTIONS'], ['LENGTH']] |
+| `h16` | approve | accepted | 1 |  | [[]] |
+| `h17` | approve | accepted | 1 |  | [[]] |
+| `h18` | approve | accepted | 1 |  | [[]] |
+| `h19` | decline | accepted | 1 |  | [[]] |
+| `h20` | approve | backup | 3 |  | [['NUMBER_NOT_IN_FACTS'], ['NUMBER_NOT_IN_FACTS', 'SECTIONS'], ['SECTIONS']] |
 
 ## Evidence for the loans that did not pass at once
 

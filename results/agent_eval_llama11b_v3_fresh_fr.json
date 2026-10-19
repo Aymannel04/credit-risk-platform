@@ -1,0 +1,380 @@
+{
+  "generated_utc": "2026-10-19 20:13",
+  "writer": "nvidia: meta/llama-3.2-11b-vision-instruct",
+  "language": "fr",
+  "scorer": "in-process API (same code as the Lambda)",
+  "cases": 20,
+  "accepted_first_try": 18,
+  "accepted_after_rewrite": 1,
+  "backup_memo": 1,
+  "backup_but_last_memo_only_form": 1,
+  "tries_rejected_for_safety": 0,
+  "total_tries": 23,
+  "writer_errors": 0,
+  "mean_tries": 1.15,
+  "mean_seconds_per_loan": 43.5,
+  "slowest_loan_seconds": 177.0,
+  "decisions": {
+    "approve": 8,
+    "refer": 6,
+    "decline": 6
+  },
+  "problem_codes": {
+    "LENGTH": 4
+  },
+  "rows": [
+    {
+      "case": "g01",
+      "decision": "approve",
+      "status": "accepted",
+      "tries": 1,
+      "first_try": true,
+      "seconds": 16.3,
+      "problems_by_try": [
+        []
+      ],
+      "writer_errors": [],
+      "memo": "## Résumé\nLa probabilité de défaut par défaut est de 0,38 %. Le score du modèle est de 647,5.\n\n## Données du dossier\n- Score de crédit : 775\n- Dettes / revenu : 38 %\n- Prêt / valeur du bien : 85 %\n- Emprunt total / valeur du bien : 85 %\n- Taux du prêt : 3,7 %\n- Taux de référence : 3,8 %\n- Écart de taux : -0,1 %\n- Nombre d'emprunteurs : 1\n- Assurance du prêt : 0 %\n- Durée en mois : 240\n- Durée en années : 20\n\n## Analyse du risque\n- Le ratio cumulé représente 35,6 points perdus.\n- Un seul emprunteur sur le prêt est associé à 24,3 points perdus.\n- Les dettes mensuelles représentent 19,6 points perdus.\n- Le prêt représente 10,8 points perdus.\n\n## Raisons principales\n- L'emprunt total représente une part élevée de la valeur du bien (ratio cumulé).\n- Un seul emprunteur sur le prêt est associé à un taux de défaut plus élevé.\n- Les dettes mensuelles représentent une part élevée du revenu.\n- Le prêt représente une part élevée de la valeur du bien.\n\n## Recommandation\nAPPROUVER\n\n## Limites\nPolitique illustrative : ce mémo n'est pas une décision de crédit.\nLe risque affiché est une moyenne sur le cycle économique : en période calme, il a été de 1,4 à 2,6 fois le taux de défaut réellement observé.\n",
+      "tries_rejected_for_safety": 0,
+      "backup_but_only_form": false
+    },
+    {
+      "case": "g02",
+      "decision": "refer",
+      "status": "accepted",
+      "tries": 1,
+      "first_try": true,
+      "seconds": 44.0,
+      "problems_by_try": [
+        []
+      ],
+      "writer_errors": [],
+      "memo": "## Résumé\nLe prêt a été évalué avec un score de 588,8 et une probabilité de défaut de 2,87 %.\n\n## Données du dossier\n- Score de crédit : 640\n- Dettes / revenu : 12 %\n- Prêt / valeur du bien : 60 %\n- Emprunt total / valeur du bien : 60 %\n- Taux du prêt : 3,9 %\n- Taux de référence : 3,9 %\n- Écart de taux : 0 %\n- Nombre d'emprunteurs : 1\n- Assurance du prêt : 12 %\n- Durée en mois : 360\n- Durée en années : 30\n\n## Analyse du risque\n- Le score de crédit est plus bas que celui des emprunteurs les plus sûrs.\n- Un seul emprunteur sur le prêt est associé à un taux de défaut plus élevé.\n- La durée du prêt diffère du groupe de durée le moins risqué.\n- L'emprunt total représente une part élevée de la valeur du bien (ratio cumulé).\n\n## Raisons principales\n- Le score de crédit est plus bas que celui des emprunteurs les plus sûrs, ce qui représente 75,5 points perdus.\n- Un seul emprunteur sur le prêt est associé à un taux de défaut plus élevé, ce qui représente 24,3 points perdus.\n- La durée du prêt diffère du groupe de durée le moins risqué, ce qui représente 22,3 points perdus.\n- L'emprunt total représente une part élevée de la valeur du bien (ratio cumulé), ce qui représente 17,6 points perdus.\n\n## Recommandation\nÀ EXAMINER.\n\n## Limites\nPolitique illustrative : ce mémo n'est pas une décision de crédit.\nLe risque affiché est une moyenne sur le cycle économique : en période calme, il a été de 1,4 à 2,6 fois le taux de défaut réellement observé.\n",
+      "tries_rejected_for_safety": 0,
+      "backup_but_only_form": false
+    },
+    {
+      "case": "g03",
+      "decision": "approve",
+      "status": "accepted",
+      "tries": 1,
+      "first_try": true,
+      "seconds": 18.1,
+      "problems_by_try": [
+        []
+      ],
+      "writer_errors": [],
+      "memo": "## Résumé\nLe prêt a été évalué avec un score de 599,8 et une probabilité de défaut de 1,98 %.\n\n## Données du dossier\n- Score de crédit : 685\n- Dettes / revenu : 38 %\n- Prêt / valeur du bien : 60 %\n- Emprunt total / valeur du bien : 60 %\n- Taux du prêt : 5,6 %\n- Taux de référence : 4,8 %\n- Écart de taux : 0,8 %\n- Nombre d'emprunteurs : 3\n- Assurance du prêt : 0 %\n- Durée en mois : 360\n- Durée en années : 30\n\n## Analyse du risque\n- Le score de crédit est plus bas que celui des emprunteurs les plus sûrs.\n- La durée du prêt diffère du groupe de durée le moins risqué.\n- Les dettes mensuelles représentent une part élevée du revenu.\n- L'emprunt total représente une part élevée de la valeur du bien (ratio cumulé).\n\n## Raisons principales\n- Le score de crédit est plus bas que celui des emprunteurs les plus sûrs, ce qui représente 45,8 points perdus.\n- La durée du prêt diffère du groupe de durée le moins risqué, ce qui représente 22,3 points perdus.\n- Les dettes mensuelles représentent une part élevée du revenu, ce qui représente 19,6 points perdus.\n- L'emprunt total représente une part élevée de la valeur du bien (ratio cumulé), ce qui représente 17,6 points perdus.\n\n## Recommandation\nAPPROUVER\n\n## Limites\nPolitique illustrative : ce mémo n'est pas une décision de crédit.\nLe risque affiché est une moyenne sur le cycle économique : en période calme, il a été de 1,4 à 2,6 fois le taux de défaut réellement observé.\n",
+      "tries_rejected_for_safety": 0,
+      "backup_but_only_form": false
+    },
+    {
+      "case": "g04",
+      "decision": "decline",
+      "status": "accepted",
+      "tries": 1,
+      "first_try": true,
+      "seconds": 17.7,
+      "problems_by_try": [
+        []
+      ],
+      "writer_errors": [],
+      "memo": "## Résumé\nLa probabilité de défaut par défaut est de 11,55 %.\n\n## Données du dossier\n- Score de crédit : 565\n- Dettes / revenu : 56 %\n- Prêt / valeur du bien : 60 %\n- Emprunt total / valeur du bien : 60 %\n- Taux du prêt : 5,3 %\n- Taux de référence : 3,8 %\n- Écart de taux : 1,5 %\n- Nombre d'emprunteurs : 2\n- Assurance du prêt : 18 %\n- Durée en mois : 360\n- Durée en années : 30\n\n## Analyse du risque\n- Le score de crédit est plus bas que celui des emprunteurs les plus sûrs.\n- Les dettes mensuelles représentent une part élevée du revenu.\n- La durée du prêt diffère du groupe de durée le moins risqué.\n- L'emprunt total représente une part élevée de la valeur du bien (ratio cumulé).\n\n## Raisons principales\n- Le score de crédit est plus bas que celui des emprunteurs les plus sûrs, ce qui représente 75,5 points perdus.\n- Les dettes mensuelles représentent une part élevée du revenu, ce qui représente 52,1 points perdus.\n- La durée du prêt diffère du groupe de durée le moins risqué, ce qui représente 22,3 points perdus.\n- L'emprunt total représente une part élevée de la valeur du bien (ratio cumulé), ce qui représente 17,6 points perdus.\n\n## Recommandation\nREFUSER\n\n## Limites\nPolitique illustrative : ce mémo n'est pas une décision de crédit.\nLe risque affiché est une moyenne sur le cycle économique : en période calme, il a été de 1,4 à 2,6 fois le taux de défaut réellement observé.\n",
+      "tries_rejected_for_safety": 0,
+      "backup_but_only_form": false
+    },
+    {
+      "case": "g05",
+      "decision": "refer",
+      "status": "accepted",
+      "tries": 1,
+      "first_try": true,
+      "seconds": 18.4,
+      "problems_by_try": [
+        []
+      ],
+      "writer_errors": [],
+      "memo": "## Résumé\nLe prêt est classé comme étant à examiner avec une probabilité de défaut de 2,81 %. Le score du modèle est de 589,3.\n\n## Données du dossier\n- Score de crédit : 670\n- Dettes / revenu : 36 %\n- Prêt / valeur du bien : 80 %\n- Emprunt total / valeur du bien : 80 %\n- Taux du prêt : 4,4 %\n- Taux de référence : 3,6 %\n- Écart de taux : 0,8 %\n- Nombre d'emprunteurs : 3\n- Assurance du prêt : 0 %\n- Durée en mois : 480\n- Durée en années : 40\n\n## Analyse du risque\n- Le score de crédit est plus bas que celui des emprunteurs les plus sûrs.\n- L'emprunt total représente une part élevée de la valeur du bien (ratio cumulé).\n- La durée du prêt diffère du groupe de durée le moins risqué.\n- Les dettes mensuelles représentent une part élevée du revenu.\n\n## Raisons principales\n- Le score de crédit est plus bas que celui des emprunteurs les plus sûrs, ce qui représente 61,1 points perdus.\n- L'emprunt total représente une part élevée de la valeur du bien (ratio cumulé), ce qui représente 22,8 points perdus.\n- La durée du prêt diffère du groupe de durée le moins risqué, ce qui représente 22,3 points perdus.\n- Les dettes mensuelles représentent une part élevée du revenu, ce qui représente 19,6 points perdus.\n\n## Recommandation\nÀ EXAMINER\n\n## Limites\nPolitique illustrative : ce mémo n'est pas une décision de crédit.\nLe risque affiché est une moyenne sur le cycle économique : en période calme, il a été de 1,4 à 2,6 fois le taux de défaut réellement observé.\n",
+      "tries_rejected_for_safety": 0,
+      "backup_but_only_form": false
+    },
+    {
+      "case": "g06",
+      "decision": "approve",
+      "status": "accepted",
+      "tries": 1,
+      "first_try": true,
+      "seconds": 119.3,
+      "problems_by_try": [
+        []
+      ],
+      "writer_errors": [],
+      "memo": "## Résumé\nLa probabilité de défaut par défaut est de 0,62 %. Le score du modèle est de 633,7.\n\n## Données du dossier\n- Score de crédit : 670\n- Dettes / revenu : 26 %\n- Prêt / valeur du bien : 70 %\n- Emprunt total / valeur du bien : 70 %\n- Taux du prêt : 3,5 %\n- Taux de référence : 3,6 %\n- Écart de taux : -0,1 %\n- Nombre d'emprunteurs : 2\n- Assurance du prêt : 18 %\n- Durée en mois : 180\n- Durée en années : 15\n\n## Analyse du risque\n- Le score de crédit est plus bas que celui des emprunteurs les plus sûrs.\n- L'emprunt total représente une part élevée de la valeur du bien (ratio cumulé).\n- Les dettes mensuelles représentent une part élevée du revenu.\n- Le prêt représente une part élevée de la valeur du bien.\n\n## Raisons principales\n- Le score de crédit est plus bas que celui des emprunteurs les plus sûrs, ce qui représente 61,1 points perdus.\n- L'emprunt total représente une part élevée de la valeur du bien (ratio cumulé), ce qui représente 22,8 points perdus.\n- Les dettes mensuelles représentent une part élevée du revenu, ce qui représente 9,6 points perdus.\n- Le prêt représente une part élevée de la valeur du bien, ce qui représente 7,4 points perdus.\n\n## Recommandation\nAPPROUVER\n\n## Limites\nPolitique illustrative : ce mémo n'est pas une décision de crédit.\nLe risque affiché est une moyenne sur le cycle économique : en période calme, il a été de 1,4 à 2,6 fois le taux de défaut réellement observé.\n",
+      "tries_rejected_for_safety": 0,
+      "backup_but_only_form": false
+    },
+    {
+      "case": "g07",
+      "decision": "approve",
+      "status": "accepted",
+      "tries": 1,
+      "first_try": true,
+      "seconds": 20.1,
+      "problems_by_try": [
+        []
+      ],
+      "writer_errors": [],
+      "memo": "## Résumé\nLe prêt a été évalué avec un score de 645,3 et une probabilité de défaut de 0,41 %.\n\n## Données du dossier\n- Score de crédit : 820\n- Dettes / revenu : 46 %\n- Prêt / valeur du bien : 40 %\n- Emprunt total / valeur du bien : 45 %\n- Taux du prêt : 5,2 %\n- Taux de référence : 4,4 %\n- Écart de taux : 0,8 %\n- Nombre d'emprunteurs : 1\n- Assurance du prêt : 0 %\n- Durée en mois : 360\n- Durée en années : 30\n\n## Analyse du risque\n- Le taux de défaut est élevé en raison de la durée du prêt.\n- Le taux d'intérêt est supérieur à celui de prêts comparables de la même période et durée.\n- Un seul emprunteur est associé à un taux de défaut plus élevé.\n- Les dettes mensuelles représentent une part élevée du revenu.\n\n## Raisons principales\n- Les dettes mensuelles représentent une part élevée du revenu (32,5 points perdus).\n- Un seul emprunteur est associé à un taux de défaut plus élevé (24,3 points perdus).\n- La durée du prêt diffère du groupe de durée le moins risqué (22,3 points perdus).\n- Le taux d'intérêt est supérieur à celui de prêts comparables de la même période et durée (13,5 points perdus).\n\n## Recommandation\nAPPROUVER\n\n## Limites\nPolitique illustrative : ce mémo n'est pas une décision de crédit.\nLe risque affiché est une moyenne sur le cycle économique : en période calme, il a été de 1,4 à 2,6 fois le taux de défaut réellement observé.\n",
+      "tries_rejected_for_safety": 0,
+      "backup_but_only_form": false
+    },
+    {
+      "case": "g08",
+      "decision": "approve",
+      "status": "accepted",
+      "tries": 1,
+      "first_try": true,
+      "seconds": 16.5,
+      "problems_by_try": [
+        []
+      ],
+      "writer_errors": [],
+      "memo": "## Résumé\nLe score de crédit est de 625,9 et la probabilité de défaut par défaut est de 0,81 %.\n\n## Données du dossier\n- Score de crédit : 600\n- Dettes / revenu : 20 %\n- Prêt / valeur du bien : 80 %\n- Emprunt total / valeur du bien : 80 %\n- Taux du prêt : 4,8 %\n- Taux de référence : 4,7 %\n- Écart de taux : 0,1 %\n- Nombre d'emprunteurs : 3\n- Assurance du prêt : 25 %\n- Durée en mois : 240\n- Durée en années : 20\n\n## Analyse du risque\n- Le score de crédit est plus bas que celui des emprunteurs les plus sûrs.\n- L'emprunt total représente une part élevée de la valeur du bien (ratio cumulé).\n- Le prêt représente une part élevée de la valeur du bien.\n\n## Raisons principales\n- Le score de crédit est plus bas que celui des emprunteurs les plus sûrs, ce qui représente 75,5 points perdus.\n- L'emprunt total représente une part élevée de la valeur du bien (ratio cumulé), ce qui représente 22,8 points perdus.\n- Le prêt représente une part élevée de la valeur du bien, ce qui représente 7,4 points perdus.\n\n## Recommandation\nAPPROUVER\n\n## Limites\nPolitique illustrative : ce mémo n'est pas une décision de crédit.\nLe risque affiché est une moyenne sur le cycle économique : en période calme, il a été de 1,4 à 2,6 fois le taux de défaut réellement observé.\n",
+      "tries_rejected_for_safety": 0,
+      "backup_but_only_form": false
+    },
+    {
+      "case": "g09",
+      "decision": "approve",
+      "status": "accepted",
+      "tries": 1,
+      "first_try": true,
+      "seconds": 30.3,
+      "problems_by_try": [
+        []
+      ],
+      "writer_errors": [],
+      "memo": "## Résumé\nL'emprunt a été évalué avec un score de 653,6 et une probabilité de défaut de 0,31 %. La recommandation est d'APPROUVER.\n\n## Données du dossier\n- Score de crédit : 765\n- Dettes / revenu : 46 %\n- Prêt / valeur du bien : 85 %\n- Emprunt total / valeur du bien : 85 %\n- Taux du prêt : 3,6 %\n- Taux de référence : 3,4 %\n- Écart de taux : 0,2 %\n- Nombre d'emprunteurs : 3\n- Assurance du prêt : 0 %\n- Durée en mois : 300\n- Durée en années : 25\n\n## Analyse du risque\n- Le ratio cumulé est élevé à 35,6.\n- Les dettes mensuelles représentent 32,5 % du revenu.\n- Le prêt représente 10,8 % de la valeur du bien.\n\n## Raisons principales\n- L'emprunt total représente une part élevée de la valeur du bien (ratio cumulé).\n- Les dettes mensuelles représentent une part élevée du revenu.\n- Le prêt représente une part élevée de la valeur du bien.\n\n## Recommandation\nAPPROUVER\n\n## Limites\nPolitique illustrative : ce mémo n'est pas une décision de crédit.\nLe risque affiché est une moyenne sur le cycle économique : en période calme, il a été de 1,4 à 2,6 fois le taux de défaut réellement observé.\n",
+      "tries_rejected_for_safety": 0,
+      "backup_but_only_form": false
+    },
+    {
+      "case": "g10",
+      "decision": "decline",
+      "status": "accepted",
+      "tries": 1,
+      "first_try": true,
+      "seconds": 23.2,
+      "problems_by_try": [
+        []
+      ],
+      "writer_errors": [],
+      "memo": "## Résumé\nLe prêt a été évalué avec un score de 527,2 et une probabilité de défaut de 19,97 %.\n\n## Données du dossier\n- Score de crédit : 660\n- Dettes / revenu : 52 %\n- Prêt / valeur du bien : 60 %\n- Emprunt total / valeur du bien : 65 %\n- Taux du prêt : 4,9 %\n- Taux de référence : 4,5 %\n- Écart de taux : 0,4 %\n- Nombre d'emprunteurs : 1\n- Assurance du prêt : 30 %\n- Durée en mois : 360\n- Durée en années : 30\n\n## Analyse du risque\n- Le score de crédit est plus bas que celui des emprunteurs les plus sûrs.\n- Les dettes mensuelles représentent une part élevée du revenu.\n- Un seul emprunteur sur le prêt est associé à un taux de défaut plus élevé.\n- La durée du prêt diffère du groupe de durée le moins risqué.\n\n## Raisons principales\n- Le score de crédit est plus bas que celui des emprunteurs les plus sûrs, ce qui représente 75,5 points perdus.\n- Les dettes mensuelles représentent une part élevée du revenu, ce qui représente 52,1 points perdus.\n- Un seul emprunteur sur le prêt est associé à un taux de défaut plus élevé, ce qui représente 24,3 points perdus.\n- La durée du prêt diffère du groupe de durée le moins risqué, ce qui représente 22,3 points perdus.\n\n## Recommandation\nREFUSER\n\n## Limites\nPolitique illustrative : ce mémo n'est pas une décision de crédit.\nLe risque affiché est une moyenne sur le cycle économique : en période calme, il a été de 1,4 à 2,6 fois le taux de défaut réellement observé.\n",
+      "tries_rejected_for_safety": 0,
+      "backup_but_only_form": false
+    },
+    {
+      "case": "g11",
+      "decision": "refer",
+      "status": "backup",
+      "tries": 3,
+      "first_try": false,
+      "seconds": 105.7,
+      "problems_by_try": [
+        [
+          "LENGTH"
+        ],
+        [
+          "LENGTH"
+        ],
+        [
+          "LENGTH"
+        ]
+      ],
+      "writer_errors": [],
+      "memo": "## Résumé\nLe modèle estime un risque de défaut de 2,18 % sur 24 mois. Recommandation : À EXAMINER.\n\n## Données du dossier\n- Score de crédit : 620\n- Dettes / revenu : 22 %\n- Prêt / valeur du bien : 40 %\n- Emprunt total / valeur du bien : 45 %\n- Taux du prêt : 5,7 %\n- Taux de référence : 4,2 %\n- Écart de taux : 1,5 %\n- Nombre d'emprunteurs : 1\n- Assurance du prêt : 0 %\n- Durée en mois : 360\n- Durée en années : 30\n\n## Analyse du risque\nScore du modèle : 596,9 points. Probabilité de défaut estimée : 2,18 %. Lignes de la politique illustrative : 2 % et 5 %.\n\n## Raisons principales\n- Le score de crédit est plus bas que celui des emprunteurs les plus sûrs (75,5 points perdus).\n- Un seul emprunteur sur le prêt est associé à un taux de défaut plus élevé (24,3 points perdus).\n- La durée du prêt diffère du groupe de durée le moins risqué (22,3 points perdus).\n- Le taux d'intérêt est supérieur à celui de prêts comparables de la même période et durée (17,0 points perdus).\n\n## Recommandation\n**À EXAMINER**. Le risque estimé se situe entre la première et la seconde ligne de la politique : un analyste doit examiner le dossier.\n\n## Limites\nPolitique illustrative : ce mémo n'est pas une décision de crédit. Le risque affiché est une moyenne sur le cycle économique : en période calme, il a été de 1,4 à 2,6 fois le taux de défaut réellement observé.\n",
+      "tries_rejected_for_safety": 0,
+      "backup_but_only_form": true,
+      "evidence": [
+        {
+          "try": 1,
+          "complaints": [
+            "[LENGTH] The memo has 264 words and the limit is 260: remove at least 24 words of your own text (the system's 'Loan data' section and the fixed sentences cannot be shortened)."
+          ],
+          "what_the_model_wrote": "## Résumé\nLa probabilité de défaut par défaut est de 2,18 %. Le score du modèle est de 596,9.\n\n## Analyse du risque\n- Le score de crédit est plus bas que celui des emprunteurs les plus sûrs.\n- Un seul emprunteur sur le prêt est associé à un taux de défaut plus élevé.\n- La durée du prêt diffère du groupe de durée le moins risqué.\n- Le taux d'intérêt est supérieur à celui de prêts comparables de la même période et durée.\n\n## Raisons principales\n- Le score de crédit est plus bas que celui des emprunteurs les plus sûrs, ce qui représente 75,5 points perdus.\n- Un seul emprunteur sur le prêt est associé à un taux de défaut plus élevé, ce qui représente 24,3 points perdus.\n- La durée du prêt diffère du groupe de durée le moins risqué, ce qui représente 22,3 points perdus.\n- Le taux d'intérêt est supérieur à celui de prêts comparables de la même période et durée, ce qui représente 17,0 points perdus.\n\n## Recommandation\nÀ EXAMINER.\n\n## Limites\nPolitique illustrative : ce mémo n'est pas une décision de crédit.\nLe risque affiché est une moyenne sur le cycle économique : en période calme, il a été de 1,4 à 2,6 fois le taux de défaut réellement observé."
+        },
+        {
+          "try": 2,
+          "complaints": [
+            "[LENGTH] The memo has 264 words and the limit is 260: remove at least 24 words of your own text (the system's 'Loan data' section and the fixed sentences cannot be shortened)."
+          ],
+          "what_the_model_wrote": "## Résumé La probabilité de défaut par défaut est de 2,18 %. Le score du modèle est de 596,9. ## Analyse du risque - Le score de crédit est plus bas que celui des emprunteurs les plus sûrs. - Un seul emprunteur sur le prêt est associé à un taux de défaut plus élevé. - La durée du prêt diffère du groupe de durée le moins risqué. - Le taux d'intérêt est supérieur à celui de prêts comparables de la même période et durée. ## Raisons principales - Le score de crédit est plus bas que celui des emprunteurs les plus sûrs, ce qui représente 75,5 points perdus. - Un seul emprunteur sur le prêt est associé à un taux de défaut plus élevé, ce qui représente 24,3 points perdus. - La durée du prêt diffère du groupe de durée le moins risqué, ce qui représente 22,3 points perdus. - Le taux d'intérêt est supérieur à celui de prêts comparables de la même période et durée, ce qui représente 17,0 points perdus. ## Recommandation À EXAMINER. ## Limites Politique illustrative : ce mémo n'est pas une décision de crédit. Le risque affiché est une moyenne sur le cycle économique : en période calme, il a été de 1,4 à 2,6 fois le taux de défaut réellement observé."
+        },
+        {
+          "try": 3,
+          "complaints": [
+            "[LENGTH] The memo has 264 words and the limit is 260: remove at least 24 words of your own text (the system's 'Loan data' section and the fixed sentences cannot be shortened)."
+          ],
+          "what_the_model_wrote": "## Résumé La probabilité de défaut par défaut est de 2,18 %. Le score du modèle est de 596,9. ## Analyse du risque - Le score de crédit est plus bas que celui des emprunteurs les plus sûrs. - Un seul emprunteur sur le prêt est associé à un taux de défaut plus élevé. - La durée du prêt diffère du groupe de durée le moins risqué. - Le taux d'intérêt est supérieur à celui de prêts comparables de la même période et durée. ## Raisons principales - Le score de crédit est plus bas que celui des emprunteurs les plus sûrs, ce qui représente 75,5 points perdus. - Un seul emprunteur sur le prêt est associé à un taux de défaut plus élevé, ce qui représente 24,3 points perdus. - La durée du prêt diffère du groupe de durée le moins risqué, ce qui représente 22,3 points perdus. - Le taux d'intérêt est supérieur à celui de prêts comparables de la même période et durée, ce qui représente 17,0 points perdus. ## Recommandation À EXAMINER. ## Limites Politique illustrative : ce mémo n'est pas une décision de crédit. Le risque affiché est une moyenne sur le cycle économique : en période calme, il a été de 1,4 à 2,6 fois le taux de défaut réellement observé."
+        }
+      ]
+    },
+    {
+      "case": "g12",
+      "decision": "decline",
+      "status": "accepted",
+      "tries": 1,
+      "first_try": true,
+      "seconds": 9.1,
+      "problems_by_try": [
+        []
+      ],
+      "writer_errors": [],
+      "memo": "## Résumé\nLa probabilité de défaut par défaut est de 19,48 %.\n\n## Données du dossier\n- Score de crédit : 600\n- Dettes / revenu : 40 %\n- Prêt / valeur du bien : 75 %\n- Emprunt total / valeur du bien : 85 %\n- Taux du prêt : 5,1 %\n- Taux de référence : 3,6 %\n- Écart de taux : 1,5 %\n- Nombre d'emprunteurs : 1\n- Assurance du prêt : 12 %\n- Durée en mois : 360\n- Durée en années : 30\n\n## Analyse du risque\n- Le score de crédit est plus bas que celui des emprunteurs les plus sûrs.\n- L'emprunt total représente une part élevée de la valeur du bien (ratio cumulé).\n- Les dettes mensuelles représentent une part élevée du revenu.\n- Un seul emprunteur sur le prêt est associé à un taux de défaut plus élevé.\n\n## Raisons principales\n- Le score de crédit est plus bas que celui des emprunteurs les plus sûrs, ce qui représente 75,5 points perdus.\n- L'emprunt total représente une part élevée de la valeur du bien, ce qui représente 35,6 points perdus.\n- Les dettes mensuelles représentent une part élevée du revenu, ce qui représente 26,2 points perdus.\n- Un seul emprunteur sur le prêt est associé à un taux de défaut plus élevé, ce qui représente 24,3 points perdus.\n\n## Recommandation\nREFUSER\n\n## Limites\nPolitique illustrative : ce mémo n'est pas une décision de crédit.\nLe risque affiché est une moyenne sur le cycle économique : en période calme, il a été de 1,4 à 2,6 fois le taux de défaut réellement observé.\n",
+      "tries_rejected_for_safety": 0,
+      "backup_but_only_form": false
+    },
+    {
+      "case": "g13",
+      "decision": "refer",
+      "status": "accepted",
+      "tries": 1,
+      "first_try": true,
+      "seconds": 16.5,
+      "problems_by_try": [
+        []
+      ],
+      "writer_errors": [],
+      "memo": "## Résumé\nLe prêt est classé comme étant à examiner avec une probabilité de défaut de 2,16 %. Le score du modèle est de 597,1.\n\n## Données du dossier\n- Score de crédit : 660\n- Dettes / revenu : 14 %\n- Prêt / valeur du bien : 90 %\n- Emprunt total / valeur du bien : 95 %\n- Taux du prêt : 4 %\n- Taux de référence : 4 %\n- Écart de taux : 0 %\n- Nombre d'emprunteurs : 3\n- Assurance du prêt : 0 %\n- Durée en mois : 360\n- Durée en années : 30\n\n## Analyse du risque\n- Le score de crédit est plus bas que celui des emprunteurs les plus sûrs.\n- L'emprunt total représente une part élevée de la valeur du bien (ratio cumulé).\n- La durée du prêt diffère du groupe de durée le moins risqué.\n- Le prêt représente une part élevée de la valeur du bien.\n\n## Raisons principales\n- Le score de crédit est plus bas que celui des emprunteurs les plus sûrs, ce qui représente 75,5 points perdus.\n- L'emprunt total représente une part élevée de la valeur du bien, ce qui représente 30,3 points perdus.\n- La durée du prêt diffère du groupe de durée le moins risqué, ce qui représente 22,3 points perdus.\n- Le prêt représente une part élevée de la valeur du bien, ce qui représente 10,8 points perdus.\n\n## Recommandation\nÀ EXAMINER\n\n## Limites\nPolitique illustrative : ce mémo n'est pas une décision de crédit.\nLe risque affiché est une moyenne sur le cycle économique : en période calme, il a été de 1,4 à 2,6 fois le taux de défaut réellement observé.\n",
+      "tries_rejected_for_safety": 0,
+      "backup_but_only_form": false
+    },
+    {
+      "case": "g14",
+      "decision": "refer",
+      "status": "accepted",
+      "tries": 1,
+      "first_try": true,
+      "seconds": 68.4,
+      "problems_by_try": [
+        []
+      ],
+      "writer_errors": [],
+      "memo": "## Résumé\nLe prêt a été évalué avec un score de 590,9 et une probabilité de défaut de 2,67 %.\n\n## Données du dossier\n- Score de crédit : 590\n- Dettes / revenu : 16 %\n- Prêt / valeur du bien : 50 %\n- Emprunt total / valeur du bien : 60 %\n- Taux du prêt : 4 %\n- Taux de référence : 3,9 %\n- Écart de taux : 0,1 %\n- Nombre d'emprunteurs : 1\n- Assurance du prêt : 12 %\n- Durée en mois : 360\n- Durée en années : 30\n\n## Analyse du risque\n- Le score de crédit est plus bas que celui des emprunteurs les plus sûrs.\n- Un seul emprunteur sur le prêt est associé à un taux de défaut plus élevé.\n- La durée du prêt diffère du groupe de durée le moins risqué.\n- L'emprunt total représente une part élevée de la valeur du bien (ratio cumulé).\n\n## Raisons principales\n- Le score de crédit est plus bas que celui des emprunteurs les plus sûrs, ce qui représente 75,5 points perdus.\n- Un seul emprunteur sur le prêt est associé à un taux de défaut plus élevé, ce qui représente 24,3 points perdus.\n- La durée du prêt diffère du groupe de durée le moins risqué, ce qui représente 22,3 points perdus.\n- L'emprunt total représente une part élevée de la valeur du bien (ratio cumulé), ce qui représente 17,6 points perdus.\n\n## Recommandation\nÀ EXAMINER.\n\n## Limites\nPolitique illustrative : ce mémo n'est pas une décision de crédit.\nLe risque affiché est une moyenne sur le cycle économique : en période calme, il a été de 1,4 à 2,6 fois le taux de défaut réellement observé.\n",
+      "tries_rejected_for_safety": 0,
+      "backup_but_only_form": false
+    },
+    {
+      "case": "g15",
+      "decision": "decline",
+      "status": "accepted",
+      "tries": 1,
+      "first_try": true,
+      "seconds": 14.1,
+      "problems_by_try": [
+        []
+      ],
+      "writer_errors": [],
+      "memo": "## Résumé\nLa probabilité de défaut par défaut est de 10,92 %.\n\n## Données du dossier\n- Score de crédit : 600\n- Dettes / revenu : 54 %\n- Prêt / valeur du bien : 80 %\n- Emprunt total / valeur du bien : 80 %\n- Taux du prêt : 5,2 %\n- Taux de référence : 4,8 %\n- Écart de taux : 0,4 %\n- Nombre d'emprunteurs : 2\n- Assurance du prêt : 0 %\n- Durée en mois : 360\n- Durée en années : 30\n\n## Analyse du risque\n- Le score de crédit est plus bas que celui des emprunteurs les plus sûrs.\n- Les dettes mensuelles représentent une part élevée du revenu.\n- L'emprunt total représente une part élevée de la valeur du bien (ratio cumulé).\n- La durée du prêt diffère du groupe de durée le moins risqué.\n\n## Raisons principales\n- Le score de crédit est plus bas que celui des emprunteurs les plus sûrs, ce qui représente 75,5 points perdus.\n- Les dettes mensuelles représentent une part élevée du revenu, ce qui représente 52,1 points perdus.\n- L'emprunt total représente une part élevée de la valeur du bien (ratio cumulé), ce qui représente 22,8 points perdus.\n- La durée du prêt diffère du groupe de durée le moins risqué, ce qui représente 22,3 points perdus.\n\n## Recommandation\nREFUSER\n\n## Limites\nPolitique illustrative : ce mémo n'est pas une décision de crédit.\nLe risque affiché est une moyenne sur le cycle économique : en période calme, il a été de 1,4 à 2,6 fois le taux de défaut réellement observé.\n",
+      "tries_rejected_for_safety": 0,
+      "backup_but_only_form": false
+    },
+    {
+      "case": "g16",
+      "decision": "approve",
+      "status": "accepted",
+      "tries": 1,
+      "first_try": true,
+      "seconds": 177.0,
+      "problems_by_try": [
+        []
+      ],
+      "writer_errors": [],
+      "memo": "## Résumé\nLe prêt a été évalué avec un score de 627,4 et une probabilité de défaut de 0,77 %.\n\n## Données du dossier\n- Score de crédit : 675\n- Dettes / revenu : 16 %\n- Prêt / valeur du bien : 40 %\n- Emprunt total / valeur du bien : 40 %\n- Taux du prêt : 3,6 %\n- Taux de référence : 3,7 %\n- Écart de taux : -0,1 %\n- Nombre d'emprunteurs : 1\n- Assurance du prêt : 30 %\n- Durée en mois : 360\n- Durée en années : 30\n\n## Analyse du risque\n- Le score de crédit est plus bas que celui des emprunteurs les plus sûrs.\n- Un seul emprunteur sur le prêt est associé à un taux de défaut plus élevé.\n- La durée du prêt diffère du groupe de durée le moins risqué.\n\n## Raisons principales\n- Le score de crédit est plus bas que celui des emprunteurs les plus sûrs.\n- Un seul emprunteur sur le prêt est associé à un taux de défaut plus élevé.\n- La durée du prêt diffère du groupe de durée le moins risqué.\n\n## Recommandation\nAPPROUVER\n\n## Limites\nPolitique illustrative : ce mémo n'est pas une décision de crédit.\nLe risque affiché est une moyenne sur le cycle économique : en période calme, il a été de 1,4 à 2,6 fois le taux de défaut réellement observé.\n",
+      "tries_rejected_for_safety": 0,
+      "backup_but_only_form": false
+    },
+    {
+      "case": "g17",
+      "decision": "decline",
+      "status": "accepted",
+      "tries": 1,
+      "first_try": true,
+      "seconds": 76.4,
+      "problems_by_try": [
+        []
+      ],
+      "writer_errors": [],
+      "memo": "## Résumé\nLe score de crédit est de 554,6 et la probabilité de défaut par défaut est de 8,79 %.\n\n## Données du dossier\n- Score de crédit : 590\n- Dettes / revenu : 42 %\n- Prêt / valeur du bien : 90 %\n- Emprunt total / valeur du bien : 100 %\n- Taux du prêt : 4 %\n- Taux de référence : 3,6 %\n- Écart de taux : 0,4 %\n- Nombre d'emprunteurs : 2\n- Assurance du prêt : 0 %\n- Durée en mois : 360\n- Durée en années : 30\n\n## Analyse du risque\n- Le score de crédit est plus bas que celui des emprunteurs les plus sûrs.\n- Les dettes mensuelles représentent une part élevée du revenu.\n- L'emprunt total représente une part élevée de la valeur du bien (ratio cumulé).\n- La durée du prêt diffère du groupe de durée le moins risqué.\n\n## Raisons principales\n- Le score de crédit est plus bas que celui des emprunteurs les plus sûrs, ce qui représente 75,5 points perdus.\n- Les dettes mensuelles représentent une part élevée du revenu, ce qui représente 32,5 points perdus.\n- L'emprunt total représente une part élevée de la valeur du bien (ratio cumulé), ce qui représente 30,3 points perdus.\n- La durée du prêt diffère du groupe de durée le moins risqué, ce qui représente 22,3 points perdus.\n\n## Recommandation\nREFUSER\n\n## Limites\nPolitique illustrative : ce mémo n'est pas une décision de crédit.\nLe risque affiché est une moyenne sur le cycle économique : en période calme, il a été de 1,4 à 2,6 fois le taux de défaut réellement observé.\n",
+      "tries_rejected_for_safety": 0,
+      "backup_but_only_form": false
+    },
+    {
+      "case": "g18",
+      "decision": "approve",
+      "status": "accepted",
+      "tries": 1,
+      "first_try": true,
+      "seconds": 14.6,
+      "problems_by_try": [
+        []
+      ],
+      "writer_errors": [],
+      "memo": "## Résumé\nLe prêt a été évalué avec un score de 652,6 et une probabilité de défaut de 0,32 %.\n\n## Données du dossier\n- Score de crédit : 815\n- Dettes / revenu : 32 %\n- Prêt / valeur du bien : 97 %\n- Emprunt total / valeur du bien : 97 %\n- Taux du prêt : 3,9 %\n- Taux de référence : 4,2 %\n- Écart de taux : -0,3 %\n- Nombre d'emprunteurs : 1\n- Assurance du prêt : 0 %\n- Durée en mois : 180\n- Durée en années : 15\n\n## Analyse du risque\n- Le ratio cumulé représente 30,3 points perdus.\n- Un seul emprunteur sur le prêt est associé à un taux de défaut plus élevé, représentant 24,3 points perdus.\n- Les dettes mensuelles représentent une part élevée du revenu, représentant 19,6 points perdus.\n- Le prêt représente une part élevée de la valeur du bien, représentant 9,3 points perdus.\n\n## Raisons principales\n- Le ratio cumulé est élevé, ce qui peut augmenter le risque de défaut.\n- Un seul emprunteur sur le prêt a un taux de défaut plus élevé, ce qui augmente le risque.\n- Les dettes mensuelles représentent une part élevée du revenu, ce qui peut rendre difficile le remboursement.\n- Le prêt représente une part élevée de la valeur du bien, ce qui peut augmenter le risque de défaut.\n\n## Recommandation\nAPPROUVER\n\n## Limites\nPolitique illustrative : ce mémo n'est pas une décision de crédit.\nLe risque affiché est une moyenne sur le cycle économique : en période calme, il a été de 1,4 à 2,6 fois le taux de défaut réellement observé.\n",
+      "tries_rejected_for_safety": 0,
+      "backup_but_only_form": false
+    },
+    {
+      "case": "g19",
+      "decision": "decline",
+      "status": "accepted",
+      "tries": 1,
+      "first_try": true,
+      "seconds": 13.4,
+      "problems_by_try": [
+        []
+      ],
+      "writer_errors": [],
+      "memo": "## Résumé\nLe score de crédit est de 567,9 et la probabilité de défaut par défaut est de 5,74 %.\n\n## Données du dossier\n- Score de crédit : 575\n- Dettes / revenu : 20 %\n- Prêt / valeur du bien : 75 %\n- Emprunt total / valeur du bien : 85 %\n- Taux du prêt : 3,8 %\n- Taux de référence : 3,7 %\n- Écart de taux : 0,1 %\n- Nombre d'emprunteurs : 1\n- Assurance du prêt : 0 %\n- Durée en mois : 360\n- Durée en années : 30\n\n## Analyse du risque\n- Le score de crédit est plus bas que celui des emprunteurs les plus sûrs.\n- L'emprunt total représente une part élevée de la valeur du bien (ratio cumulé).\n- Un seul emprunteur sur le prêt est associé à un taux de défaut plus élevé.\n- La durée du prêt diffère du groupe de durée le moins risqué.\n\n## Raisons principales\n- Le score de crédit est plus bas que celui des emprunteurs les plus sûrs, ce qui représente 75,5 points perdus.\n- L'emprunt total représente une part élevée de la valeur du bien, ce qui représente 35,6 points perdus.\n- Un seul emprunteur sur le prêt est associé à un taux de défaut plus élevé, ce qui représente 24,3 points perdus.\n- La durée du prêt diffère du groupe de durée le moins risqué, ce qui représente 22,3 points perdus.\n\n## Recommandation\nREFUSER\n\n## Limites\nPolitique illustrative : ce mémo n'est pas une décision de crédit.\nLe risque affiché est une moyenne sur le cycle économique : en période calme, il a été de 1,4 à 2,6 fois le taux de défaut réellement observé.\n",
+      "tries_rejected_for_safety": 0,
+      "backup_but_only_form": false
+    },
+    {
+      "case": "g20",
+      "decision": "refer",
+      "status": "accepted",
+      "tries": 2,
+      "first_try": false,
+      "seconds": 51.1,
+      "problems_by_try": [
+        [
+          "LENGTH"
+        ],
+        []
+      ],
+      "writer_errors": [],
+      "memo": "## Résumé\nLe prêt a été évalué avec un score de 585,5 et une probabilité de défaut de 3,20 %.\n\n## Données du dossier\n- Score de crédit : 565\n- Dettes / revenu : 10 %\n- Prêt / valeur du bien : 40 %\n- Emprunt total / valeur du bien : 45 %\n- Taux du prêt : 4,9 %\n- Taux de référence : 3,4 %\n- Écart de taux : 1,5 %\n- Nombre d'emprunteurs : 1\n- Assurance du prêt : 0 %\n- Durée en mois : 360\n- Durée en années : 30\n\n## Analyse du risque\n- Le score de crédit est plus bas que celui des emprunteurs les plus sûrs. - Un seul emprunteur sur le prêt est associé à un taux de défaut plus élevé. - La durée du prêt diffère du groupe de durée le moins risqué. - Le taux d'intérêt est supérieur à celui de prêts comparables de la même période et durée.\n\n## Raisons principales\n- Le score de crédit est plus bas que celui des emprunteurs les plus sûrs, ce qui représente 75,5 points perdus. - Un seul emprunteur sur le prêt est associé à un taux de défaut plus élevé, ce qui représente 24,3 points perdus. - La durée du prêt diffère du groupe de durée le moins risqué, ce qui représente 22,3 points perdus.\n\n## Recommandation\nÀ EXAMINER\n\n## Limites\nPolitique illustrative : ce mémo n'est pas une décision de crédit. Le risque affiché est une moyenne sur le cycle économique : en période calme, il a été de 1,4 à 2,6 fois le taux de défaut réellement observé.\n",
+      "tries_rejected_for_safety": 0,
+      "backup_but_only_form": false,
+      "evidence": [
+        {
+          "try": 1,
+          "complaints": [
+            "[LENGTH] The memo has 265 words and the limit is 260: remove at least 25 words of your own text (the system's 'Loan data' section and the fixed sentences cannot be shortened)."
+          ],
+          "what_the_model_wrote": "## Résumé\nLe prêt a été évalué avec un score de 585,5 et une probabilité de défaut de 3,20 %. \n\n## Analyse du risque\n- Le score de crédit est plus bas que celui des emprunteurs les plus sûrs.\n- Un seul emprunteur sur le prêt est associé à un taux de défaut plus élevé.\n- La durée du prêt diffère du groupe de durée le moins risqué.\n- Le taux d'intérêt est supérieur à celui de prêts comparables de la même période et durée.\n\n## Raisons principales\n- Le score de crédit est plus bas que celui des emprunteurs les plus sûrs, ce qui représente 75,5 points perdus.\n- Un seul emprunteur sur le prêt est associé à un taux de défaut plus élevé, ce qui représente 24,3 points perdus.\n- La durée du prêt diffère du groupe de durée le moins risqué, ce qui représente 22,3 points perdus.\n- Le taux d'intérêt est supérieur à celui de prêts comparables de la même période et durée, ce qui représente 17,0 points perdus.\n\n## Recommandation\nÀ EXAMINER\n\n## Limites\nPolitique illustrative : ce mémo n'est pas une décision de crédit.\nLe risque affiché est une moyenne sur le cycle économique : en période calme, il a été de 1,4 à 2,6 fois le taux de défaut réellement observé."
+        },
+        {
+          "try": 2,
+          "complaints": [],
+          "what_the_model_wrote": "## Résumé Le prêt a été évalué avec un score de 585,5 et une probabilité de défaut de 3,20 %. ## Analyse du risque - Le score de crédit est plus bas que celui des emprunteurs les plus sûrs. - Un seul emprunteur sur le prêt est associé à un taux de défaut plus élevé. - La durée du prêt diffère du groupe de durée le moins risqué. - Le taux d'intérêt est supérieur à celui de prêts comparables de la même période et durée. ## Raisons principales - Le score de crédit est plus bas que celui des emprunteurs les plus sûrs, ce qui représente 75,5 points perdus. - Un seul emprunteur sur le prêt est associé à un taux de défaut plus élevé, ce qui représente 24,3 points perdus. - La durée du prêt diffère du groupe de durée le moins risqué, ce qui représente 22,3 points perdus. ## Recommandation À EXAMINER ## Limites Politique illustrative : ce mémo n'est pas une décision de crédit. Le risque affiché est une moyenne sur le cycle économique : en période calme, il a été de 1,4 à 2,6 fois le taux de défaut réellement observé."
+        }
+      ]
+    }
+  ],
+  "settings": {
+    "temperature": 0.0,
+    "max_tokens": 2500,
+    "timeout_s": 150.0
+  }
+}

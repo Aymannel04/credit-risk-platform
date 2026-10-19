@@ -12,6 +12,7 @@ import os
 import sys
 from collections import Counter
 from datetime import datetime, timezone
+from math import sqrt
 from pathlib import Path
 from time import monotonic
 
@@ -89,6 +90,22 @@ def evaluate_seeded(cases: list[dict], scorer, policy: Policy, language: str) ->
             "rejection_rate": round(rejected / len(rows), 4) if rows else 0, "rows": rows}
 
 
+def wilson_interval(successes: int, n: int, z: float = 1.96) -> tuple[float, float]:
+    """95% interval for a proportion measured on `n` cases (Wilson): honest about how little 20 loans can say."""
+    if n <= 0:
+        return (0.0, 0.0)
+    p = successes / n
+    denom = 1 + z * z / n
+    centre = (p + z * z / (2 * n)) / denom
+    margin = z * sqrt(p * (1 - p) / n + z * z / (4 * n * n)) / denom
+    return (max(0.0, centre - margin), min(1.0, centre + margin))
+
+
+def _percent_interval(successes: int, n: int) -> str:
+    low, high = wilson_interval(successes, n)
+    return f"{successes} of {n} = {successes / n:.0%} (between {low:.0%} and {high:.0%})" if n else "no loan"
+
+
 def render_report(result: dict, policy: Policy) -> str:
     settings = result.get("settings")
     head = [f"# Memo agent evaluation: {result['writer']}", "",
@@ -99,7 +116,10 @@ def render_report(result: dict, policy: Policy) -> str:
                  f"({result['cases']} loans x {len(result['kinds'])} kinds of mistake, forced on every try.)", "",
                  "Kinds: " + ", ".join(f"`{k}`" for k in result["kinds"]) + ".", ""]
         return "\n".join(head) + "\n"
+    first, model_written = result["accepted_first_try"], result["accepted_first_try"] + result["accepted_after_rewrite"]
     head += ["| Measure | Value |", "|---|---|", f"| Loans | {result['cases']} |",
+             f"| Accepted on the first try, with a 95% interval (the sample is small) | {_percent_interval(first, result['cases'])} |",
+             f"| Memo written by the model and accepted (first try or rewrite), 95% interval | {_percent_interval(model_written, result['cases'])} |",
              f"| Accepted on the first try | {result['accepted_first_try']} |", f"| Accepted after a rewrite | {result['accepted_after_rewrite']} |",
              f"| Backup memo (written by code) | {result['backup_memo']} |",
              f"| of which the model's last memo had a problem of FORM only (headings, length) | {result.get('backup_but_last_memo_only_form', 'not recorded')} |",
