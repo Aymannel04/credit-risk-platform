@@ -111,6 +111,8 @@ def main(argv: list[str] | None = None) -> int:
     ap.add_argument("--model", default=None)
     ap.add_argument("--base-url", default=None)
     ap.add_argument("--key-env", default=None)
+    ap.add_argument("--max-tokens", type=int, default=2500, help="room for the model's answer (reasoning models also think inside it)")
+    ap.add_argument("--timeout", type=float, default=150.0, help="seconds to wait for the model")
     ap.add_argument("--lang", choices=("fr", "en"), default="fr")
     ap.add_argument("--live-url", default=os.environ.get("CREDIT_API_URL"))
     ap.add_argument("--profile", default="credit-admin")
@@ -125,7 +127,7 @@ def main(argv: list[str] | None = None) -> int:
                 result = evaluate_cases(cases, scorer, lambda f: ScriptedWriter([good_reply(f)], name="pretend careful writer"), policy, a.lang,
                                         "pretend careful writer (not a language model)")
             else:
-                writer = make_writer(a.writer, policy, a.model, a.base_url, a.key_env)
+                writer = make_writer(a.writer, policy, a.model, a.base_url, a.key_env, a.max_tokens, a.timeout)
                 def show(i, n, row):
                     note = row["writer_errors"][0][:90] if row["writer_errors"] else ", ".join(c for t in row["problems_by_try"] for c in t)
                     print(f"[{i}/{n}] {row['case']}: {row['decision']}, {row['status']} after {row['tries']} try(ies)" + (f" ({note})" if note else ""), flush=True)

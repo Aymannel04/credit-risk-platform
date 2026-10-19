@@ -322,3 +322,22 @@ def test_no_seeded_mistake_ever_reaches_the_reader(sheets):
             assert validate_memo(result.memo, facts, POLICY) == [], (key, kind)
             assert "777" not in result.memo and "77,7" not in result.memo and "77.7" not in result.memo
     assert runs == len(SEEDED_KINDS) * 12 == rejected
+
+
+def test_the_thinking_of_a_reasoning_model_is_ignored_not_inspected(sheets):
+    facts = sheets[("prime_approve", "fr")]
+    thinking = "<think>Let me count: the risk is maybe 12 percent, deux lignes, I should promise... garanti</think>\n"
+    assert validate_memo(assemble(thinking + good_reply(facts), facts), facts, POLICY) == []
+    fenced = "<THINK>\nmore thinking 999\n</THINK>\n```markdown\n" + good_reply(facts) + "```"
+    assert validate_memo(assemble(fenced, facts), facts, POLICY) == []
+    # thinking is dropped, but a reply that is ONLY thinking is still an empty memo that gets rejected
+    assert validate_memo(assemble("<think>nothing else</think>", facts), facts, POLICY)
+
+
+def test_the_real_writer_is_built_with_generous_room_and_time_by_default():
+    from agent import run
+
+    writer = run.make_writer("nvidia", POLICY, "some-model")
+    assert writer.max_tokens == 2500 and writer.timeout == 150.0
+    writer = run.make_writer("custom", POLICY, "m", "https://x.test/v1", "K", max_tokens=100, timeout=5)
+    assert writer.max_tokens == 100 and writer.timeout == 5

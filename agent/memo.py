@@ -44,7 +44,9 @@ class MemoResult:
 
 
 def _strip_fence(reply: str) -> str:
-    """Models often wrap the whole answer in a markdown code fence: that is formatting, not content."""
+    """Models often wrap the whole answer in a markdown code fence, and reasoning models may print their thinking between <think> tags:
+    both are formatting around the memo, not part of it."""
+    reply = re.sub(r"<think>.*?</think>", "", reply, flags=re.DOTALL | re.IGNORECASE).lstrip()
     m = re.fullmatch(r"\s*```[a-zA-Z]*\n(.*?)\n?```\s*", reply, flags=re.DOTALL)
     return m.group(1) if m else reply
 

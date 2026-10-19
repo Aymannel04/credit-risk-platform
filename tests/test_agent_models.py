@@ -149,7 +149,7 @@ def test_the_probe_reports_which_models_answer_and_pauses_between_calls(monkeypa
 
 def test_the_probe_command_prints_a_clear_table(monkeypatch, capsys):
     monkeypatch.setattr(models, "list_models", lambda base, env: ["a/instruct", "b/instruct", "c/other"])
-    def fake_probe(base, env, names, on_result=None):
+    def fake_probe(base, env, names, on_result=None, **options):
         results = [(n, n.startswith("a"), "OK" if n.startswith("a") else "HTTP 404: gone") for n in names]
         for r in results:
             on_result(r)
@@ -180,3 +180,34 @@ def test_service_detail_also_hides_opaque_account_ids_that_are_not_hexadecimal()
     text = service_detail(err(404, body), KEY)
     assert text == "Function '<id>': Not found for account '<id>'"
     assert "AbCdEf" not in text
+
+
+def test_the_probe_can_be_given_room_and_time_for_slow_reasoning_models(monkeypatch):
+    monkeypatch.setenv("FAKE_LLM_KEY", KEY)
+    asked, timeouts = [], []
+
+    def urlopen(request, timeout):
+        asked.append(json.loads(request.data)["max_tokens"])
+        timeouts.append(timeout)
+        return Response({"choices": [{"message": {"content": "OK"}}]})
+
+    models.probe_models("https://x.test/v1", "FAKE_LLM_KEY", ["m"], urlopen=urlopen, sleep=lambda s: None, max_tokens=400, timeout=120)
+    assert asked == [400] and timeouts == [120]
+
+
+def test_the_command_can_probe_exact_names_and_refuses_unknown_ones(monkeypatch, capsys):
+    monkeypatch.setattr(models, "list_models", lambda base, env: ["a/one", "b/two", "c/three"])
+    seen = []
+
+    def fake_probe(base, env, names, on_result=None, **options):
+        seen.append((list(names), options))
+        results = [(n, True, "OK") for n in names]
+        for r in results:
+            on_result(r)
+        return results
+
+    monkeypatch.setattr(models, "probe_models", fake_probe)
+    assert models.main(["--writer", "nvidia", "--probe", "--names", "b/two, c/three", "--max-tokens", "400", "--timeout", "120"]) == 0
+    assert seen == [(["b/two", "c/three"], {"max_tokens": 400, "timeout": 120.0})]
+    assert models.main(["--writer", "nvidia", "--probe", "--names", "b/two,nope/missing"]) == 1
+    assert "nope/missing" in capsys.readouterr().err

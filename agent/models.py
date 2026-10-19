@@ -40,14 +40,15 @@ def list_models(base_url: str, api_key_env: str, urlopen: Callable = urllib.requ
 
 
 def probe_models(base_url: str, api_key_env: str, names: list[str], urlopen: Callable = urllib.request.urlopen,
-                 sleep: Callable = time.sleep, pause: float = 1.6, on_result: Callable | None = None) -> list[tuple[str, bool, str]]:
+                 sleep: Callable = time.sleep, pause: float = 1.6, on_result: Callable | None = None, max_tokens: int = 8,
+                 timeout: float = 45.0) -> list[tuple[str, bool, str]]:
     """Ask every model one tiny question and report (name, answered, short note). The pause keeps us under the free rate limit.
     `on_result` is called with each result as soon as it is known, so a person can watch the progress."""
     results = []
     for i, name in enumerate(names):
         if i:
             sleep(pause)
-        writer = OpenAICompatibleWriter(base_url, name, api_key_env, max_tokens=8, retries=0, timeout=45.0, urlopen=urlopen, sleep=sleep)
+        writer = OpenAICompatibleWriter(base_url, name, api_key_env, max_tokens=max_tokens, retries=0, timeout=timeout, urlopen=urlopen, sleep=sleep)
         try:
             reply = writer.write([{"role": "user", "content": "Reply with the single word OK."}])
             results.append((name, True, " ".join(reply.split())[:30]))
@@ -67,7 +68,10 @@ def main(argv: list[str] | None = None) -> int:
     ap.add_argument("--base-url", default=None)
     ap.add_argument("--key-env", default=None)
     ap.add_argument("--contains", default=None, help="only names containing this text (not case sensitive)")
+    ap.add_argument("--names", default=None, help="only these exact model names, separated by commas")
     ap.add_argument("--probe", action="store_true", help="send each shown model one tiny question and report which ones really answer")
+    ap.add_argument("--max-tokens", type=int, default=8, help="room for the answer in the probe: 'reasoning' models need much more than 8 (try 400)")
+    ap.add_argument("--timeout", type=float, default=45.0, help="seconds to wait for each model in the probe (slow models: try 120)")
     a = ap.parse_args(argv)
     try:
         policy = load_policy()
@@ -83,18 +87,22 @@ def main(argv: list[str] | None = None) -> int:
     except (WriterError, PolicyError) as e:
         print(f"error: {e}", file=sys.stderr)
         return 1
-    shown = [n for n in names if not a.contains or a.contains.casefold() in n.casefold()]
+    wanted = {n.strip() for n in a.names.split(",") if n.strip()} if a.names else None
+    shown = [n for n in names if (not a.contains or a.contains.casefold() in n.casefold()) and (wanted is None or n in wanted)]
+    if wanted and (missing := sorted(wanted - set(names))):
+        print("error: not offered by the service: " + ", ".join(missing), file=sys.stderr)
+        return 1
     if not a.probe:
         print("\n".join(shown))
         print(f"{len(shown)} model(s) shown, {len(names)} offered in total.")
         return 0
-    print(f"Asking {len(shown)} model(s) one tiny question each. Each result appears as soon as it is known (a slow model can take up to 45 s).", flush=True)
+    print(f"Asking {len(shown)} model(s) one tiny question each. Each result appears as soon as it is known (a slow model can take up to {a.timeout:.0f} s).", flush=True)
 
     def show(result):
         name, answered, note = result
         print(f"{'ANSWERS' if answered else 'no     '}  {name}  {'' if answered else '-> ' + note}", flush=True)
 
-    outcomes = probe_models(base_url, key_env, shown, on_result=show)
+    outcomes = probe_models(base_url, key_env, shown, on_result=show, max_tokens=a.max_tokens, timeout=a.timeout)
     print(f"{sum(o[1] for o in outcomes)} of {len(outcomes)} models answered.")
     return 0
 
