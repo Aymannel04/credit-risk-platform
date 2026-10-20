@@ -1,4 +1,4 @@
-# Demo kit: a 2-minute screen recording and the screenshots
+# Demo kit: a 3-minute screen recording and the screenshots
 
 Goal: someone who has never heard of the project understands in two minutes what it does, sees it work, and hears the honest part. You record; this file is the script.
 
@@ -12,9 +12,9 @@ Goal: someone who has never heard of the project understands in two minutes what
    $url = aws lambda get-function-url-config --function-name credit-scoring-api --query FunctionUrl --output text --profile credit-admin --region eu-north-1
    ```
 4. Increase the terminal font (Ctrl and mouse wheel). Use light or dark mode, but the same everywhere.
-5. Recorder: Windows Game Bar (`Win + G`, then record) or OBS. 1080p, microphone on, 2 to 2.5 minutes. One take is fine; small stumbles are human.
+5. Recorder: Windows Game Bar (`Win + G`, then record) or OBS. 1080p, microphone on, 3 to 3.5 minutes. One take is fine; small stumbles are human.
 
-## The script (about 2 minutes)
+## The script (about 3 minutes)
 
 | Time | On screen | Say (in your own words) |
 |---|---|---|
@@ -22,8 +22,31 @@ Goal: someone who has never heard of the project understands in two minutes what
 | 0:15 to 0:35 | The architecture diagram on the README | "Data goes through raw, staging and features, with checks that stop the chain if something is wrong. The model is a points-based scorecard, a 7 KB file. The API runs in a Docker container on AWS Lambda." |
 | 0:35 to 1:05 | `docs/monitoring.png` (open it, zoom on the left panel) | "I froze the model and wrote the success rules before testing on four years it had never seen. Gini between 0.54 and 0.63. But look at this: in calm years the model predicts one and a half to two and a half times too many defaults. I found it, measured it, and tested a fix. My own pre-written rule rejected the fix, because it got worse at turning points." |
 | 1:05 to 1:35 | Terminal: the smoke test against the live Lambda (command below) | "This is the live API on AWS. The URL is locked: only signed requests work. The test scores a sample loan, asks for reasons, and checks that bad input is refused cleanly. It says SMOKE TEST OK." |
-| 1:35 to 1:50 | Browser: paste the URL, show **403 Forbidden**, then the GitHub Actions page with a green run | "An anonymous visitor gets 403. CI runs 307 tests, builds the container and smoke-tests it on every push." |
-| 1:50 to 2:05 | The README "Honest limitations" section | "It's a portfolio project, not a lending product. Deployment is automatic but without an automatic rollback, and the memo agent runs from a command line, measured on a small free model, not deployed." |
+| 1:35 to 1:50 | Browser: paste the URL, show **403 Forbidden**, then the GitHub Actions page with a green run | "An anonymous visitor gets 403. CI runs 498 tests, builds the container and smoke-tests it on every push." |
+| 1:50 to 2:35 | Terminal: the memo agent (commands below), then the first lines of `results/agent_eval_seeded.md` | "On top of the API there is a read-only agent that writes a credit memo. Code asks the API and decides approve, refer or decline. The AI only writes the words. An inspector, plain code, checks every number, the decision and the warnings, and sends the memo back if something is wrong. If it still fails, code writes the memo itself. I damaged memos on purpose 150 times, in 10 ways: all 150 were rejected. On 20 loans it had never seen, a small free model wrote 18 good memos on the first try. A call takes about 20 seconds because the free service is shared." |
+| 2:35 to 2:55 | The README "Honest limitations" section | "It's a portfolio project, not a lending product. Deployment is automatic but without an automatic rollback. The agent runs from a command line, was measured on one small free model in French on made-up loans, and is not deployed." |
+
+**The commands for the agent shot** (do the key step BEFORE recording, off screen; the key is never printed):
+
+```powershell
+$env:NVIDIA_API_KEY = "<your key>"      # before recording only; clear the screen with cls afterwards
+```
+
+1. The memo written by the AI and checked by the inspector (about 20 s, speed it up when editing; add `--lang en` for English, but English was not measured):
+
+```powershell
+.venv\Scripts\python.exe -m agent.run --loan agent\cases\example_loan.json --writer nvidia --model meta/llama-3.2-11b-vision-instruct --show-attempts
+```
+
+Point at the last lines: `status: accepted by the inspector on try 1` (or the complaints, if it needed a rewrite or fell back to the code memo; both are honest and worth explaining).
+
+2. The proof that the inspector works (no run, no waiting):
+
+```powershell
+Get-Content resultsgent_eval_seeded.md -TotalCount 6
+```
+
+Point at: 150 of 150 deliberately damaged memos rejected, 0 reached the reader.
 
 **The commands for the terminal shot** (variable `$url` already set):
 
