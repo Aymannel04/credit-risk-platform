@@ -54,7 +54,7 @@ def test_the_main_and_fresh_years_are_the_ones_of_the_pipeline_and_do_not_overla
     assert not set(c["YEARS_MAIN"]) & set(c["YEARS_FRESH"])
 
 
-def test_expected_answers_cover_five_questions_and_none_uses_the_split():
+def test_expected_answers_cover_six_questions_and_none_uses_the_split():
     expected = json.loads((DIR / "expected_control_queries.json").read_text(encoding="utf-8"))
     assert list(expected) == ["dev_totals", "dev_vintage_sums", "fresh_structure", "raw_orig_loans", "raw_perf_rows", "raw_perf_loans"]
     assert not any("split" in v["sql"] for v in expected.values())  # DuckDB's hash() is not Spark's

@@ -202,3 +202,29 @@ dbt stops before building the models that depend on it, so a bad staging table n
 
 **59. What would you do differently?**
 Declare the raw files as dbt sources (I read them with `read_parquet` inside the models), add the dbt run to CI with a small sample of data, and add freshness checks. I would also say that dbt here replays logic that already existed: the value is the tests and the proof of equality, not new logic.
+
+## H. Delta, PySpark and Databricks (added after the Databricks run)
+
+**60. Why did you redo the transformations in PySpark?**
+To show the same logic runs on a distributed engine, and to test it: the PySpark tables must equal the DuckDB ones. I did not do it because 450,000 loans need Spark. They do not: DuckDB took 1.77 s, Spark 35 s. I say that openly, and that Spark pays off when data no longer fits one machine or when many people share a cluster.
+
+**61. What is Delta, and what does it give you?**
+A table format: Parquet files plus a transaction log. ACID writes (a write is all or nothing), schema enforcement (I appended a row with a wrong column and it was refused with an `AnalysisException`; the table kept its 450,000 rows) and time travel (read version 0 of a table).
+
+**62. What differences did you find between DuckDB and Spark?**
+Two. (1) The split: it is `hash(loan_seq || seed) % 100` and DuckDB's `hash()` is not Spark's, so the same loan can land in another split. Proportions were right (59.8 / 10.2 / 14.9 / 15.1) but the assignment differs: reproducible inside one engine, not portable between engines. I compared every column except `split`. (2) Spark serverless runs in ANSI mode, so a bad cast raises an error: I used `try_cast` and `try_to_date`.
+
+**63. How did you prove the results are the same?**
+`exceptAll` in both directions on the whole table (0 rows on one side only, for 229,419 and 177,081 rows), plus 6 control queries whose answers come from DuckDB (all identical). Floats were rounded to 6 decimals on both sides before comparing, because two engines can differ in the last bits.
+
+**64. How did you translate the median window?**
+DuckDB uses `quantile_cont(...) OVER (PARTITION BY ...)`. In PySpark I used `groupBy` plus `percentile(int_rate, 0.5)` (same linear interpolation) and a join that treats nulls as equal (`eqNullSafe`), because an ordinary join drops rows whose key is null.
+
+**65. Your Spark run was slower. Is that a problem?**
+No, it is the expected result, and I report it: 35.38 s (one run, free serverless, writing Delta tables) against 1.77 s (median of 3, laptop, in memory). Different machines and a single Spark run, so it is a sanity check and not a benchmark. At 450,000 loans there is nothing to distribute.
+
+**66. When would you choose Spark over DuckDB?**
+When the data no longer fits on one machine (hundreds of gigabytes and up), when many jobs and people share one cluster, or when the platform around it (Unity Catalog, jobs, streaming) is the reason. For a table that fits in memory I would pick DuckDB or a warehouse.
+
+**67. What did you NOT do?**
+No scale test (so I cannot say where Spark overtakes DuckDB), no dbt on Databricks (dbt stays on DuckDB), Delta time travel shown only on the raw table, and Spark was run once.

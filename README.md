@@ -63,6 +63,7 @@ flowchart TB
 | Cloud | container, ECR, Lambda, least-privilege role, locked URL; private S3 data lake read by Athena; scripts with dry-run and teardown | `Dockerfile`, `infra/`, `credit/cloud/` |
 | Memo agent | code asks the API and decides approve / refer / decline; a language model only writes; an inspector checks every number; a memo written by code is the fallback | `agent/` |
 | Transformations as dbt | the same cleaning and features as models with 43 tests; three parity tests prove the tables are identical to the pipeline's (450,000 loans) | `dbt/` |
+| Spark check | the same cleaning and features in PySpark on Delta tables (Databricks Free Edition): identical tables and 6 of 6 control queries; Spark took 35 s against 1.8 s for DuckDB at this size | `databricks/`, `results/spark_parity.md` |
 
 ## What runs on AWS
 

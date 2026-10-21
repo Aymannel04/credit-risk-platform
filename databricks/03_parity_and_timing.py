@@ -4,7 +4,7 @@
 # MAGIC
 # MAGIC Three checks, like the S3 + Athena test of the project:
 # MAGIC 1. **The features tables** made by PySpark against the ones the DuckDB pipeline wrote (rows on one side only = a difference).
-# MAGIC 2. **Five control queries** (the same questions as `credit/cloud/lake.py`) whose DuckDB answers are in `expected_control_queries.json`.
+# MAGIC 2. **Six control queries** (five are the questions of `credit/cloud/lake.py`, one replaces the split question) whose DuckDB answers are in `expected_control_queries.json`.
 # MAGIC 3. **A timing table**, with its limits written next to it.
 # MAGIC
 # MAGIC Upload to the volume `ref` first: `features.parquet`, `features_fresh.parquet` (from `data/interim/features*/`) and `expected_control_queries.json` (from `databricks/`).

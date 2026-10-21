@@ -770,3 +770,13 @@ The owner installed AWS CLI 2.37.12 (current-user MSI from awscli.amazonaws.com)
 **Two known differences, written down before running.** (1) `split` cannot be identical: it comes from `hash()`, and DuckDB's and Spark's hash functions differ; the comparison ignores that column and the proportions are checked instead. (2) Spark serverless is in ANSI mode, so casts use `try_cast` and `try_to_date`.
 
 **Not verified.** The notebooks have never run on Spark (none here; local Spark on Windows with Java 25 was judged not worth the risk). Tests only check that they parse, follow the notebook format, share the pipeline's constants and hold no secret. No Spark timing or parity result exists yet; the README claims none.
+
+## 2026-10-21: part B run on Databricks: identical results, and DuckDB is about 20 times faster at this size
+
+**Evidence** (`results/spark_parity.md`, run by the owner on Databricks Free Edition, serverless). The notebooks needed no fix. Delta tables hold 450,000 loans and 24,674,152 monthly rows. The PySpark features tables are identical to the DuckDB pipeline's (229,419 and 177,081 rows, 0 rows on one side only) on every column except `split`, and the 6 control queries match DuckDB's answers. The split proportions are 59.8 / 10.2 / 14.9 / 15.1.
+
+**Timing, honestly.** DuckDB 1.77 s (median of 3, laptop, in memory) against Spark 35.38 s (one run, free serverless, writing Delta). At 450,000 loans one machine wins clearly. Different machines and one Spark run: a sanity check, not a benchmark.
+
+**What it shows.** The same logic runs on both engines and a test proves it. The one difference is expected and understood: `hash()` is engine-specific, so a split defined by a hash is reproducible inside one engine and not portable between engines. If the split had to be portable, it should be stored as a column or computed with a function defined by the project.
+
+**Not done.** Delta time travel was shown on the raw table only; no dbt-on-Databricks target (dbt stays on DuckDB); no scale test, so nothing here shows when Spark would overtake DuckDB.
