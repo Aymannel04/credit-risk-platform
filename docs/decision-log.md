@@ -762,3 +762,11 @@ The owner installed AWS CLI 2.37.12 (current-user MSI from awscli.amazonaws.com)
 **Evidence (measured 2026-10-21).** 7 models and 43 tests pass in about 4 seconds of running. 450,000 loans staged (250,000 + 200,000), 229,419 and 177,081 kept loans, the same numbers as the pipeline. Three `parity_*` tests compare the dbt tables with the Parquet files the Python pipeline wrote (rows on one side only fail the test): zero differences. Negative test: a wrong split seed made the parity test fail with 151,442 differing rows, so the test is not empty.
 
 **Not done / limits.** The profile is local DuckDB only (a Databricks target is part B). Raw files are read with `read_parquet`, not declared as dbt sources. dbt is not installed in CI (`requirements-dbt.txt` is separate); 7 structure tests run in CI, the data tests run on the owner's machine. The fresh labels were locked until the v2 exam; the exam is finished, so building them here breaks no rule.
+
+## 2026-10-21: Databricks / PySpark notebooks written (part B), NOT yet run on Databricks
+
+**What exists.** `databricks/01_load_delta.py`, `02_pyspark_transform.py`, `03_parity_and_timing.py`: the raw files into Delta tables, the same staging and features in PySpark, and a comparison with the DuckDB pipeline (tables, five control queries, timing). `scripts/make_databricks_expected.py` wrote `databricks/expected_control_queries.json` (what DuckDB answers). `scripts/time_duckdb_pipeline.py` measured DuckDB: **1.77 s** (median of 3, 32 logical cores, in memory, 450,000 loans in, 229,419 + 177,081 loans out; `results/engine_timing_duckdb.json`).
+
+**Two known differences, written down before running.** (1) `split` cannot be identical: it comes from `hash()`, and DuckDB's and Spark's hash functions differ; the comparison ignores that column and the proportions are checked instead. (2) Spark serverless is in ANSI mode, so casts use `try_cast` and `try_to_date`.
+
+**Not verified.** The notebooks have never run on Spark (none here; local Spark on Windows with Java 25 was judged not worth the risk). Tests only check that they parse, follow the notebook format, share the pipeline's constants and hold no secret. No Spark timing or parity result exists yet; the README claims none.

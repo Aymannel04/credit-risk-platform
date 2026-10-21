@@ -1,0 +1,122 @@
+{
+ "dev_totals": {
+  "sql": "SELECT count(*) AS loans, sum(default_24m) AS defaults FROM features_dev",
+  "rows": [
+   [
+    "229419",
+    "3902"
+   ]
+  ]
+ },
+ "dev_vintage_sums": {
+  "sql": "SELECT vintage_year, count(*) AS loans, sum(credit_score) AS sum_score, sum(dti) AS sum_dti, sum(orig_term) AS sum_term, round(avg(rate_spread), 6) AS avg_spread FROM features_dev GROUP BY vintage_year ORDER BY vintage_year",
+  "rows": [
+   [
+    "2008",
+    "49712",
+    "36853367",
+    "1760584",
+    "16605736",
+    "0.043503"
+   ],
+   [
+    "2009",
+    "1",
+    "782",
+    "32",
+    "360",
+    "0.0"
+   ],
+   [
+    "2012",
+    "32546",
+    "24948992",
+    "1005718",
+    "9412882",
+    "0.003621"
+   ],
+   [
+    "2016",
+    "47372",
+    "35549012",
+    "1614972",
+    "15124802",
+    "0.050335"
+   ],
+   [
+    "2019",
+    "49881",
+    "37368810",
+    "1761773",
+    "16552947",
+    "0.061159"
+   ],
+   [
+    "2022",
+    "49907",
+    "37107294",
+    "1844325",
+    "16955782",
+    "-0.014152"
+   ]
+  ]
+ },
+ "fresh_structure": {
+  "sql": "SELECT vintage_year, count(*) AS loans, count(DISTINCT loan_seq) AS distinct_loans, sum(credit_score) AS sum_score, min(first_payment_date) AS first_payment_min FROM features_fresh GROUP BY vintage_year ORDER BY vintage_year",
+  "rows": [
+   [
+    "2010",
+    "35304",
+    "35304",
+    "26916932",
+    "2010-02-01"
+   ],
+   [
+    "2014",
+    "42566",
+    "42566",
+    "31998158",
+    "2014-02-01"
+   ],
+   [
+    "2018",
+    "49377",
+    "49377",
+    "36852726",
+    "2018-02-01"
+   ],
+   [
+    "2023",
+    "49834",
+    "49834",
+    "37354780",
+    "2023-02-01"
+   ]
+  ]
+ },
+ "raw_orig_loans": {
+  "sql": "SELECT count(*) AS n_rows, count(DISTINCT loan_seq) AS loans FROM raw_orig",
+  "rows": [
+   [
+    "450000",
+    "450000"
+   ]
+  ]
+ },
+ "raw_perf_rows": {
+  "sql": "SELECT count(*) AS monthly_rows FROM raw_perf",
+  "rows": [
+   [
+    "24674152"
+   ]
+  ]
+ },
+ "raw_perf_loans": {
+  "sql": "SELECT count(DISTINCT loan_seq) AS loans FROM raw_perf",
+  "rows": [
+   [
+    "450000"
+   ]
+  ]
+ }
+}

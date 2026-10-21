@@ -10,6 +10,8 @@ ignore = ["E501"]  # long lines in the v1 code are cosmetic
 # Known v1 issue (audit 3.2 point 8): bare except hides unknown categories.
 # The dashboard is replaced in v2, so it is not rewritten now.
 "app/dashboard.py" = ["E722"]
+# Databricks notebooks: `spark` and `display` are provided by the notebook, not imported.
+"databricks/*.py" = ["F821"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
