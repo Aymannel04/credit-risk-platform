@@ -176,3 +176,29 @@ Nothing bad: a network error, a wrong key, a busy service, an empty answer or no
 
 **51. Is it production-ready?**
 No, and I would say why: it runs from a command line, it is not deployed on AWS, it uses a free service with rate limits, the decision lines are an illustrative assumption (not a lending policy), and the numbers above are on made-up loans. What it demonstrates is the design: the code decides, the model words, a checker proves every number, and every failure ends in a safe memo.
+
+## G. dbt (added with the dbt project; the Spark and Databricks questions come after part B)
+
+**52. What is dbt, in one sentence?**
+A tool that turns SQL files into a chain of tables: each model is one `select`, `ref()` links one model to the next, and tests and documentation live next to the SQL. In French: "dbt transforme des fichiers SQL en une chaîne de tables testées et documentées."
+
+**53. Why did you add dbt to a project that already worked?**
+The cleaning and features already existed as SQL inside Python files. dbt gives what Python strings do not: a test next to each column, a lineage graph, and a clear split between staging (typed copy of the raw data) and marts (tables ready for use). I also wanted to show that I test my work instead of assuming it is right.
+
+**54. What are staging and marts?**
+Staging: one model per source table, light cleaning only, nothing removed (`stg_orig`, `stg_label`). Marts: tables made for a use: `mart_loan_features` (the table the models learn from) and `mart_default_rates` (a summary). The same idea as the raw, staging and features layers of the pipeline.
+
+**55. Which tests do you have?**
+43. Generic ones (`not_null`, `unique`, `accepted_values`, `relationships` for the foreign key between the two staging tables), one custom (`in_range`, for example credit score between 300 and 850), and three "parity" tests that compare the dbt tables with the files the Python pipeline wrote.
+
+**56. How do you know the dbt tables are right?**
+Parity tests: `select * from dbt_table except select * from existing_table`, in both directions. Any row on one side only fails the test. Result: zero differences on 450,000 loans (229,419 and 177,081 kept loans). And I proved the test is not empty: with a wrong split seed it failed with 151,442 differing rows.
+
+**57. A test fails during `dbt build`. What happens?**
+dbt stops before building the models that depend on it, so a bad staging table never reaches the marts. Same idea as the blocking data checks of the Dagster pipeline.
+
+**58. Why DuckDB as the dbt engine and not a warehouse?**
+450,000 loans fit on one machine and DuckDB reads the Parquet files directly, so the whole build takes about 4 seconds. A warehouse adds cost and setup without helping at this size. The models are plain SQL, so another engine is a profile change (that is what part B tests with Databricks).
+
+**59. What would you do differently?**
+Declare the raw files as dbt sources (I read them with `read_parquet` inside the models), add the dbt run to CI with a small sample of data, and add freshness checks. I would also say that dbt here replays logic that already existed: the value is the tests and the proof of equality, not new logic.

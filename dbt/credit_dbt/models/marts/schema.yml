@@ -1,0 +1,46 @@
+version: 2
+
+models:
+  - name: mart_loan_features
+    description: "The table the models learn from: kept loans, day-one features, label and split. Same table as data/interim/features/features.parquet."
+    columns:
+      - name: loan_seq
+        data_tests: [not_null, unique]
+      - name: default_24m
+        data_tests:
+          - not_null
+          - accepted_values:
+              arguments: {values: [0, 1]}
+      - name: split
+        data_tests:
+          - not_null
+          - accepted_values:
+              arguments: {values: ["train", "calibration", "validation", "test_in_time", "test_oot_2019", "test_oot_2022"]}
+
+  - name: mart_default_rates
+    description: "Loans, defaults and default rate per vintage and split."
+    columns:
+      - name: loans
+        data_tests:
+          - in_range:
+              arguments: {min_value: 1, max_value: 100000000}
+      - name: default_rate_pct
+        description: "A sanity limit, like the 20% limit of the staging checks."
+        data_tests:
+          - in_range:
+              arguments: {min_value: 0, max_value: 20}
+
+  - name: mart_loan_features_fresh
+    description: "Kept loans of the 4 fresh vintages (the v2 exam). Same table as data/interim/features_fresh/features_fresh.parquet."
+    columns:
+      - name: loan_seq
+        data_tests: [not_null, unique]
+      - name: default_24m
+        data_tests:
+          - not_null
+          - accepted_values:
+              arguments: {values: [0, 1]}
+      - name: split
+        data_tests:
+          - accepted_values:
+              arguments: {values: ["fresh_2010", "fresh_2014", "fresh_2018", "fresh_2023"]}

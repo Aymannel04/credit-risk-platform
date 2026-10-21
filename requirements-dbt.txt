@@ -1,0 +1,3 @@
+# Optional: the dbt project in dbt/credit_dbt (not needed by the API, the pipeline or CI)
+dbt-duckdb==1.11.0
+dbt-core==1.12.6

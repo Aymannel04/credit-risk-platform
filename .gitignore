@@ -27,3 +27,8 @@ data/interim/
 # Dagster run history (local only)
 .dagster_home/
 .dagster/
+
+# dbt: local build output, logs and installed packages
+dbt/credit_dbt/target/
+dbt/credit_dbt/logs/
+dbt/credit_dbt/dbt_packages/

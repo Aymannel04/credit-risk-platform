@@ -1,0 +1,35 @@
+name: credit_dbt
+version: "1.0.0"
+config-version: 2
+profile: credit_dbt
+
+# Run from this folder:  dbt build --profiles-dir .      (see dbt/README.md)
+model-paths: ["models"]
+macro-paths: ["macros"]
+test-paths: ["tests"]
+target-path: "target"
+clean-targets: ["target", "dbt_packages", "logs"]
+
+# The same constants as credit/freddie/staging.py and credit/freddie/features.py (changing one is a modelling decision: log it).
+vars:
+  years: [2008, 2012, 2016, 2019, 2022]        # the vintages the pipeline uses (the raw folder holds a few more)
+  fresh_years: [2010, 2014, 2018, 2023]        # the 4 vintages of the v2 exam, staged separately
+  raw_dir: "../../data/interim/raw"            # Freddie Mac files stay on the laptop, never in git
+  existing_features: "../../data/interim/features/features.parquet"
+  existing_stg_dir: "../../data/interim/stg"
+  existing_stg_fresh_dir: "../../data/interim/stg_fresh"
+  existing_features_fresh: "../../data/interim/features_fresh/features_fresh.parquet"
+  window_months: 24
+  dev_max_vintage: 2018
+  oot_1_min: 2019
+  oot_1_max: 2021
+  oot_2_min: 2022
+  split_seed: "split-v1"
+  short_term_months: 180
+
+models:
+  credit_dbt:
+    staging:
+      +materialized: table
+    marts:
+      +materialized: table

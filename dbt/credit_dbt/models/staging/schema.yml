@@ -1,0 +1,91 @@
+version: 2
+
+# These tests are the dbt version of run_checks() in credit/freddie/staging.py. A failing test stops `dbt build` before the marts are built.
+models:
+  - name: stg_orig
+    description: "One row per loan, typed. Special values turned into NULL, odd loans flagged but never removed."
+    columns:
+      - name: loan_seq
+        description: "Loan id, pattern PYYQnXXXXXXX (the year and quarter of the vintage are inside it)."
+        data_tests: [not_null, unique]
+      - name: vintage_year
+        data_tests: [not_null]
+      - name: vintage_quarter
+        data_tests: [not_null]
+      - name: credit_score
+        description: "300 to 850; anything else became NULL."
+        data_tests:
+          - in_range:
+              arguments: {min_value: 300, max_value: 850}
+      - name: dti
+        data_tests:
+          - in_range:
+              arguments: {min_value: 0, max_value: 65}
+      - name: orig_upb
+        data_tests:
+          - not_null
+          - in_range:
+              arguments: {min_value: 1, max_value: 100000000}
+      - name: int_rate
+        data_tests:
+          - not_null
+          - in_range:
+              arguments: {min_value: 0, max_value: 20}
+      - name: orig_term
+        description: "A real 513-month loan exists in the 2010 sample, hence the wide upper limit."
+        data_tests:
+          - not_null
+          - in_range:
+              arguments: {min_value: 60, max_value: 600}
+      - name: occupancy
+        data_tests:
+          - accepted_values:
+              arguments: {values: ["P", "I", "S"]}
+      - name: purpose
+        data_tests:
+          - accepted_values:
+              arguments: {values: ["P", "C", "N", "R"]}
+
+  - name: stg_label
+    description: "One row per loan: watched for 24 months or not, and the default label."
+    columns:
+      - name: loan_seq
+        data_tests:
+          - not_null
+          - unique
+          - relationships:
+              arguments: {to: ref('stg_orig'), field: loan_seq}   # every performance loan has an origination row
+      - name: default_24m
+        description: "1 if 90+ days late (no assistance plan active) or a credit-event zero balance code within 24 months."
+        data_tests:
+          - accepted_values:
+              arguments: {values: [0, 1]}
+
+  - name: stg_orig_fresh
+    description: "Same as stg_orig, for the 4 fresh vintages (2010, 2014, 2018, 2023)."
+    columns:
+      - name: loan_seq
+        data_tests: [not_null, unique]
+      - name: credit_score
+        data_tests:
+          - in_range:
+              arguments: {min_value: 300, max_value: 850}
+      - name: int_rate
+        data_tests:
+          - not_null
+          - in_range:
+              arguments: {min_value: 0, max_value: 20}
+
+  - name: stg_label_fresh
+    description: "Same as stg_label, for the 4 fresh vintages."
+    columns:
+      - name: loan_seq
+        data_tests:
+          - not_null
+          - unique
+          - relationships:
+              arguments: {to: ref('stg_orig_fresh'), field: loan_seq}
+      - name: default_24m
+        data_tests:
+          - accepted_values:
+              arguments: {values: [0, 1]}

@@ -1,0 +1,8 @@
+# No secret in this file. The local target is a DuckDB file inside target/ (ignored by git).
+credit_dbt:
+  target: local
+  outputs:
+    local:
+      type: duckdb
+      path: target/credit.duckdb
+      threads: 4

@@ -752,3 +752,13 @@ The owner installed AWS CLI 2.37.12 (current-user MSI from awscli.amazonaws.com)
 **Decision.** A manual workflow (`.github/workflows/mirror-adapter.yml`, permissions `contents: read`, `packages: write`, temporary token, no stored secret) copies the adapter once to `ghcr.io/aymannel04/aws-lambda-adapter:1.1.0` and checks that the copy has the same sha256 as the original (`sha256:17cfd08e...`). The package was made public (the adapter is open source). The `Dockerfile` now pulls from there with the same digest, so the image content does not change. A test keeps the workflow manual, least-privilege and tied to the Dockerfile's digest.
 
 **Limit.** The copy depends on ghcr.io staying public and on the package not being deleted; if it disappears, rerun the mirror workflow.
+
+## 2026-10-21: the transformations as a dbt project (part A of the Databricks / dbt / PySpark extension)
+
+**Decision.** Add `dbt/credit_dbt`: the SQL of `credit/freddie/staging.py` and `features.py` written as dbt models (`stg_orig`, `stg_label`, `mart_loan_features`, `mart_default_rates`, plus the same for the 4 fresh vintages), run with dbt-duckdb on the local DuckDB file. The Python helpers (`_int`, `_one_of`, `_month`) became macros; the Python constants (24-month window, split seed `split-v1`, vintage limits, 180-month term class) are dbt vars and a test checks they equal the Python values.
+
+**Why.** Many data-engineering offers ask for dbt, and the useful part is the tests and the lineage. The project already had the transformations, so this is a translation that can be proved, not an invented example.
+
+**Evidence (measured 2026-10-21).** 7 models and 43 tests pass in about 4 seconds of running. 450,000 loans staged (250,000 + 200,000), 229,419 and 177,081 kept loans, the same numbers as the pipeline. Three `parity_*` tests compare the dbt tables with the Parquet files the Python pipeline wrote (rows on one side only fail the test): zero differences. Negative test: a wrong split seed made the parity test fail with 151,442 differing rows, so the test is not empty.
+
+**Not done / limits.** The profile is local DuckDB only (a Databricks target is part B). Raw files are read with `read_parquet`, not declared as dbt sources. dbt is not installed in CI (`requirements-dbt.txt` is separate); 7 structure tests run in CI, the data tests run on the owner's machine. The fresh labels were locked until the v2 exam; the exam is finished, so building them here breaks no rule.
